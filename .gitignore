@@ -1,0 +1,7 @@
+/target/
+/artifacts/
+/data/
+*.part
+.vs/
+bin/
+obj/
