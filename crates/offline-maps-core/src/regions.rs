@@ -30,7 +30,7 @@ mod tests {
             assert!(r.id.starts_with("us-") && r.id.len() == 5, "{}", r.id);
             assert!(r.package_url.ends_with("-shortbread-1.0.mbtiles"));
             assert!(r.extras_url.ends_with("-latest.osm.pbf"));
-            assert!(r.package_bytes > 0 && r.extras_bytes > 0);
+            assert!(r.package_bytes > 0 && r.extras_bytes > 0 && r.terrain_bytes > 0);
             let o = r.outer;
             assert!(o.west < o.east && o.south < o.north, "{}", r.name);
             for (lon, lat) in r.required_points {

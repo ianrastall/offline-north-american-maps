@@ -42,10 +42,20 @@ Do not implement a bulk downloader against tile.openstreetmap.org. Its public ti
 - The map page sees one source covering the box around all installed regions. For each tile, the core reads every installed package whose bounds touch it. Where more than one has the tile (a border), same-named layers are joined (`merge.rs`): key and value tables without repeats, tags renumbered, identical features kept once. Each extract includes whole roads and relations that cross its outline, so some of a neighbouring state shows even when only one region is installed.
 - Search runs over every installed region's index and extras and ranks the results together. Places with the same name in different regions (Springfield, Illinois and Missouri) are kept apart; the same place in two regions' data is listed once.
 
+## Terrain (0.3.0)
+
+- Source: Mapterhorn's planet archive, `https://download.mapterhorn.com/planet.pmtiles` (PMTiles v3, 355.6 GB, zoom 0–12; Terrarium-encoded elevation as 512-pixel WebP). For the United States its sources are the USGS 3D Elevation Program at 1 m and 10 m (public domain) and Copernicus GLO-30 at 30 m (Copernicus licence: free use and redistribution with attribution). Source list: `https://download.mapterhorn.com/attribution.json`. Checked 8 November 2026.
+- Mapterhorn documents extracting areas from the planet file with range requests (`pmtiles extract --bbox`) and states no download limits. The core does the same itself (`pmtiles.rs`, `terrain.rs`): it reads the archive's header and directories (about 0.2 MB per state), then fetches the region's tiles in joined ranges (gaps up to 512 KB, at most 16 MB per request), every request after the first with `If-Range` on the archive's ETag. A file replaced mid-download is detected and the next attempt starts again; a cancelled download resumes.
+- Extent: the installed map's bounds (the region's outline box), zoom 0–12, about 15 m per pixel at 40° N. Zoom 13 would add about four times as much (about 1.1 GB more for Illinois). Illinois: 5,309 tiles, 366 MB. All 52 regions: about 23 GB; Texas 1.9 GB, California 1.6 GB, Montana 1.4 GB.
+- Storage: `<root>/<region>/terrain/versions/<v>/terrain.mbtiles` with a record and an `active.json` pointer, like the extras. Removing a region deletes it.
+- Rendering: the map page asks for `terrain/{z}/{x}/{y}.webp`; the shell answers from the core. MapLibre draws hillshading (a `raster-dem` source); maplibre-contour 0.1.1 (BSD-3-Clause, pinned in `proof/renderer`) computes contour lines in a web worker from the same tiles: in feet (200/1000 at zoom 10 down to 10/50 at zoom 16) or metres with the distance setting. Both sit under water, roads and labels.
+
 ## Licensing obligations
 
 - OpenStreetMap data (ODbL 1.0): show "© OpenStreetMap contributors" on the map and keep license details with packages. Distributing tiles or a derived database (for example committing them to a public repository or bundling them in a release) triggers share-alike obligations, so map data stays out of git and out of the installer; the app downloads it from Geofabrik.
 - MapLibre GL JS: BSD-3-Clause. VersaTiles Style: MIT. VersaTiles sprites: CC0. Noto Sans: OFL 1.1. Ship their license texts with the app.
+- Terrain (when downloaded): credit Mapterhorn, the USGS and Copernicus on the map (short form, with the full Copernicus notice as a tooltip) and in Map information and the third-party notices: "© DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018 provided under COPERNICUS by the European Union and ESA; all rights reserved". USGS data is public domain. Terrain stays out of git and the installer; the app downloads it.
+- maplibre-contour: BSD-3-Clause; its license text ships with the app and in the third-party notices.
 - Geofabrik labels the Shortbread package experimental. Its file is rebuilt about weekly; record ETag and Last-Modified per download.
 
 ## Package storage contract

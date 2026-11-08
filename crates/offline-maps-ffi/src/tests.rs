@@ -84,6 +84,27 @@ fn empty_store_reports_no_map_and_refuses_search() {
     let illinois = catalog.regions.iter().find(|r| r.id == "us-il").unwrap();
     assert_eq!(illinois.name, "Illinois");
     assert!(illinois.package_bytes > 100_000_000);
+    assert!(illinois.terrain_bytes > 100_000_000);
+
+    // No terrain installed: an empty tile; terrain needs the region's map first.
+    let tile = call(
+        core,
+        13,
+        pb::request::Command::GetTerrainTile(pb::GetTerrainTile { z: 12, x: 1, y: 1 }),
+    );
+    match tile.result {
+        Some(pb::response::Result::TerrainTile(t)) => assert!(t.data.is_empty()),
+        other => panic!("{other:?}"),
+    }
+    let terrain = call(
+        core,
+        14,
+        pb::request::Command::Update(pb::Update {
+            target: pb::UpdateTarget::Terrain as i32,
+            region_id: "us-il".into(),
+        }),
+    );
+    assert_eq!(terrain.error.unwrap().kind, ErrorKind::NotFound as i32);
 
     // Removing a region that is not installed succeeds; an unknown one does not.
     let removed = call(

@@ -24,6 +24,10 @@ use offline_maps_core::places::{PlacesError, SavedPlace, SavedPlaces};
 use offline_maps_core::regions;
 use offline_maps_core::search::{SearchIndex, open_or_build, search_all};
 use offline_maps_core::store::{ActivePackage, PackageStore};
+use offline_maps_core::terrain::{
+    ActiveTerrain, TERRAIN_MAX_ZOOM, TERRAIN_URL, TerrainOutcome, TerrainTiles, active_terrain,
+    prune_terrain, update_terrain,
+};
 
 use crate::messages as pb;
 use pb::ErrorKind;
@@ -58,6 +62,8 @@ struct Slot {
     map: Mutex<Option<OpenMap>>,
     search: Mutex<Option<SearchIndex>>,
     extras: Option<ActiveExtras>,
+    terrain: Option<ActiveTerrain>,
+    terrain_tiles: Mutex<Option<TerrainTiles>>,
     problem: String,
 }
 
@@ -71,6 +77,7 @@ pub struct Service {
     /// Test overrides of Illinois's download addresses.
     package_url: Option<&'static str>,
     extras_url: Option<&'static str>,
+    terrain_url: String,
     /// Installed regions, in catalog order.
     slots: RwLock<Vec<Arc<Slot>>>,
     places: Mutex<Places>,
@@ -176,12 +183,10 @@ fn decompress(z: u8, x: u32, y: u32, encoding: TileEncoding, data: Vec<u8>) -> O
 fn open_slot(store: &PackageStore, region: Region) -> Option<Slot> {
     let id = region.id;
     let mut problems = Vec::new();
-    let has_files = store.region_dir(id).join("active.json").exists()
-        || store
-            .region_dir(id)
-            .join("extras")
-            .join("active.json")
-            .exists();
+    let dir = store.region_dir(id);
+    let has_files = ["active.json", "extras/active.json", "terrain/active.json"]
+        .iter()
+        .any(|f| dir.join(f).exists());
     if !has_files {
         return None;
     }
@@ -212,6 +217,28 @@ fn open_slot(store: &PackageStore, region: Region) -> Option<Slot> {
             None
         }
     };
+    let terrain = match active_terrain(store, id) {
+        Ok(terrain) => terrain,
+        Err(e) => {
+            problems.push(format!(
+                "The {} terrain could not be read: {e}.",
+                region.name
+            ));
+            None
+        }
+    };
+    let terrain_tiles = terrain
+        .as_ref()
+        .and_then(|t| match TerrainTiles::open(&t.path) {
+            Ok(tiles) => Some(tiles),
+            Err(e) => {
+                problems.push(format!(
+                    "The {} terrain could not be opened: {e}.",
+                    region.name
+                ));
+                None
+            }
+        });
     if let (Some(index), Some(extras)) = (search.as_mut(), extras.as_ref())
         && let Err(e) = index.attach_extras(&extras.path)
     {
@@ -226,6 +253,8 @@ fn open_slot(store: &PackageStore, region: Region) -> Option<Slot> {
         map: Mutex::new(map),
         search: Mutex::new(search),
         extras,
+        terrain: terrain_tiles.is_some().then_some(terrain).flatten(),
+        terrain_tiles: Mutex::new(terrain_tiles),
         problem: problems.join(" "),
     })
 }
@@ -259,6 +288,10 @@ impl Service {
             store: PackageStore::new(root),
             package_url: leak(&config.package_url),
             extras_url: leak(&config.extras_url),
+            terrain_url: match config.terrain_url.as_str() {
+                "" => TERRAIN_URL.to_owned(),
+                url => url.to_owned(),
+            },
             slots: RwLock::new(Vec::new()),
             places: Mutex::new(places),
             progress: Mutex::new(pb::ProgressEvent::default()),
@@ -330,6 +363,7 @@ impl Service {
                     package_bytes: r.package_bytes,
                     extras_bytes: r.extras_bytes,
                     source_page: r.source_page.to_owned(),
+                    terrain_bytes: r.terrain_bytes,
                 })
                 .collect(),
         }
@@ -339,21 +373,23 @@ impl Service {
         let slots = self.slots();
         let mut regions = Vec::new();
         let mut coverage: Option<Bounds> = None;
+        let mut terrain_coverage: Option<Bounds> = None;
+        let join = |a: Option<Bounds>, b: Bounds| match a {
+            None => b,
+            Some(c) => Bounds {
+                west: c.west.min(b.west),
+                south: c.south.min(b.south),
+                east: c.east.max(b.east),
+                north: c.north.max(b.north),
+            },
+        };
         let (mut min_zoom, mut max_zoom) = (u32::MAX, 0);
         let mut versions = Vec::new();
         for slot in &slots {
             let map = lock(&slot.map).as_ref().map(|m| {
                 let r = &m.active.record;
                 let b = r.metadata.bounds;
-                coverage = Some(match coverage {
-                    None => b,
-                    Some(c) => Bounds {
-                        west: c.west.min(b.west),
-                        south: c.south.min(b.south),
-                        east: c.east.max(b.east),
-                        north: c.north.max(b.north),
-                    },
-                });
+                coverage = Some(join(coverage, b));
                 min_zoom = min_zoom.min(r.metadata.min_zoom.into());
                 max_zoom = max_zoom.max(r.metadata.max_zoom.into());
                 pb::MapInfo {
@@ -386,11 +422,25 @@ impl Service {
                     source_bytes: r.byte_length,
                 }
             });
+            let terrain = slot.terrain.as_ref().map(|t| {
+                let r = &t.record;
+                terrain_coverage = Some(join(terrain_coverage, r.bounds));
+                pb::TerrainInfo {
+                    version: t.version.clone(),
+                    data_date: http_date_to_iso(r.source.last_modified.as_deref()),
+                    downloaded_at: r.downloaded_at.clone(),
+                    bytes: r.bytes,
+                    tiles: r.tiles,
+                    max_zoom: r.max_zoom.into(),
+                    attribution: r.attribution.clone(),
+                }
+            });
             versions.push(format!(
-                "{}:{}:{}",
+                "{}:{}:{}:{}",
                 slot.region.id,
                 map.as_ref().map_or("", |m| m.version.as_str()),
-                extras.as_ref().map_or("", |x| x.version.as_str())
+                extras.as_ref().map_or("", |x| x.version.as_str()),
+                terrain.as_ref().map_or("", |t| t.version.as_str())
             ));
             regions.push(pb::RegionStatus {
                 id: slot.region.id.to_owned(),
@@ -398,6 +448,7 @@ impl Service {
                 search_ready: lock(&slot.search).is_some(),
                 map,
                 extras,
+                terrain,
                 problem: slot.problem.clone(),
             });
         }
@@ -428,6 +479,7 @@ impl Service {
             min_zoom: if max_zoom == 0 { 0 } else { min_zoom },
             max_zoom,
             content_version: versions.join(";"),
+            terrain_coverage: terrain_coverage.map(bounds_message),
             regions,
         }
     }
@@ -526,6 +578,52 @@ impl Service {
                 })
             }
         }
+    }
+
+    /// The terrain tile at z/x/y from whichever installed region has it.
+    pub fn terrain_tile(&self, request: &pb::GetTerrainTile) -> Outcome<pb::TerrainTile> {
+        let (x, y) = (request.x, request.y);
+        let Some(z) = u8::try_from(request.z)
+            .ok()
+            .filter(|z| *z <= TERRAIN_MAX_ZOOM)
+        else {
+            return Ok(pb::TerrainTile::default());
+        };
+        let n = 1_u64 << z;
+        if u64::from(x) >= n || u64::from(y) >= n {
+            return Ok(pb::TerrainTile::default());
+        }
+        let (west, north) = tile_point_to_lon_lat(z, x, y, 4096, 0, 0);
+        let (east, south) = tile_point_to_lon_lat(z, x, y, 4096, 4096, 4096);
+        let area = Bounds {
+            west,
+            south,
+            east,
+            north,
+        };
+        for slot in self.slots() {
+            if !slot
+                .terrain
+                .as_ref()
+                .is_some_and(|t| overlaps(&t.record.bounds, &area))
+            {
+                continue;
+            }
+            let guard = lock(&slot.terrain_tiles);
+            let Some(tiles) = guard.as_ref() else {
+                continue;
+            };
+            let found = tiles.tile(z, x, y).map_err(|e| {
+                error(
+                    ErrorKind::InvalidData,
+                    format!("Terrain tile {z}/{x}/{y}: {e}"),
+                )
+            })?;
+            if let Some(data) = found {
+                return Ok(pb::TerrainTile { data });
+            }
+        }
+        Ok(pb::TerrainTile::default())
     }
 
     pub fn stations(&self) -> Outcome<pb::Stations> {
@@ -670,6 +768,42 @@ impl Service {
                     replaced: replaced.unwrap_or_default(),
                 },
             }),
+            pb::UpdateTarget::Terrain => {
+                let bounds = self
+                    .slots()
+                    .iter()
+                    .find(|s| s.region.id == id)
+                    .and_then(|s| s.bounds)
+                    .ok_or_else(|| {
+                        error(
+                            ErrorKind::NotFound,
+                            format!("Download the {} map before its terrain.", region.name),
+                        )
+                    })?;
+                update_terrain(
+                    &self.store,
+                    &region,
+                    bounds,
+                    &self.terrain_url,
+                    TERRAIN_MAX_ZOOM,
+                    &transport,
+                    &options,
+                    &mut |p| self.report(p),
+                    &self.cancel,
+                )
+                .map(|outcome| match outcome {
+                    TerrainOutcome::UpToDate(active) => pb::UpdateResult {
+                        up_to_date: true,
+                        version: active.version,
+                        replaced: String::new(),
+                    },
+                    TerrainOutcome::Activated { terrain, replaced } => pb::UpdateResult {
+                        up_to_date: false,
+                        version: terrain.version,
+                        replaced: replaced.unwrap_or_default(),
+                    },
+                })
+            }
             _ => update_extras(
                 &self.store,
                 &region,
@@ -700,6 +834,9 @@ impl Service {
             match target {
                 pb::UpdateTarget::Map => {
                     self.store.prune(id);
+                }
+                pb::UpdateTarget::Terrain => {
+                    prune_terrain(&self.store, id);
                 }
                 _ => {
                     prune_extras(&self.store, id);

@@ -8,9 +8,11 @@ pub mod mvt;
 pub mod osm_pbf;
 pub mod package;
 pub mod places;
+pub mod pmtiles;
 pub mod regions;
 pub mod search;
 pub mod store;
+pub mod terrain;
 pub mod time;
 
 use std::io::{self, Read, Write};

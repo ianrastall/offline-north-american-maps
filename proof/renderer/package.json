@@ -6,6 +6,7 @@
     "fetch-assets": "node fetch-assets.mjs"
   },
   "dependencies": {
+    "maplibre-contour": "0.1.1",
     "maplibre-gl": "6.16.0"
   }
 }

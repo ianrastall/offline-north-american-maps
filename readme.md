@@ -2,9 +2,10 @@
 
 Jupiter desktop app for downloading road maps before an emergency and using them without internet access. Regions: the US states except Alaska, the District of Columbia, Puerto Rico and the US Virgin Islands, in any combination. Follows Jupiter style standard 1.1.
 
-Status (8 November 2026): version 0.2.0 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
+Status (8 November 2026): version 0.3.0 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
 
 - **Map:** downloads Geofabrik's map package for each chosen region (Map > Regions) with resume, verification and atomic activation, and shows the installed regions as one map with MapLibre in WebView2, entirely from local files. Tiles on a border between installed regions are merged. Light and dark map styles show interstate, US and state route shields.
+- **Terrain:** an optional download per region of Mapterhorn elevation tiles (USGS 3DEP and Copernicus GLO-30, to zoom 12, about 15 m per pixel), drawn as hillshading and contour lines in feet or metres. View > Terrain shading and View > Contour lines turn them on and off.
 - **Downloads:** queued and run one at a time; Map > Update all regions checks every installed region.
 - **Search:** finds places, streets, landmarks, transit and water offline, across all installed regions. An optional second download adds fuel stations, charging stations and house-number addresses, read from Geofabrik's raw extract.
 - **Saved places:** kept apart from map packages, so they survive map updates, app upgrades and uninstalling.
@@ -21,7 +22,7 @@ Status (8 November 2026): version 0.2.0 is installed on Ian's machine. It is a W
 
 | Path | Contents |
 | --- | --- |
-| `crates/offline-maps-core` | Rust domain core: region catalog, packages, downloads, store, tile merging, search, extras, saved places |
+| `crates/offline-maps-core` | Rust domain core: region catalog, packages, downloads, store, tile merging, search, extras, terrain (PMTiles index reader), saved places |
 | `crates/offline-maps-ffi` | C ABI facade (`offline_maps_ffi.dll`, ABI version 1) for the WinUI shell |
 | `crates/offline-maps-dev` | Development command-line tools (not shipped) |
 | `proto/offline_maps.proto` | Messages between the shell and the core |
@@ -37,7 +38,7 @@ Windows 11 x64; Rust 1.99.1, .NET SDK 10.0.114 and Inno Setup 6. Jupiter.UI must
 
 One-time prerequisites:
 
-- MapLibre, sprites and glyphs (Node 24; pinned hashes): `cd proof/renderer; npm ci; node fetch-assets.mjs`.
+- MapLibre, maplibre-contour, sprites and glyphs (Node 24; pinned hashes): `cd proof/renderer; npm ci; node fetch-assets.mjs`.
 - The signed WebView2 offline runtime installer at `third_party/webview2/MicrosoftEdgeWebView2RuntimeInstallerX64.exe` (the Evergreen Standalone x64 installer). It is not committed.
 
 Release (checks, Rust and interop tests, publish, installer to `dist/`):

@@ -86,6 +86,11 @@
                             Click="ExtrasButton_Click"
                             Content="Download stations and addresses" />
                         <Button
+                            x:Name="TerrainButton"
+                            HorizontalAlignment="Stretch"
+                            Click="TerrainButton_Click"
+                            Content="Download terrain" />
+                        <Button
                             x:Name="RemoveButton"
                             HorizontalAlignment="Stretch"
                             Click="RemoveButton_Click"

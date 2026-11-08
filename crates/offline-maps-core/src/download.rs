@@ -55,6 +55,50 @@ pub trait Transport {
     /// GET `url`. With `resume = Some((offset, etag))` asks for the bytes from
     /// `offset` on, valid only if the file still has `etag`.
     fn fetch(&self, url: &str, resume: Option<(u64, &str)>) -> io::Result<Fetched>;
+
+    /// GET bytes `start..start + length` of `url`. With `etag`, fails with
+    /// `InvalidData` if the file no longer has it. Returns the server's view of
+    /// the whole file (its length, validators) and the bytes.
+    fn fetch_range(
+        &self,
+        url: &str,
+        start: u64,
+        length: u64,
+        etag: Option<&str>,
+    ) -> io::Result<(RemoteInfo, Vec<u8>)> {
+        let fetched = match etag {
+            Some(etag) => self.fetch(url, Some((start, etag)))?,
+            None => self.fetch(url, None)?,
+        };
+        let (info, mut body, at) = match fetched {
+            Fetched::Partial {
+                start: at,
+                info,
+                body,
+            } => (info, body, at),
+            Fetched::Full { info, body } => (info, body, 0),
+        };
+        if etag.is_some() && at != start {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "The file changed on the server",
+            ));
+        }
+        io::copy(&mut (&mut body).take(start - at), &mut io::sink())?;
+        read_exact_range(body, length).map(|bytes| (info, bytes))
+    }
+}
+
+fn read_exact_range(body: impl Read, length: u64) -> io::Result<Vec<u8>> {
+    let mut bytes = Vec::with_capacity(usize::try_from(length.min(64 << 20)).unwrap_or(0));
+    body.take(length).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 != length {
+        return Err(io::Error::new(
+            io::ErrorKind::UnexpectedEof,
+            "The server sent fewer bytes than asked for",
+        ));
+    }
+    Ok(bytes)
 }
 
 /// HTTPS transport using the Windows certificate store (SChannel).
@@ -180,6 +224,56 @@ impl Transport for HttpTransport {
                     body: Box::new(response.into_body().into_reader()),
                 })
             }
+            status => Err(http_error(status)),
+        }
+    }
+
+    fn fetch_range(
+        &self,
+        url: &str,
+        start: u64,
+        length: u64,
+        etag: Option<&str>,
+    ) -> io::Result<(RemoteInfo, Vec<u8>)> {
+        if length == 0 {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Empty range"));
+        }
+        let mut request = self
+            .agent
+            .get(url)
+            .header("Range", format!("bytes={start}-{}", start + length - 1));
+        if let Some(etag) = etag {
+            request = request.header("If-Range", etag);
+        }
+        let response = request.call().map_err(ureq::Error::into_io)?;
+        let mut info = remote_info(&response);
+        match response.status().as_u16() {
+            206 => {
+                let (from, to, total) = header(&response, "content-range")
+                    .as_deref()
+                    .and_then(parse_content_range)
+                    .ok_or_else(|| {
+                        io::Error::new(io::ErrorKind::InvalidData, "Invalid Content-Range")
+                    })?;
+                if from != start || to != start + length - 1 {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "The server sent a different range than asked for",
+                    ));
+                }
+                info.length = total;
+                let bytes = read_exact_range(response.into_body().into_reader(), length)?;
+                Ok((info, bytes))
+            }
+            // If-Range did not match: the whole (changed) file would follow.
+            200 if etag.is_some() => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "The file changed on the server",
+            )),
+            200 => Err(io::Error::new(
+                io::ErrorKind::Unsupported,
+                "The server does not support partial downloads",
+            )),
             status => Err(http_error(status)),
         }
     }

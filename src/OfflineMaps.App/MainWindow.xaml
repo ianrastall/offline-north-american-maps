@@ -44,6 +44,9 @@
                     </ToggleMenuFlyoutItem.KeyboardAccelerators>
                 </ToggleMenuFlyoutItem>
                 <MenuFlyoutSeparator />
+                <ToggleMenuFlyoutItem x:Name="ShadingItem" Click="Terrain_Click" Text="Terrain shading" />
+                <ToggleMenuFlyoutItem x:Name="ContoursItem" Click="Terrain_Click" Text="Contour lines" />
+                <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Name="ZoomInItem" Click="ZoomIn_Click" KeyboardAcceleratorTextOverride="Ctrl++" Text="Zoom in" />
                 <MenuFlyoutItem x:Name="ZoomOutItem" Click="ZoomOut_Click" KeyboardAcceleratorTextOverride="Ctrl+-" Text="Zoom out" />
                 <MenuFlyoutItem x:Name="FitItem" Click="Fit_Click" KeyboardAcceleratorTextOverride="Ctrl+0" Text="Show whole map" />

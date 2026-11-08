@@ -38,7 +38,7 @@ $signature = Get-AuthenticodeSignature $runtime
 if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'CN=Microsoft Corporation') {
     throw 'The WebView2 runtime installer does not carry a valid Microsoft signature.'
 }
-foreach ($asset in 'proof/renderer/node_modules/maplibre-gl/dist/maplibre-gl.mjs', 'data/renderer-assets/glyphs/noto_sans_regular/0-255.pbf', 'data/renderer-assets/sprites/base.json') {
+foreach ($asset in 'proof/renderer/node_modules/maplibre-gl/dist/maplibre-gl.mjs', 'proof/renderer/node_modules/maplibre-contour/dist/index.mjs', 'data/renderer-assets/glyphs/noto_sans_regular/0-255.pbf', 'data/renderer-assets/sprites/base.json') {
     if (-not (Test-Path (Join-Path $root $asset))) { throw "Map page asset $asset is missing; run npm ci and node fetch-assets.mjs in proof/renderer." }
 }
 if (-not $InnoCompiler) {
@@ -73,7 +73,7 @@ try {
 
     # Without the app's own .pri the published app crashes at startup.
     foreach ($file in 'OfflineMaps.exe', 'OfflineMaps.pri', 'offline_maps_ffi.dll', 'Assets/AppIcon.ico', 'THIRD-PARTY-NOTICES.txt',
-        'Web/index.html', 'Web/map.js', 'Web/maplibre/maplibre-gl.mjs', 'Web/maplibre/maplibre-gl-worker.mjs',
+        'Web/index.html', 'Web/map.js', 'Web/maplibre/maplibre-gl.mjs', 'Web/maplibre/maplibre-gl-worker.mjs', 'Web/contour/maplibre-contour.mjs',
         'Web/styles/offline-maps-dark.json', 'Web/sprites/base.json', 'Web/glyphs/noto_sans_regular/0-255.pbf') {
         if (-not (Test-Path (Join-Path $appDir $file))) { throw "The published folder is missing $file." }
     }

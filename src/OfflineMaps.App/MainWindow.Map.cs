@@ -100,6 +100,7 @@ public sealed partial class MainWindow
         }
         string path = Uri.UnescapeDataString(new Uri(uri).AbsolutePath);
         bool tile = path.StartsWith("/tiles/", StringComparison.Ordinal);
+        bool terrain = path.StartsWith("/terrain/", StringComparison.Ordinal);
         bool stations = path == "/extras/stations.geojson";
         var deferral = e.GetDeferral();
         try
@@ -108,7 +109,7 @@ public sealed partial class MainWindow
             byte[] body;
             string type;
             int status = 200;
-            if (!tile && !stations)
+            if (!tile && !stations && !terrain)
             {
                 (body, type, status) = await Task.Run(() => ReadWebFile(path));
             }
@@ -124,6 +125,14 @@ public sealed partial class MainWindow
                     ? await Task.Run(() => core.Tile(z, x, y))
                     : [];
                 type = "application/x-protobuf";
+            }
+            else if (terrain)
+            {
+                string[] parts = path["/terrain/".Length..].Replace(".webp", "", StringComparison.Ordinal).Split('/');
+                body = parts.Length == 3 && int.TryParse(parts[0], out int z) && int.TryParse(parts[1], out int x) && int.TryParse(parts[2], out int y)
+                    ? await Task.Run(() => core.TerrainTile(z, x, y))
+                    : [];
+                type = "image/webp";
             }
             else
             {
@@ -150,7 +159,7 @@ public sealed partial class MainWindow
                     writer.DetachStream();
                 }
                 stream.Seek(0);
-                string cache = tile || stations ? "no-store" : "no-cache";
+                string cache = tile || stations || terrain ? "no-store" : "no-cache";
                 e.Response = _environment!.CreateWebResourceResponse(stream, 200, "OK", $"Content-Type: {type}\r\nCache-Control: {cache}");
             }
         }
@@ -286,6 +295,11 @@ public sealed partial class MainWindow
             ["colors"] = Colors(),
             ["animate"] = UiSettings.AnimationsEnabled,
             ["units"] = _settings.Kilometres ? "metric" : "imperial",
+            ["terrain"] = status.TerrainCoverage is { } t
+                ? new JsonObject { ["bounds"] = new JsonObject { ["west"] = t.West, ["south"] = t.South, ["east"] = t.East, ["north"] = t.North } }
+                : null,
+            ["shading"] = _settings.TerrainShading,
+            ["contours"] = _settings.ContourLines,
         };
         if (_settings.ViewLatitude is double lat && _settings.ViewLongitude is double lon && _settings.ViewZoom is double zoom
             && lat >= b.South && lat <= b.North && lon >= b.West && lon <= b.East)
@@ -325,6 +339,13 @@ public sealed partial class MainWindow
         }
         Post(new JsonObject { ["kind"] = "places", ["items"] = items });
     }
+
+    private void PostTerrain() => Post(new JsonObject
+    {
+        ["kind"] = "terrain",
+        ["shading"] = _settings.TerrainShading,
+        ["contours"] = _settings.ContourLines,
+    });
 
     private void PostUnits() => Post(new JsonObject { ["kind"] = "units", ["units"] = _settings.Kilometres ? "metric" : "imperial" });
 

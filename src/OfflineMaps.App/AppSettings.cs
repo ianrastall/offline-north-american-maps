@@ -31,6 +31,12 @@ public sealed class AppSettings : Jupiter.UI.IAccentPreferences, Jupiter.UI.IThe
     /// <summary>The offer to download stations and addresses was closed.</summary>
     public bool ExtrasOfferClosed { get; set; }
 
+    /// <summary>Hillshading from installed terrain.</summary>
+    public bool TerrainShading { get; set; } = true;
+
+    /// <summary>Contour lines from installed terrain, in feet or metres with the distance unit.</summary>
+    public bool ContourLines { get; set; } = true;
+
     public double? ViewLatitude { get; set; }
 
     public double? ViewLongitude { get; set; }

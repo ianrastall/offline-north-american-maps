@@ -39,16 +39,19 @@
   </ItemGroup>
 
   <!-- The map page and its local assets, served to WebView2 from the app folder as https://map.local/.
-       MapLibre comes from proof/renderer (npm ci), the sprites and glyphs from
+       MapLibre and maplibre-contour come from proof/renderer (npm ci), the sprites and glyphs from
        `node proof/renderer/fetch-assets.mjs`, both with pinned hashes. -->
   <PropertyGroup>
     <MapLibreDir>$(RepoRoot)proof\renderer\node_modules\maplibre-gl\</MapLibreDir>
+    <ContourDir>$(RepoRoot)proof\renderer\node_modules\maplibre-contour\</ContourDir>
     <RendererAssetsDir>$(RepoRoot)data\renderer-assets\</RendererAssetsDir>
   </PropertyGroup>
   <ItemGroup>
     <None Include="$(RepoRoot)web\*" Link="Web\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
     <None Include="$(MapLibreDir)dist\maplibre-gl.mjs;$(MapLibreDir)dist\maplibre-gl-shared.mjs;$(MapLibreDir)dist\maplibre-gl-worker.mjs;$(MapLibreDir)dist\maplibre-gl.css;$(MapLibreDir)LICENSE.txt"
           Link="Web\maplibre\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(ContourDir)dist\index.mjs" Link="Web\contour\maplibre-contour.mjs" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(ContourDir)LICENSE" Link="Web\contour\LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
     <None Include="$(RepoRoot)assets\styles\offline-maps-*.json" Link="Web\styles\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
     <None Include="$(RendererAssetsDir)sprites\base*" Link="Web\sprites\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
     <None Include="$(RendererAssetsDir)glyphs\**\*.pbf" Link="Web\glyphs\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
@@ -56,6 +59,7 @@
   </ItemGroup>
   <Target Name="RequireMapAssets" BeforeTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
     <Error Condition="!Exists('$(MapLibreDir)dist\maplibre-gl.mjs')" Text="MapLibre is missing. Run npm ci in proof/renderer." />
+    <Error Condition="!Exists('$(ContourDir)dist\index.mjs')" Text="maplibre-contour is missing. Run npm ci in proof/renderer." />
     <Error Condition="!Exists('$(RendererAssetsDir)glyphs\noto_sans_regular\0-255.pbf') or !Exists('$(RendererAssetsDir)sprites\base.json')" Text="Map sprites or glyphs are missing. Run node proof/renderer/fetch-assets.mjs." />
   </Target>
 

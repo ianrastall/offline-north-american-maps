@@ -187,6 +187,11 @@ public sealed partial class MainWindow : Window
         ExtrasBar.Title = $"Stations and addresses are not installed for {Format.List(missingExtras)}";
         UpdateAllItem.IsEnabled = !busy && hasMap;
         MapInfoItem.IsEnabled = hasMap;
+        bool hasTerrain = status.TerrainCoverage is not null;
+        ShadingItem.IsEnabled = hasTerrain;
+        ContoursItem.IsEnabled = hasTerrain;
+        ShadingItem.IsChecked = _settings.TerrainShading;
+        ContoursItem.IsChecked = _settings.ContourLines;
         foreach (var item in new[] { ZoomInItem, ZoomOutItem, FitItem })
         {
             item.IsEnabled = hasMap;
@@ -331,6 +336,14 @@ public sealed partial class MainWindow : Window
 
     private void Exit_Click(object sender, RoutedEventArgs e) => Close();
 
+    private void Terrain_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.TerrainShading = ShadingItem.IsChecked;
+        _settings.ContourLines = ContoursItem.IsChecked;
+        _settings.Save();
+        PostTerrain();
+    }
+
     private void Find_Click(object sender, RoutedEventArgs e) => FocusSearch();
 
     private void FocusSearch()
@@ -392,6 +405,9 @@ public sealed partial class MainWindow : Window
             lines.Add(region.Extras is { } extras
                 ? $"Stations and addresses: data of {Format.Date(extras.DataDate)}, downloaded {Format.Date(extras.DownloadedAt)}: {extras.Fuel:N0} fuel stations, {extras.Charging:N0} charging stations, {extras.Addresses:N0} addresses"
                 : "Stations and addresses: not installed");
+            lines.Add(region.Terrain is { } terrain
+                ? $"Terrain: downloaded {Format.Date(terrain.DownloadedAt)}, {Format.Megabytes(terrain.Bytes)}, {terrain.Tiles:N0} tiles to zoom {terrain.MaxZoom}"
+                : "Terrain: not installed");
             if (region.Problem.Length > 0)
             {
                 lines.Add(region.Problem);
@@ -399,7 +415,8 @@ public sealed partial class MainWindow : Window
             Row(region.Name, string.Join(Environment.NewLine, lines));
         }
         Row("Map folder", status.StoreDirectory);
-        Row("Attribution", "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL). Map package and extracts by Geofabrik.");
+        Row("Attribution", "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL). Map package and extracts by Geofabrik."
+            + (status.TerrainCoverage is null ? "" : " Terrain from Mapterhorn (mapterhorn.com/attribution): USGS 3D Elevation Program (public domain) and Copernicus GLO-30, © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA."));
         panel.Children.Add(Text("Offline maps show roads as mapped on the data date. They do not show current closures, detours, traffic or emergency conditions.", "JupiterCaptionTextStyle"));
         await ShowDialogAsync(new ContentDialog
         {

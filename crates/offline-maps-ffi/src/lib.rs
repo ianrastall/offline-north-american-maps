@@ -152,6 +152,9 @@ fn dispatch(service: &Service, request: pb::Request) -> pb::Response {
         Some(Command::ResetPlaces(_)) => service.reset_places().map(|()| None),
         Some(Command::RemoveRegion(remove)) => service.remove_region(&remove).map(|()| None),
         Some(Command::GetCatalog(_)) => Ok(Some(R::Catalog(service.catalog()))),
+        Some(Command::GetTerrainTile(tile)) => {
+            service.terrain_tile(&tile).map(|t| Some(R::TerrainTile(t)))
+        }
     };
     match result {
         Ok(result) => pb::Response {

@@ -5,8 +5,11 @@ Inputs (downloaded separately; nothing here touches the network):
   sizes.txt       "<slug> <bytes>" per line: HEAD Content-Length of <slug>-shortbread-1.0.mbtiles
   pbf-sizes.txt   "<slug> <bytes>" per line: HEAD Content-Length of <slug>-latest.osm.pbf
                   (offline-maps-dev probe <url> reports both)
+  terrain-sizes.txt "<slug> <bytes>" per line: bytes of Mapterhorn's planet.pmtiles tiles,
+                  zoom 0-12, touching the region's outline box (read from the archive's
+                  index only; see docs/validation.md, 0.3.0)
 
-Usage: python -I tools/make-regions.py index-v1.json sizes.txt pbf-sizes.txt <date YYYY-MM-DD>
+Usage: python -I tools/make-regions.py index-v1.json sizes.txt pbf-sizes.txt terrain-sizes.txt <date YYYY-MM-DD>
        then cargo fmt
 
 Each region's coverage check is its outline's bounding box (Geofabrik's package
@@ -56,9 +59,9 @@ def sizes(path):
 
 
 def main():
-    index_path, shortbread_path, pbf_path, date = sys.argv[1:5]
+    index_path, shortbread_path, pbf_path, terrain_path, date = sys.argv[1:6]
     index = json.loads(Path(index_path).read_text(encoding="utf-8"))
-    shortbread, pbf = sizes(shortbread_path), sizes(pbf_path)
+    shortbread, pbf, terrain = sizes(shortbread_path), sizes(pbf_path), sizes(terrain_path)
     regions = []
     for feature in index["features"]:
         props = feature["properties"]
@@ -109,6 +112,7 @@ def main():
             f"    required_points: &[{point_text}],",
             f"    package_bytes: {shortbread[slug]},",
             f"    extras_bytes: {pbf[slug]},",
+            f"    terrain_bytes: {terrain[slug]},",
             "};",
             "",
         ]
@@ -120,7 +124,7 @@ def main():
     out.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(f"{len(names)} regions -> {out}")
     il = HANDWRITTEN["illinois"]
-    print(f"illinois sizes for {il}: package_bytes {shortbread['illinois']}, extras_bytes {pbf['illinois']}")
+    print(f"illinois sizes for {il}: package_bytes {shortbread['illinois']}, extras_bytes {pbf['illinois']}, terrain_bytes {terrain['illinois']}")
 
 
 main()

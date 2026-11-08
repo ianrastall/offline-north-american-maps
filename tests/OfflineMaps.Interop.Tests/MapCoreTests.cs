@@ -44,6 +44,8 @@ public class MapCoreTests
         Assert.Equal(ErrorKind.Unavailable, error.Kind);
         Assert.Empty(core.Tile(14, 4203, 6089));
         Assert.Empty(core.Tile(99, 0, 0));
+        Assert.Empty(core.TerrainTile(12, 1046, 1520));
+        Assert.Equal(ErrorKind.NotFound, Assert.Throws<MapCoreException>(() => core.Update(UpdateTarget.Terrain, "us-il")).Kind);
         var catalog = core.Catalog();
         Assert.Equal(52, catalog.Count);
         Assert.Contains(catalog, r => r.Id == "us-il" && r.Name == "Illinois");

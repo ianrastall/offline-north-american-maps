@@ -251,6 +251,24 @@ Verified in the installed app (upgraded silently from 0.1.1; Illinois map, extra
 
 Not covered: stations and addresses for a second region (a further 202 MB for Indiana), two downloads queued at once, and cancelling a queued download in the installed app.
 
+## 0.3.0: terrain
+
+Completed 8 November 2026. Ian asked whether other mapsets could add layers such as topography. Terrain comes from Mapterhorn (see [sources](sources-and-architecture.md#terrain-030)).
+
+- **Measured first.** A script read only the archive's index to size each region at zoom 0–12 (Illinois: z12 3,901 tiles, 271 MB; z0–12 366 MB; 0.2 MB of index read). Zoom 12 was chosen: about 15 m per pixel, enough for shading and street-level contours; zoom 13 would quadruple the size. All 52 regions are in the catalog with their terrain size (`tools/make-regions.py`, 4th input).
+- **Core.** `pmtiles.rs` reads a PMTiles v3 index through range requests (header, root and leaf directories, Hilbert tile IDs). `terrain.rs` downloads a region's tiles in joined ranges with `If-Range`, resumes after cancelling, detects a file replaced on the server mid-download, checks the tile count, and installs atomically. `Transport` gained `fetch_range` (an exact `Range` request; HTTP 200 to an `If-Range` request means the file changed).
+- **ABI and app.** Update target `TERRAIN` (needs the region's map), `GetTerrainTile`, terrain state per region and the box around all terrain in the status. The Regions window has Download or Update terrain with its size; View > Terrain shading and View > Contour lines (kept in settings, on by default); Map information and the third-party notices carry the Copernicus notice.
+- **Tests.** PMTiles: tile IDs against the specification's reference value, root and leaf directory lookup. Terrain (fake archive server): download and serving, up to date on a second run (3 requests: header, root, one joined range), replacement by a newer file and pruning of the old one, a file changed mid-download, cancel and resume, and Illinois's zoom-12 tile count matching Mapterhorn's index (3,901). ABI and interop: empty terrain tile, terrain refused without a map. 66 core, 2 HTTP and 6 ABI tests (Rust) and 9 interop tests (C#) pass.
+
+Verified in the installed app (upgraded silently from 0.2.0; launched from the Start Menu):
+
+- Regions showed Illinois terrain as about 366 MB; Download terrain showed progress in the row and installed in about 70 seconds: 5,309 tiles, 365.6 MB, with the archive's ETag recorded.
+- A bug found here: the terrain layers were never added, because `map.isStyleLoaded()` is false inside MapLibre's `style.load` while tiles are still loading. The page now tracks style readiness itself. Fixed before release.
+- At Galena (zoom 12 and 14) hillshading and contour lines followed the river valleys under the roads and labels, contour labels read "600 ft", "700 ft" and "750 ft", and street and town labels took precedence. The map credited "Terrain: Mapterhorn, USGS, Copernicus".
+- View > Terrain shading turned the shading off and on, leaving the contours, and was kept in settings. The terrain credit now stays while only contours are shown (fixed after this check).
+
+Not covered: terrain for a region other than Illinois, metric contours, the light theme with terrain, and an update of terrain when Mapterhorn publishes a new archive.
+
 ## Next stages
 
 1. Download the Illinois map and the stations and addresses from Geofabrik in the installed app, then launch with networking disabled and verify map rendering, labels, search, stations, addresses and saved places from a clean process. This is the decisive first-workflow acceptance test.
@@ -258,4 +276,4 @@ Not covered: stations and addresses for a second region (a further 202 MB for In
 3. Choose the app's license and add it to the installer and About.
 4. Install on a clean Windows 11 machine.
 5. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
-6. Terrain: hillshading and contour lines from Mapterhorn terrain tiles (USGS 3DEP and Copernicus GLO-30) for each installed region.
+6. Further layers worth considering: PAD-US public lands (USGS, public domain), FEMA flood hazard zones (public domain), and more from the raw OSM extract already downloaded (shelters, water points, campgrounds, trails).

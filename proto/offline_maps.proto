@@ -19,6 +19,8 @@ message Config {
   // local server; empty uses the defaults. Other regions always use Geofabrik.
   string package_url = 2;
   string extras_url = 3;
+  // Override of the terrain archive's address, for testing; empty uses Mapterhorn.
+  string terrain_url = 4;
 }
 
 message Position {
@@ -40,6 +42,7 @@ message Request {
     ResetPlaces reset_places = 10;
     RemoveRegion remove_region = 11;
     GetCatalog get_catalog = 12;
+    GetTerrainTile get_terrain_tile = 13;
   }
 }
 
@@ -75,6 +78,8 @@ enum UpdateTarget {
   UPDATE_TARGET_MAP = 1;
   // Fuel and charging stations and addresses from the raw extract.
   UPDATE_TARGET_EXTRAS = 2;
+  // Terrain tiles for the region's map area (needs the map installed).
+  UPDATE_TARGET_TERRAIN = 3;
 }
 
 // Downloads or updates one region's map or extras. Long-running: progress is
@@ -92,6 +97,13 @@ message RemoveRegion {
 
 // The regions that can be downloaded.
 message GetCatalog {}
+
+// A terrain tile (XYZ numbering): Terrarium-encoded elevation as a 512-pixel WebP.
+message GetTerrainTile {
+  uint32 z = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+}
 
 message GetStations {}
 
@@ -131,7 +143,13 @@ message Response {
     UpdateResult update = 6;
     Stations stations = 7;
     Catalog catalog = 8;
+    TerrainTile terrain_tile = 9;
   }
+}
+
+message TerrainTile {
+  // Empty when no installed terrain has the tile.
+  bytes data = 1;
 }
 
 message Bounds {
@@ -176,6 +194,7 @@ message CatalogRegion {
   uint64 package_bytes = 3;
   uint64 extras_bytes = 4;
   string source_page = 5;
+  uint64 terrain_bytes = 6;
 }
 
 message Catalog {
@@ -193,8 +212,21 @@ message RegionStatus {
   ExtrasInfo extras = 4;
   // The map has a usable search index.
   bool search_ready = 5;
-  // Set when the region's map or extras could not be opened.
+  // Set when the region's map, extras or terrain could not be opened.
   string problem = 6;
+  // Absent when its terrain is not installed.
+  TerrainInfo terrain = 7;
+}
+
+message TerrainInfo {
+  string version = 1;
+  // Server date of the terrain archive (YYYY-MM-DD).
+  string data_date = 2;
+  string downloaded_at = 3;
+  uint64 bytes = 4;
+  uint64 tiles = 5;
+  uint32 max_zoom = 6;
+  string attribution = 7;
 }
 
 message Place {
@@ -228,8 +260,10 @@ message Status {
   Bounds coverage = 11;
   uint32 min_zoom = 12;
   uint32 max_zoom = 13;
-  // Changes whenever an installed map or extras changes.
+  // Changes whenever an installed map, extras or terrain changes.
   string content_version = 14;
+  // The box around all installed terrain; absent when none is installed.
+  Bounds terrain_coverage = 15;
 }
 
 message SearchResult {

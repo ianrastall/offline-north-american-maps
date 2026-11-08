@@ -40,6 +40,8 @@ pub struct Region {
     /// are rebuilt regularly; the server's figure is used while downloading).
     pub package_bytes: u64,
     pub extras_bytes: u64,
+    /// Terrain tiles for the region's map area (see `terrain`).
+    pub terrain_bytes: u64,
 }
 
 pub const ILLINOIS: Region = Region {
@@ -64,6 +66,7 @@ pub const ILLINOIS: Region = Region {
     ],
     package_bytes: 362_586_112,
     extras_bytes: 363_155_297,
+    terrain_bytes: 365_559_838,
 };
 
 /// What the server said about the file when it was downloaded.

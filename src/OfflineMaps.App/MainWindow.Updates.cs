@@ -71,12 +71,14 @@ public sealed partial class MainWindow
             return;
         }
         int extras = installed.Count(r => r.Extras is not null);
+        int terrain = installed.Count(r => r.Terrain is not null);
         string names = Format.List(installed.Select(r => r.Name));
         var answer = await ShowDialogAsync(new ContentDialog
         {
             Title = "Update all regions?",
             Content = Text($"Offline Maps checks Geofabrik (download.geofabrik.de) for newer maps of {names}"
-                + (extras > 0 ? " and newer stations and addresses where they are installed" : "")
+                + (extras > 0 ? ", newer stations and addresses where they are installed" : "")
+                + (terrain > 0 ? ", newer terrain where it is installed" : "")
                 + ", and downloads what has changed. Each map is about the size shown in Regions. The installed maps stay in use until each new one has been downloaded and checked."),
             PrimaryButtonText = "Update all",
             CloseButtonText = "Cancel",
@@ -92,6 +94,10 @@ public sealed partial class MainWindow
             if (region.Extras is not null)
             {
                 Enqueue(region.Id, UpdateTarget.Extras);
+            }
+            if (region.Terrain is not null)
+            {
+                Enqueue(region.Id, UpdateTarget.Terrain);
             }
         }
     }
@@ -133,7 +139,7 @@ public sealed partial class MainWindow
         var dialog = new ContentDialog
         {
             Title = $"Remove {name}?",
-            Content = Text($"The {name} map, its search and its stations and addresses are deleted from this computer. Saved places are kept. Downloading the region again needs a connection."),
+            Content = Text($"The {name} map, its search, its stations and addresses and its terrain are deleted from this computer. Saved places are kept. Downloading the region again needs a connection."),
             PrimaryButtonText = $"Remove {name}",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Close,
@@ -210,9 +216,12 @@ public sealed partial class MainWindow
         }
     }
 
-    private string Subject(Job job) => job.Target == UpdateTarget.Map
-        ? $"the {RegionName(job.RegionId)} map"
-        : $"{RegionName(job.RegionId)} stations and addresses";
+    private string Subject(Job job) => job.Target switch
+    {
+        UpdateTarget.Map => $"the {RegionName(job.RegionId)} map",
+        UpdateTarget.Terrain => $"the {RegionName(job.RegionId)} terrain",
+        _ => $"{RegionName(job.RegionId)} stations and addresses",
+    };
 
     /// <summary>Runs queued jobs until the queue is empty.</summary>
     private async Task RunQueueAsync()
@@ -231,7 +240,7 @@ public sealed partial class MainWindow
             string? message = await RunAsync(job, $"Updating {subject}", () => Task.Run(() =>
             {
                 var result = core.Update(job.Target, job.RegionId);
-                return result.UpToDate ? $"{Format.Sentence(subject)} {(job.Target == UpdateTarget.Map ? "is" : "are")} already up to date" : $"Completed: {subject} installed";
+                return result.UpToDate ? $"{Format.Sentence(subject)} {(job.Target == UpdateTarget.Extras ? "are" : "is")} already up to date" : $"Completed: {subject} installed";
             }));
             if (message is null)
             {

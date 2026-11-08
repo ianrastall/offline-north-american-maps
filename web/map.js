@@ -2,10 +2,16 @@
 // the page, MapLibre, styles, sprites and glyphs come from the app folder at
 // https://map.local/, tiles and stations from the Rust core through the shell.
 //
-// Shell -> page messages (JSON): init, theme, units, show, clearSelection,
-// places, zoom, fit, center, reload. Page -> shell: ready, view, contextmenu,
-// place, key, idle, error.
+// Shell -> page messages (JSON): init, theme, units, terrain, show,
+// clearSelection, places, zoom, fit, center, reload. Page -> shell: ready,
+// view, contextmenu, place, key, idle, error.
+//
+// Terrain (when installed): Terrarium elevation tiles from the core at
+// terrain/{z}/{x}/{y}.webp, drawn as hillshading by MapLibre and as contour
+// lines by maplibre-contour, which computes them in a worker from the same
+// tiles. Both sit under water, roads and labels.
 import * as maplibregl from './maplibre/maplibre-gl.mjs';
+import mlcontour from './contour/maplibre-contour.mjs';
 
 const host = window.chrome?.webview;
 const post = (message) => host?.postMessage(message);
@@ -19,7 +25,27 @@ let selection = null;
 let placeMarkers = [];
 let metadata = null;
 let scale = null;
+let units = 'imperial';
+// { bounds } of the installed terrain, or null; and what is shown of it.
+let terrain = null;
+let shading = true;
+let contours = true;
+let demSource = null;
+// True between a style's load and the next setStyle: layers can be added.
+let styleReady = false;
 const styles = {};
+const TERRAIN_BEFORE = 'water-river';
+// Short credit on the map; the full one is in Map information.
+const TERRAIN_CREDIT = 'Terrain: <span title="Mapterhorn: USGS 3DEP, Copernicus GLO-30 © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018 provided under COPERNICUS by the European Union and ESA">Mapterhorn, USGS, Copernicus</span>';
+const TERRAIN_LAYERS = ['terrain-shading', 'contour-lines', 'contour-labels'];
+// Contour spacing by zoom: [minor, major] in feet or metres.
+const CONTOUR_FEET = { 10: [200, 1000], 11: [100, 500], 12: [50, 250], 14: [20, 100], 16: [10, 50] };
+const CONTOUR_METRES = { 10: [50, 250], 11: [25, 100], 12: [20, 100], 14: [10, 50], 16: [5, 25] };
+// Map content colors (terrain), not interface colors.
+const TERRAIN_COLORS = {
+  light: { shadow: '#5c4a32', highlight: '#ffffff', accent: '#6b5a3e', line: '#8c6d46', label: '#6b5235', halo: '#ffffff' },
+  dark: { shadow: '#000000', highlight: '#9c9c9c', accent: '#1a1a1a', line: '#a08a6a', label: '#c9b79a', halo: '#1c1b19' },
+};
 
 async function loadStyle(name) {
   if (!styles[name]) {
@@ -110,6 +136,111 @@ function addChargingIcon() {
   map.addImage('station-charging', ctx.getImageData(0, 0, size, size), { pixelRatio: ratio });
 }
 
+function terrainUrl() {
+  return absolute('terrain/{z}/{x}/{y}.webp');
+}
+
+// The elevation source is created once; its tiles are shared by the
+// hillshading and the contour lines.
+function ensureDemSource() {
+  if (demSource) return demSource;
+  demSource = new mlcontour.DemSource({
+    url: terrainUrl(),
+    encoding: 'terrarium',
+    maxzoom: 12,
+    worker: true,
+    cacheSize: 100,
+    timeoutMs: 10000,
+  });
+  demSource.setupMaplibre(maplibregl);
+  return demSource;
+}
+
+function contourUrl() {
+  const feet = units !== 'metric';
+  return ensureDemSource().contourProtocolUrl({
+    multiplier: feet ? 3.28084 : 1,
+    thresholds: feet ? CONTOUR_FEET : CONTOUR_METRES,
+    elevationKey: 'ele',
+    levelKey: 'level',
+    contourLayer: 'contours',
+    overzoom: 1,
+  });
+}
+
+// Adds or removes the terrain sources and layers to match `terrain`.
+function applyTerrain() {
+  if (!map || !styleReady) return;
+  for (const id of TERRAIN_LAYERS) if (map.getLayer(id)) map.removeLayer(id);
+  for (const id of ['terrain-dem', 'contours']) if (map.getSource(id)) map.removeSource(id);
+  if (!terrain) return;
+  const b = terrain.bounds;
+  const bounds = [b.west, b.south, b.east, b.north];
+  const colors = TERRAIN_COLORS[theme] ?? TERRAIN_COLORS.dark;
+  const before = map.getLayer(TERRAIN_BEFORE) ? TERRAIN_BEFORE : undefined;
+  map.addSource('terrain-dem', {
+    type: 'raster-dem',
+    tiles: [ensureDemSource().sharedDemProtocolUrl],
+    encoding: 'terrarium',
+    tileSize: 512,
+    maxzoom: 12,
+    bounds,
+    attribution: TERRAIN_CREDIT,
+  });
+  // The credit is on both sources, so it shows while either layer is visible.
+  map.addSource('contours', { type: 'vector', tiles: [contourUrl()], maxzoom: 15, bounds, attribution: TERRAIN_CREDIT });
+  map.addLayer({
+    id: 'terrain-shading',
+    type: 'hillshade',
+    source: 'terrain-dem',
+    layout: { visibility: shading ? 'visible' : 'none' },
+    paint: {
+      'hillshade-shadow-color': colors.shadow,
+      'hillshade-highlight-color': colors.highlight,
+      'hillshade-accent-color': colors.accent,
+      'hillshade-exaggeration': theme === 'dark' ? 0.45 : 0.35,
+    },
+  }, before);
+  map.addLayer({
+    id: 'contour-lines',
+    type: 'line',
+    source: 'contours',
+    'source-layer': 'contours',
+    minzoom: 10,
+    layout: { visibility: contours ? 'visible' : 'none' },
+    paint: {
+      'line-color': colors.line,
+      'line-opacity': ['match', ['get', 'level'], 1, 0.7, 0.4],
+      'line-width': ['match', ['get', 'level'], 1, 1.2, 0.6],
+    },
+  }, before);
+  map.addLayer({
+    id: 'contour-labels',
+    type: 'symbol',
+    source: 'contours',
+    'source-layer': 'contours',
+    minzoom: 12,
+    filter: ['>', ['get', 'level'], 0],
+    layout: {
+      visibility: contours ? 'visible' : 'none',
+      'symbol-placement': 'line',
+      'text-size': 10,
+      'text-field': ['concat', ['number-format', ['get', 'ele'], {}], units === 'metric' ? ' m' : ' ft'],
+      'text-font': ['noto_sans_regular'],
+      'text-max-angle': 30,
+    },
+    paint: { 'text-color': colors.label, 'text-halo-color': colors.halo, 'text-halo-width': 1 },
+  }, before);
+}
+
+function setTerrainVisibility() {
+  if (!map) return;
+  const show = (id, on) => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
+  show('terrain-shading', shading);
+  show('contour-lines', contours);
+  show('contour-labels', contours);
+}
+
 function reportView() {
   const c = map.getCenter();
   post({ kind: 'view', latitude: c.lat, longitude: c.lng, zoom: map.getZoom() });
@@ -126,6 +257,8 @@ async function init(message) {
   metadata = message.metadata;
   theme = message.theme;
   animate = message.animate;
+  units = message.units;
+  readTerrain(message);
   applyColors(message.colors);
   const b = metadata.bounds;
   const view = message.view;
@@ -146,8 +279,10 @@ async function init(message) {
   setUnits(message.units);
   map.getCanvas().setAttribute('aria-label', 'Map. Arrow keys move, plus and minus zoom.');
   map.on('style.load', () => {
+    styleReady = true;
     Object.keys(SHIELDS).forEach(addShield);
     addChargingIcon();
+    applyTerrain();
   });
   map.on('styleimagemissing', ({ id }) => (id === 'station-charging' ? addChargingIcon() : addShield(id)));
   map.on('moveend', reportView);
@@ -161,10 +296,17 @@ async function init(message) {
   });
 }
 
-function setUnits(units) {
+function setUnits(value) {
+  units = value;
   if (scale) map.removeControl(scale);
   scale = new maplibregl.ScaleControl({ unit: units === 'metric' ? 'metric' : 'imperial' });
   map.addControl(scale, 'bottom-left');
+}
+
+function readTerrain(message) {
+  terrain = message.terrain ?? null;
+  shading = message.shading ?? shading;
+  contours = message.contours ?? contours;
 }
 
 function move(options) {
@@ -178,7 +320,8 @@ const handlers = {
     animate = message.animate;
     if (message.theme !== theme && map) {
       theme = message.theme;
-      map.setStyle(await loadStyle(theme), { diff: false });
+      styleReady = false;
+    map.setStyle(await loadStyle(theme), { diff: false });
     }
   },
   show(message) {
@@ -210,7 +353,15 @@ const handlers = {
     });
   },
   units(message) {
-    if (map) setUnits(message.units);
+    if (!map) return;
+    setUnits(message.units);
+    // Contours are labelled in the new unit.
+    applyTerrain();
+  },
+  terrain(message) {
+    shading = message.shading;
+    contours = message.contours;
+    setTerrainVisibility();
   },
   zoom(message) {
     if (map) move({ zoom: map.getZoom() + message.delta });
@@ -228,8 +379,10 @@ const handlers = {
   async reload(message) {
     if (!map) return init(message);
     metadata = message.metadata;
+    readTerrain(message);
     for (const key of Object.keys(styles)) delete styles[key];
     map.setMaxBounds(maxBounds());
+    styleReady = false;
     map.setStyle(await loadStyle(theme), { diff: false });
   },
 };
