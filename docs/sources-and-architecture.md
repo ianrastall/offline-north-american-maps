@@ -28,6 +28,7 @@ Do not implement a bulk downloader against tile.openstreetmap.org. Its public ti
 - Narrow versioned C ABI with protobuf commands/results and SafeHandle ownership. Add at the integration stage; it is not implemented yet.
 - Renderer, selected 8 November 2026 after the [renderer proof](renderer-proof.md): MapLibre GL JS in WebView2 renders Geofabrik Shortbread MBTiles with bundled style (derived from VersaTiles, MIT), sprites (CC0) and Noto Sans glyphs (OFL). Static assets load through a WebView2 virtual host; tiles come from the Rust core through request interception. Recorded as a [Jupiter exception](jupiter-exceptions.md).
 - Raw PBF is road/source data, not a renderable map package. Rendering conversion, local place search and a routing graph are distinct derived artifacts with separate validation and storage costs.
+- Search is a derived artifact built from the package's own tiles at preparation time (`search.sqlite`, about 98 MB for Illinois, SQLite FTS5), installed beside the package. Saved places are user data at the store root, independent of any package. See stage 5 in [validation](validation.md) for what the Shortbread package cannot provide (fuel stations, addresses, counties).
 
 ## Licensing obligations
 

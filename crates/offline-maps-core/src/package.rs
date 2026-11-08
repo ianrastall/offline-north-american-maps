@@ -196,9 +196,17 @@ pub(crate) mod tests {
 
     /// Bytes of a minimal valid Illinois Shortbread package; `marker` varies the content.
     pub(crate) fn shortbread_package_bytes(marker: &[u8]) -> Vec<u8> {
+        use crate::mvt::tests::encode_layer;
+        let name = String::from_utf8_lossy(marker).into_owned();
+        let place = |x| {
+            encode_layer(
+                "place_labels",
+                &[(&[("name", name.as_str()), ("kind", "town")], 1, &[(x, 100)])],
+            )
+        };
         let file = build_package(
             &metadata_with("json", SHORTBREAD_LAYERS),
-            &[(0, 0, 0, marker), (1, 0, 1, b"b")],
+            &[(0, 0, 0, &place(10)), (1, 0, 1, &place(20))],
         );
         std::fs::read(&file.0).unwrap()
     }

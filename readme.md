@@ -2,7 +2,7 @@
 
 Jupiter project for downloading road maps before an emergency and using them without internet access. Working application name: **Offline Maps**. First region: **Illinois**.
 
-Status: project started on 27 October 2026. Product brief, source assessment and a tested Rust package-transfer foundation exist. On 8 November 2026 a [renderer proof](docs/renderer-proof.md) rendered Geofabrik's Illinois vector tiles entirely from local files with MapLibre; MapLibre in WebView2 is the selected map surface. The Rust core reads and verifies MBTiles packages and downloads them with resume, verification and atomic activation that keeps the previous map through any failure; derived light/dark styles show interstate, US and Illinois route shields. There is no app map viewer, search, routing engine or installed application yet.
+Status: project started on 27 October 2026. Product brief, source assessment and a tested Rust package-transfer foundation exist. On 8 November 2026 a [renderer proof](docs/renderer-proof.md) rendered Geofabrik's Illinois vector tiles entirely from local files with MapLibre; MapLibre in WebView2 is the selected map surface. The Rust core reads and verifies MBTiles packages and downloads them with resume, verification and atomic activation that keeps the previous map through any failure; derived light/dark styles show interstate, US and Illinois route shields. Offline search (places, streets, points of interest, transit, water) is built with each package, and saved places are stored apart from packages. The package has no fuel stations or addresses. There is no app map viewer, routing engine or installed application yet.
 
 - [Project brief](docs/project-brief.md)
 - [Sources and technical decisions](docs/sources-and-architecture.md)
@@ -29,6 +29,7 @@ cargo run --release -p offline-maps-dev -- inspect data/sources/illinois-shortbr
 cargo run --release -p offline-maps-dev -- serve data/sources/illinois-shortbread-1.0.mbtiles
 cargo run --release -p offline-maps-dev -- probe
 cargo run --release -p offline-maps-dev -- download data/store [--url URL] [--stop-after BYTES]
+cargo run --release -p offline-maps-dev -- search data/store "main st clinton" [--near LAT,LON]
 ```
 
 `probe` sends one HEAD request. `download` without `--url` downloads the 362 MB Illinois package from Geofabrik; with `--url http://127.0.0.1:8765/source/package.mbtiles` it uses the local dev server instead.

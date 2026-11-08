@@ -173,9 +173,18 @@ fn downloads_verifies_and_activates() {
         total: Some(size)
     }));
     assert_eq!(
-        events[events.len() - 2..],
-        [Progress::Verifying, Progress::Activating]
+        events[events.len() - 3..],
+        [
+            Progress::Verifying,
+            Progress::Indexing { done: 1, total: 1 },
+            Progress::Activating
+        ]
     );
+    // Search was built before activation and belongs to this package.
+    let index =
+        crate::search::SearchIndex::open(&package.search_index_path(), &package.record.sha256)
+            .unwrap();
+    assert_eq!(index.search("one", None, 1).unwrap()[0].name, "one");
 
     // Same ETag and size: nothing is fetched again.
     assert!(matches!(

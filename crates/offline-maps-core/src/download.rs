@@ -12,8 +12,9 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use crate::mbtiles::PackageError;
+use crate::mbtiles::{PackageError, TilePackage};
 use crate::package::{PackageRecord, Region, SourceInfo, verify_package};
+use crate::search::{SEARCH_FILE, build_index};
 use crate::stage_download;
 use crate::store::{ActivePackage, PackageStore, StagingState};
 
@@ -187,8 +188,16 @@ impl Transport for HttpTransport {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Progress {
     Checking,
-    Downloading { received: u64, total: Option<u64> },
+    Downloading {
+        received: u64,
+        total: Option<u64>,
+    },
     Verifying,
+    /// Building the offline search index from the package's tiles.
+    Indexing {
+        done: u64,
+        total: u64,
+    },
     Activating,
 }
 
@@ -483,10 +492,33 @@ pub fn update_region(
         return Ok(UpdateOutcome::UpToDate(active.clone()));
     }
 
+    // Search is part of a ready package: build it before activation.
+    let index = store.staging_dir(id).join(SEARCH_FILE);
+    let indexed = TilePackage::open(&part).and_then(|package| {
+        build_index(
+            &package,
+            &record.sha256,
+            &index,
+            cancelled,
+            &mut |done, total| progress(Progress::Indexing { done, total }),
+        )
+    });
+    match indexed {
+        Ok(_) => {}
+        Err(PackageError::Io(e)) if e.kind() == io::ErrorKind::Interrupted => {
+            return Err(UpdateError::Cancelled);
+        }
+        Err(PackageError::Io(e)) => return Err(UpdateError::Storage(e)),
+        Err(e) => {
+            let _ = store.clear_staging(id);
+            return Err(UpdateError::Invalid(e));
+        }
+    }
+
     progress(Progress::Activating);
     let version = version_name(&record);
     store
-        .install_version(id, &version, &part, &record)
+        .install_version(id, &version, &part, Some(&index), &record)
         .map_err(UpdateError::Storage)?;
     store.activate(id, &version).map_err(UpdateError::Storage)?;
     let _ = store.clear_staging(id);

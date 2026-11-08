@@ -106,8 +106,11 @@ fn package_bytes(marker: &[u8]) -> Vec<u8> {
             db.execute("INSERT INTO metadata VALUES (?1, ?2)", (k, v))
                 .unwrap();
         }
-        // Enough data to span many reads.
-        let tile: Vec<u8> = marker.iter().copied().cycle().take(300_000).collect();
+        // A valid vector tile large enough to span many reads: one unknown
+        // top-level field (number 20), which decoders skip.
+        let payload: Vec<u8> = marker.iter().copied().cycle().take(300_000).collect();
+        let mut tile = vec![0xa2, 0x01, 0xe0, 0xa7, 0x12]; // key 20/LEN, varint 300000
+        tile.extend_from_slice(&payload);
         db.execute("INSERT INTO tiles VALUES (0, 0, 0, ?1)", [tile])
             .unwrap();
     }

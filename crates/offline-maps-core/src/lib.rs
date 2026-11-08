@@ -1,7 +1,10 @@
 //! Offline map package foundations. No network, credentials, or UI dependencies.
 pub mod download;
 pub mod mbtiles;
+pub mod mvt;
 pub mod package;
+pub mod places;
+pub mod search;
 pub mod store;
 pub mod time;
 

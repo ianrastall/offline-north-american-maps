@@ -44,9 +44,33 @@ Completed 8 November 2026.
 
 Not covered: a live update where Geofabrik has published a newer build than the active one (the guard and replacement paths are covered by tests), the app's choice of store location (`%LOCALAPPDATA%` is the expected root, decided at integration), and a progress/cancel UI.
 
+## Stage 5: offline search and saved places
+
+Completed 8 November 2026.
+
+- **Tile decoder.** `mvt` reads Mapbox Vector Tiles (gzip, layers, attributes) and one representative point per feature; no third-party MVT dependency. Coordinates are checked against independently computed tile bounds.
+- **Search index.** `search::build_index` reads every zoom-14 tile and writes a separate SQLite FTS5 file (`search.sqlite`) beside the package: places, named streets (one entry per street name per nearest town, placed on the street), points of interest, stations/stops/airports and named water. Streets and points of interest carry their nearest town as context. Common abbreviations match both ways (street/st, avenue/ave, north/n, saint/st, interstate/i and others), route numbers are searchable (`us 51`, `i 55`), the last word matches as a prefix, and leading or trailing compass words do not block a strong match (`main street` finds West Main Street). Ranking: strong matches (exact name, name prefix, route number, category such as `hospital` or `police`) before other word matches before matches through the nearest town; cities, towns and villages first; then by distance from the map position when one is given, otherwise by place size and population. The index records the package SHA-256 and is rejected for any other package.
+- **Package preparation.** `update_region` builds the index after verification and installs package, record and index together; a package is not activated without search. `search::open_or_build` builds a missing or mismatched index for packages installed earlier.
+- **Saved places.** `places::SavedPlaces` keeps user places in `saved-places.json` at the store root, outside region and version directories, so package updates and pruning never touch it. Names (1–120 characters, no control characters) and notes (up to 2,000) are validated; changes are written atomically and adopted only after a successful write; ids are never reused; an unreadable file is reported and left untouched, and `move_aside_unreadable` preserves it under a new name before a fresh list is started. `is_covered_by` reports whether the active package's bounds include a place, so the app can say a place is outside the map rather than requesting remote data.
+- **Tests.** 45 unit tests and 2 integration tests pass; Clippy and rustfmt are clean.
+
+Real Illinois package (8 November build):
+
+- Index: 482,723 entries (6,905 places, 340,520 streets, 98,825 points of interest, 24,419 transit, 12,054 water), 97.8 MB, built in 15–17 s (decoding all 60,649 zoom-14 tiles takes about 8 s).
+- Full update from the local source route: verification 6.1 s, indexing, activation; 23.5 s in total. The live store installed before search had its index built in place in 15.4 s on first search.
+- Queries take 1–40 ms. Examples: `springfield` → Springfield (state capital); `carbondale` → Carbondale, then its fire stations; `main st clinton` → West and East Main Street near Clinton; `us 51` → streets signed US 51; near Carbondale, `hospital` → Memorial Hospital of Carbondale (0.4 km) and `police` → Carbondale Public Safety Center (0.6 km); near Clinton, `pharmacy` → CVS 1.5 km; near the Loop, `oak st` → East and West Oak Street.
+
+Limits of this package, found while testing:
+
+- **No fuel stations.** Geofabrik's Shortbread tiles contain no `amenity=fuel` in points of interest, buildings or sites. For emergency use this is a real gap; the raw `.osm.pbf` contains them.
+- **No address search.** House numbers carry no street names in this schema.
+- **No county search.** Boundary labels at every zoom are state names only, and land areas are unnamed (named parks still appear as points of interest).
+- **State line.** The extract includes border towns in neighbouring states without state attribution, so `clinton` without a position ranks Clinton, Iowa (a city) above Clinton, Illinois (a town). With the map position supplied, Clinton, Illinois comes first when viewing central Illinois. The app must always pass the map position.
+- Recently renamed roads match their current OSM name only (`lake shore dr` finds bike-share docks before DuSable Lake Shore Drive).
+
 ## Next stages
 
-1. Build offline place search and saved places. Verify Illinois boundary behavior and show package coverage instead of silently requesting remote data.
-2. Integrate Rust through the canonical ABI into the Jupiter WinUI workspace. Validate keyboard, resizing, accessibility, light/dark and accent settings.
-3. Produce the installer through the normal release command. Install and launch from Start Menu. Test an upgrade and uninstall while preserving user data.
-4. Launch with networking disabled and verify map rendering, labels, search and saved places from a clean process. This is the decisive first-workflow acceptance test.
+1. Integrate Rust through the canonical ABI into the Jupiter WinUI workspace. Validate keyboard, resizing, accessibility, light/dark and accent settings.
+2. Produce the installer through the normal release command. Install and launch from Start Menu. Test an upgrade and uninstall while preserving user data.
+3. Launch with networking disabled and verify map rendering, labels, search and saved places from a clean process. This is the decisive first-workflow acceptance test.
+4. Decide whether to derive fuel stations (and possibly addresses) from the raw `.osm.pbf` as an additional search source.

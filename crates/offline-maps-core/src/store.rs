@@ -31,6 +31,14 @@ pub struct ActivePackage {
     pub record: PackageRecord,
 }
 
+impl ActivePackage {
+    /// Where this version's search index lives (it may not exist yet for
+    /// packages installed before search was added).
+    pub fn search_index_path(&self) -> PathBuf {
+        self.path.with_file_name(crate::search::SEARCH_FILE)
+    }
+}
+
 /// Describes the partial download in `staging/package.part`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StagingState {
@@ -142,6 +150,7 @@ impl PackageStore {
         region_id: &str,
         version: &str,
         package: &Path,
+        search_index: Option<&Path>,
         record: &PackageRecord,
     ) -> io::Result<PathBuf> {
         if !is_version_name(version) {
@@ -156,6 +165,9 @@ impl PackageStore {
         }
         fs::create_dir_all(&dir)?;
         fs::rename(package, dir.join(PACKAGE_FILE))?;
+        if let Some(index) = search_index {
+            fs::rename(index, dir.join(crate::search::SEARCH_FILE))?;
+        }
         write_atomic(&dir.join(RECORD_FILE), record.to_json().as_bytes())?;
         Ok(dir)
     }
@@ -213,7 +225,12 @@ impl PackageStore {
 
     pub fn clear_staging(&self, region_id: &str) -> io::Result<()> {
         let dir = self.staging_dir(region_id);
-        for name in ["package.part", "download.json"] {
+        for name in [
+            "package.part",
+            "download.json",
+            "search.sqlite",
+            "search.sqlite.tmp",
+        ] {
             match fs::remove_file(dir.join(name)) {
                 Err(error) if error.kind() != io::ErrorKind::NotFound => return Err(error),
                 _ => {}

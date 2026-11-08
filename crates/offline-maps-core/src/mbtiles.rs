@@ -184,6 +184,43 @@ impl TilePackage {
         }))
     }
 
+    /// Number of tiles stored at `zoom`.
+    pub fn tile_count(&self, zoom: u8) -> Result<u64, PackageError> {
+        let count: i64 = self.connection.query_row(
+            "SELECT COUNT(*) FROM tiles WHERE zoom_level = ?1",
+            [zoom],
+            |r| r.get(0),
+        )?;
+        Ok(count as u64)
+    }
+
+    /// Calls `visit(x, y, data)` (XYZ addressing) for every tile at `zoom`.
+    /// Stops early when `visit` returns `Ok(false)`.
+    pub fn for_each_tile(
+        &self,
+        zoom: u8,
+        mut visit: impl FnMut(u32, u32, &[u8]) -> Result<bool, PackageError>,
+    ) -> Result<(), PackageError> {
+        let mut statement = self
+            .connection
+            .prepare("SELECT tile_column, tile_row, tile_data FROM tiles WHERE zoom_level = ?1")?;
+        let mut rows = statement.query([zoom])?;
+        let size = 1_i64 << zoom;
+        while let Some(row) = rows.next()? {
+            let (x, row_index): (i64, i64) = (row.get(0)?, row.get(1)?);
+            if !(0..size).contains(&x) || !(0..size).contains(&row_index) {
+                return Err(invalid(format!(
+                    "tile {zoom}/{x}/{row_index} is out of range"
+                )));
+            }
+            let data = row.get_ref(2)?.as_blob().map_err(rusqlite::Error::from)?;
+            if !visit(x as u32, (size - 1 - row_index) as u32, data)? {
+                break;
+            }
+        }
+        Ok(())
+    }
+
     /// Runs SQLite's integrity check and confirms tiles exist across the
     /// declared zoom range. This reads every page of the file.
     pub fn check(&self) -> Result<PackageCheck, PackageError> {

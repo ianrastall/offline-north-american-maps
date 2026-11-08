@@ -5,6 +5,9 @@
 //!   offline-maps-dev serve <package.mbtiles> [--port 8765]
 //!   offline-maps-dev download <store-dir> [--url U] [--stop-after BYTES]
 //!   offline-maps-dev probe [url]      (HEAD request only; downloads nothing)
+//!   offline-maps-dev index <package.mbtiles> <search.sqlite>
+//!   offline-maps-dev search <store-dir> <query> [--near LAT,LON] [--limit N]
+//!       (builds the active package's search index first if it is missing)
 //!
 //! `serve` binds 127.0.0.1 only and stands in for the WebView2 request
 //! interception the app will use: tiles come from the Rust core, every
@@ -27,6 +30,118 @@ fn probe(url: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn package_sha(path: &std::path::Path) -> Result<String, String> {
+    offline_maps_core::package::sha256_file(path, &AtomicBool::new(false))
+        .map(|(sha, _)| sha)
+        .map_err(|e| e.to_string())
+}
+
+fn index(args: &[String]) -> Result<(), String> {
+    use offline_maps_core::mbtiles::TilePackage;
+    let [package, out] = args else {
+        return Err("usage: index <package.mbtiles> <search.sqlite>".into());
+    };
+    let started = std::time::Instant::now();
+    let sha = package_sha(package.as_ref())?;
+    let package = TilePackage::open(package.as_ref()).map_err(|e| e.to_string())?;
+    let mut last = 0;
+    let stats = offline_maps_core::search::build_index(
+        &package,
+        &sha,
+        out.as_ref(),
+        &AtomicBool::new(false),
+        &mut |done, total| {
+            let percent = done * 100 / total.max(1);
+            if percent / 10 != last / 10 {
+                last = percent;
+                println!("  {percent}% ({:.1} s)", started.elapsed().as_secs_f64());
+            }
+        },
+    )
+    .map_err(|e| e.to_string())?;
+    let size = std::fs::metadata(out).map_err(|e| e.to_string())?.len();
+    println!(
+        "{stats:?}\n{} entries, {:.1} MB, {:.1} s",
+        stats.entries(),
+        size as f64 / 1e6,
+        started.elapsed().as_secs_f64()
+    );
+    Ok(())
+}
+
+fn search(args: &[String]) -> Result<(), String> {
+    use offline_maps_core::Coordinates;
+    use offline_maps_core::store::PackageStore;
+    let [store_dir, query, rest @ ..] = args else {
+        return Err("usage: search <store-dir> <query> [--near LAT,LON] [--limit N]".into());
+    };
+    let (_, options) = parse(
+        &[String::new()]
+            .iter()
+            .chain(rest)
+            .cloned()
+            .collect::<Vec<_>>(),
+    )?;
+    let near = options
+        .get("near")
+        .map(|v| {
+            let (lat, lon) = v.split_once(',').ok_or("--near LAT,LON")?;
+            Coordinates::new(
+                lat.parse().map_err(|_| "lat")?,
+                lon.parse().map_err(|_| "lon")?,
+            )
+            .ok_or("invalid coordinates")
+        })
+        .transpose()?;
+    let limit = options
+        .get("limit")
+        .map_or(Ok(10), |v| v.parse())
+        .map_err(|_| "--limit")?;
+    let active = PackageStore::new(store_dir)
+        .active(ILLINOIS.id)
+        .map_err(|e| e.to_string())?
+        .ok_or("the store has no active Illinois package")?;
+    let opening = std::time::Instant::now();
+    let built = !active.search_index_path().exists();
+    let index =
+        offline_maps_core::search::open_or_build(&active, &AtomicBool::new(false), &mut |_, _| {})
+            .map_err(|e| e.to_string())?;
+    if built {
+        println!(
+            "Built search index for {} in {:.1} s",
+            active.version,
+            opening.elapsed().as_secs_f64()
+        );
+    }
+    let started = std::time::Instant::now();
+    let results = index
+        .search(query, near, limit)
+        .map_err(|e| e.to_string())?;
+    println!(
+        "{query:?}: {} results in {:.1} ms",
+        results.len(),
+        started.elapsed().as_secs_f64() * 1000.0
+    );
+    for r in results {
+        println!(
+            "  {:<40} {:<8} {:<16} {:<22} {:.4},{:.4}{}",
+            match &r.reference {
+                Some(reference) => format!("{} [{}]", r.name, reference.replace('\n', "/")),
+                None => r.name.clone(),
+            },
+            format!("{:?}", r.kind).to_lowercase(),
+            r.category,
+            r.near.map(|n| format!("near {n}")).unwrap_or_default(),
+            r.latitude,
+            r.longitude,
+            r.distance_km
+                .map(|d| format!("  {d:.1} km"))
+                .unwrap_or_default()
+        );
+    }
+    Ok(())
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
@@ -34,6 +149,8 @@ fn main() -> ExitCode {
         Some("serve") => serve(&args[1..]),
         Some("download") => download(&args[1..]),
         Some("probe") => probe(args.get(1).map_or(ILLINOIS.package_url, String::as_str)),
+        Some("index") => index(&args[1..]),
+        Some("search") => search(&args[1..]),
         _ => Err("usage: offline-maps-dev inspect|serve <package.mbtiles> | download <store-dir> [options]".into()),
     };
     match result {
@@ -162,6 +279,14 @@ fn download(args: &[String]) -> Result<(), String> {
                     "  {} / {} MB",
                     received / 1_000_000,
                     total.map_or("?".into(), |t| (t / 1_000_000).to_string())
+                );
+            }
+        }
+        Progress::Indexing { done, total } => {
+            if done == total {
+                println!(
+                    "Indexed {total} tiles ({:.1} s)",
+                    started.elapsed().as_secs_f64()
                 );
             }
         }
