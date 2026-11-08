@@ -63,7 +63,7 @@ Real Illinois package (8 November build):
 Limits of this package, found while testing:
 
 - **No fuel stations.** Geofabrik's Shortbread tiles contain no `amenity=fuel` in points of interest, buildings or sites. For emergency use this is a real gap; the raw `.osm.pbf` contains them (added in stage 6).
-- **No address search.** House numbers carry no street names in this schema.
+- **No address search.** House numbers carry no street names in this schema (added from the raw extract in stage 7).
 - **No county search.** Boundary labels at every zoom are state names only, and land areas are unnamed (named parks still appear as points of interest).
 - **State line.** The extract includes border towns in neighbouring states without state attribution, so `clinton` without a position ranks Clinton, Iowa (a city) above Clinton, Illinois (a town). With the map position supplied, Clinton, Illinois comes first when viewing central Illinois. The app must always pass the map position.
 - Recently renamed roads match their current OSM name only (`lake shore dr` finds bike-share docks before DuSable Lake Shore Drive).
@@ -117,9 +117,56 @@ Limits:
 - About 10% of fuel stations are unnamed and unbranded, and are shown as "Fuel station".
 - Each extras update needs a raw extract download of about 363 MB, in addition to the 363 MB package. The app should therefore offer extras updates separately from map updates.
 
+## Stage 7: address search from the raw extract
+
+Completed 8 November 2026.
+
+- **Extraction.** The same reading passes now collect addresses: `addr:housenumber` with `addr:street` (or `addr:place` for rural addresses) on points, buildings and multipolygons.
+  - A building is placed midway between its first node and the node halfway round its outline. For a simple outline this lies inside the building, and it needs two node positions per building instead of all of them.
+  - Node positions for the second pass are held in a sorted table, not a hash map.
+  - Interpolation lines (`addr:interpolation`, 209 in Illinois) and numbers longer than 16 characters are not used.
+- **Towns.** An address keeps its `addr:city`. Otherwise it is assigned to the settlement whose covered radius best contains it: distance divided by a radius from `population` (about 20 km for Chicago, 2 km for a town of 25,000) or from the kind of place.
+  - With plain nearest-town assignment, Chicago addresses without a city tag were split among neighbourhood and suburb names, and only 90,700 were found under Chicago; with the weighting, 480,186 are.
+  - Suburbs and quarters within 2 km are kept as extra searchable words, so `1601 n clark lincoln park` works.
+  - This is a heuristic, not municipal boundaries. Near a town line an address can be credited to the neighbouring town.
+- **Storage.** The extras database (format 2) adds one row per street and town, with an FTS5 index over street, town and suburb names, and one compact row per house number. Positions are stored in millionths of a degree; the primary key is street and normalized number, without rowid.
+  - Repeated numbers on one street are kept once: a point is preferred over a building outline, then the southernmost.
+  - Streets are sorted, so the same extract always produces the same address data (checked by hashing two runs).
+  - Address tables are carried over when search entries are rebuilt after a search-format change.
+  - `update_extras` replaces active extras in an older format or that cannot be opened, even when the source is unchanged.
+- **Search.** A query starting with a house number (digits with at most one letter, so `1st street` and `22nd` are ordinary searches) is matched against streets, towns and suburbs, then the number is looked up on each matching street.
+  - Numbers are compared without spaces, punctuation or case (`101-A` = `101a`).
+  - Exact matches come first: strong street matches before weaker ones, then by distance from the map position.
+  - When no street has the number, each matching street offers its nearest listed number, labelled `2100 is not listed; nearest listed number on this street`.
+  - Address results come before other results; a query that is not address-shaped is unaffected.
+- **Tests.** 55 unit tests and 2 integration tests pass; Clippy and rustfmt are clean. New tests cover:
+  - addresses on points, buildings and multipolygons, and town, suburb and duplicate handling;
+  - exact and nearest-number search, house-number forms, and queries that are not addresses;
+  - address tables surviving a rebuild, and an outdated extras file being replaced by an update.
+
+Real Illinois extract (same file as stage 6):
+
+- **Counts:** 843,142 addresses on 32,049 street-and-town groups. 35,070 were dropped as repeats or with nodes missing from the extract.
+- **Size and speed:** the extras file is 34.9 MB, about 29 MB of it house numbers. Extraction takes 8.7 s with a peak working set of 189 MB.
+- **Update run:** `download-extras` through the local dev server replaced the format 1 extras from the same source in 16.1 s (full transfer over loopback, verification, extraction, activation). The next run reported up to date.
+- **Search examples** (2–5 ms each):
+  - `905 e main st carbondale` → 905 East Main Street, Carbondale.
+  - `906 east main carbondale` → 905, labelled as the nearest listed number.
+  - `1601 n clark chicago` and `1601 n clark lincoln park` → 1601 North Clark Street, Chicago.
+  - From Springfield, `100 n main` → 100 North Main Street in Chatham (14.7 km) and Athens (18.9 km).
+  - `2100 s 6th st springfield` → 2101 South 6th Street, labelled as nearest.
+- **Map:** unchanged. Clinton at zoom 15 still shows its fuel stations, with 0 errors and 0 CSP violations.
+
+Limits:
+
+- Coverage is OSM's. Chicago and a number of counties have imported addresses; many rural areas have few or none.
+- Towns without a city tag are inferred from settlement points, not boundaries.
+- Interpolated address ranges are not searched.
+- The nearest listed number can be far from the one asked for on sparsely mapped streets. Its label says so, but it is not an interpolated position.
+
 ## Next stages
 
 1. Integrate Rust through the canonical ABI into the Jupiter WinUI workspace. Validate keyboard, resizing, accessibility, light/dark and accent settings.
 2. Produce the installer through the normal release command. Install and launch from Start Menu. Test an upgrade and uninstall while preserving user data.
-3. Launch with networking disabled and verify map rendering, labels, search and saved places from a clean process. This is the decisive first-workflow acceptance test, including fuel and charging stations.
-4. Consider address search from the same raw extract (`addr:*` on buildings and points), as a further extras category.
+3. Launch with networking disabled and verify map rendering, labels, search and saved places from a clean process. This is the decisive first-workflow acceptance test, including fuel and charging stations and addresses.
+4. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.

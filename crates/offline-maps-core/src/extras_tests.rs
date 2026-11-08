@@ -8,7 +8,9 @@ const FEATURES: &[&str] = &["OsmSchema-V0.6", "DenseNodes"];
 
 /// Clinton and Chicago with four stations: a forecourt area plus a point
 /// inside it (one station mapped twice), a private pump (excluded), a
-/// charging point, an unnamed station and a multipolygon station.
+/// charging point, an unnamed station and a multipolygon station. Addresses:
+/// a point (and a repeat of it), a building without a city and a multipolygon
+/// in the Lincoln Park suburb.
 fn sample(with_towns: bool, with_charging: bool) -> Vec<u8> {
     let mut first = vec![
         E::Node(1, 40.1500, -88.9600, &[]),
@@ -39,6 +41,30 @@ fn sample(with_towns: bool, with_charging: bool) -> Vec<u8> {
             ],
         ),
         E::Node(23, 40.14, -88.95, &[("amenity", "fuel")]),
+        E::Node(12, 40.1520, -88.9640, &[]),
+        E::Node(13, 40.1520, -88.9638, &[]),
+        E::Node(14, 40.1522, -88.9638, &[]),
+        E::Node(15, 40.1522, -88.9640, &[]),
+        E::Node(
+            24,
+            40.1510,
+            -88.9641,
+            &[
+                ("addr:housenumber", "101"),
+                ("addr:street", "North Main Street"),
+                ("addr:city", "Clinton"),
+            ],
+        ),
+        E::Node(
+            25,
+            40.1511,
+            -88.9641,
+            &[
+                ("addr:housenumber", "101"),
+                ("addr:street", "North Main Street"),
+                ("addr:city", "Clinton"),
+            ],
+        ),
     ];
     if with_towns {
         first.push(E::Node(
@@ -52,6 +78,12 @@ fn sample(with_towns: bool, with_charging: bool) -> Vec<u8> {
             41.878,
             -87.630,
             &[("place", "city"), ("name", "Chicago")],
+        ));
+        first.push(E::Node(
+            26,
+            41.881,
+            -87.629,
+            &[("place", "suburb"), ("name", "Lincoln Park")],
         ));
     }
     if with_charging {
@@ -81,16 +113,37 @@ fn sample(with_towns: bool, with_charging: bool) -> Vec<u8> {
                     ],
                 ),
                 E::Way(31, &[5, 6, 7, 5], &[]),
+                E::Way(
+                    32,
+                    &[12, 13, 14, 15, 12],
+                    &[
+                        ("building", "house"),
+                        ("addr:housenumber", "105"),
+                        ("addr:street", "North Main Street"),
+                    ],
+                ),
             ],
-            &[E::Relation(
-                40,
-                &[(31, "outer")],
-                &[
-                    ("type", "multipolygon"),
-                    ("amenity", "fuel"),
-                    ("name", "Loop Fuel"),
-                ],
-            )],
+            &[
+                E::Relation(
+                    40,
+                    &[(31, "outer")],
+                    &[
+                        ("type", "multipolygon"),
+                        ("amenity", "fuel"),
+                        ("name", "Loop Fuel"),
+                    ],
+                ),
+                E::Relation(
+                    41,
+                    &[(31, "outer")],
+                    &[
+                        ("type", "multipolygon"),
+                        ("building", "yes"),
+                        ("addr:housenumber", "1600"),
+                        ("addr:street", "North Clark Street"),
+                    ],
+                ),
+            ],
         ],
         FEATURES,
     )
@@ -121,7 +174,11 @@ fn extracts_points_areas_and_multipolygons() {
             charging: 1,
             merged: 1,
             unlocated: 0,
-            towns: 2,
+            towns: 3,
+            addresses: 3,
+            address_streets: 2,
+            // 101 is mapped on two points and on the Shell forecourt.
+            addresses_dropped: 2,
         }
     );
     let ids: Vec<&str> = extract.stations.iter().map(|s| s.osm_id.as_str()).collect();
@@ -194,6 +251,10 @@ fn rebuilds_entries_after_a_search_format_change() {
         .query_row("SELECT count(*) FROM entries", [], |r| r.get(0))
         .unwrap();
     assert_eq!(count, 4);
+    let addresses: i64 = db
+        .query_row("SELECT count(*) FROM addresses", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(addresses, 3);
     assert_eq!(
         meta(&db, "search_schema").unwrap(),
         SEARCH_SCHEMA.to_string()
@@ -266,6 +327,21 @@ fn update_installs_replaces_and_keeps_only_stations() {
         run(&mut |_| {}).unwrap(),
         ExtrasOutcome::UpToDate(_)
     ));
+    // An extras file in an older format is rebuilt from the same source.
+    Connection::open(&extras.path)
+        .unwrap()
+        .execute(
+            "UPDATE meta SET value = '1' WHERE key = 'extras_schema'",
+            [],
+        )
+        .unwrap();
+    let ExtrasOutcome::Activated {
+        extras, replaced, ..
+    } = run(&mut |_| {}).unwrap()
+    else {
+        panic!("expected a rebuild");
+    };
+    assert!(replaced.is_some());
 
     transport.serve(sample(true, false), "\"x2\"");
     let ExtrasOutcome::Activated {
@@ -288,4 +364,109 @@ fn update_installs_replaces_and_keeps_only_stations() {
     assert!(matches!(run(&mut |_| {}), Err(UpdateError::Invalid(_))));
     assert!(!store.staging_file(&id).exists());
     assert_eq!(active_extras(&store, ILLINOIS.id).unwrap().unwrap(), second);
+}
+
+#[test]
+fn extracts_addresses_with_towns_and_areas() {
+    let dir = TempDir::new();
+    let extract = extract_sample(&dir);
+    let streets: Vec<(&str, &str, Vec<String>)> = extract
+        .address_streets
+        .iter()
+        .map(|s| (s.name.as_str(), s.town.as_str(), s.areas.clone()))
+        .collect();
+    assert_eq!(
+        streets,
+        [
+            (
+                "North Clark Street",
+                "Chicago",
+                vec!["Lincoln Park".to_owned()]
+            ),
+            ("North Main Street", "Clinton", vec![]),
+        ]
+    );
+    let find = |number: &str| {
+        extract
+            .addresses
+            .iter()
+            .find(|a| a.number == number)
+            .map(|a| (a.street, a.latitude, a.longitude))
+            .unwrap()
+    };
+    // Of the repeated 101s, a point is preferred over the forecourt area,
+    // then the southernmost.
+    let (street, lat, _) = find("101");
+    assert_eq!((street, lat), (1, 40.151));
+    // A building is placed between its first node and the one opposite.
+    let (street, lat, lon) = find("105");
+    assert_eq!(street, 1);
+    assert!((lat - 40.1521).abs() < 1e-6 && (lon + 88.9639).abs() < 1e-6);
+    let (street, lat, lon) = find("1600");
+    assert_eq!(street, 0);
+    assert!((lat - 41.8803).abs() < 1e-6 && (lon + 87.6295).abs() < 1e-6);
+}
+
+#[test]
+fn finds_house_numbers_and_nearest_listed_numbers() {
+    let dir = TempDir::new();
+    let path = dir.0.join(EXTRAS_FILE);
+    write_extras(&extract_sample(&dir), "sha", &path).unwrap();
+    let (_file, mut index, _) = crate::search::tests::built();
+    index.attach_extras(&path).unwrap();
+    let search = |q: &str| index.search(q, None, 5).unwrap();
+
+    let exact = search("101 n main st clinton");
+    assert_eq!(exact[0].name, "101 North Main Street");
+    assert_eq!(exact[0].kind, crate::search::EntryKind::Address);
+    assert_eq!(exact[0].near.as_deref(), Some("Clinton"));
+    assert_eq!(exact[0].detail, None);
+    assert_eq!(search("105 North Main")[0].name, "105 North Main Street");
+
+    // 103 is not mapped: 101 and 105 are equally near; the lower is offered.
+    let near = search("103 main street");
+    assert_eq!(near[0].name, "101 North Main Street");
+    assert!(
+        near[0]
+            .detail
+            .as_deref()
+            .unwrap()
+            .starts_with("103 is not listed")
+    );
+
+    // Suburbs are searchable as well as the town.
+    assert_eq!(
+        search("1600 clark lincoln park")[0].name,
+        "1600 North Clark Street"
+    );
+    assert_eq!(
+        search("1600 clark chicago")[0].near.as_deref(),
+        Some("Chicago")
+    );
+
+    // Not address-shaped: ordinals and lone numbers use ordinary search.
+    for q in ["1st street", "101", "main 101"] {
+        assert!(
+            search(q)
+                .iter()
+                .all(|r| r.kind != crate::search::EntryKind::Address),
+            "{q}"
+        );
+    }
+}
+
+#[test]
+fn house_number_forms() {
+    use crate::addresses::number_key;
+    assert_eq!(number_key("101-A"), "101a");
+    assert_eq!(number_key(" 101 a"), "101a");
+    let dir = TempDir::new();
+    let path = dir.0.join(EXTRAS_FILE);
+    write_extras(&extract_sample(&dir), "sha", &path).unwrap();
+    let (_file, mut index, _) = crate::search::tests::built();
+    index.attach_extras(&path).unwrap();
+    // "101a" is not mapped; the nearest listed number is 101.
+    let r = index.search("101a main", None, 1).unwrap();
+    assert_eq!(r[0].name, "101 North Main Street");
+    assert!(r[0].detail.is_some());
 }

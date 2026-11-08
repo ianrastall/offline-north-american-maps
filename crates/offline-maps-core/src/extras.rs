@@ -1,10 +1,11 @@
-//! Fuel and charging stations from the region's raw OpenStreetMap extract.
+//! Fuel and charging stations and addresses from the region's raw
+//! OpenStreetMap extract.
 //!
-//! Geofabrik's Shortbread tiles leave out `amenity=fuel` and
-//! `amenity=charging_station`. They are read from the region's `.osm.pbf`
-//! (stations mapped as points, areas or multipolygons) into a small extras
+//! Geofabrik's Shortbread tiles leave out `amenity=fuel`,
+//! `amenity=charging_station` and usable addresses. They are read from the
+//! region's `.osm.pbf` (points, areas or multipolygons) into an extras
 //! database that search and the map use beside the package. The raw file is
-//! deleted once the stations are extracted.
+//! deleted once they are extracted.
 //!
 //! ```text
 //! <root>/<region>/extras/active.json
@@ -24,6 +25,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use rusqlite::{Connection, OpenFlags, params};
 use serde::{Deserialize, Serialize};
 
+use crate::addresses::{Address, AddressStreet, Settlement, Settlements};
 use crate::download::{
     Progress, Transport, UpdateError, UpdateOptions, check_size, download_to_staging, is_older,
     network,
@@ -37,7 +39,7 @@ use crate::search::{
 use crate::store::{PackageStore, RECORD_FILE, is_version_name, write_atomic};
 
 pub const EXTRAS_FILE: &str = "extras.sqlite";
-pub const EXTRAS_SCHEMA: u32 = 1;
+pub const EXTRAS_SCHEMA: u32 = 2;
 const STATION_KINDS: [&str; 2] = ["fuel", "charging_station"];
 const TOWN_KINDS: [&str; 5] = ["city", "town", "village", "hamlet", "suburb"];
 /// Fuels worth showing, with display names. Octane grades are left out.
@@ -198,6 +200,14 @@ pub struct ExtractStats {
     /// Areas whose nodes are missing from the extract.
     pub unlocated: u64,
     pub towns: u64,
+    #[serde(default)]
+    pub addresses: u64,
+    /// Distinct street (or place) and town pairs with addresses.
+    #[serde(default)]
+    pub address_streets: u64,
+    /// Addresses on areas whose nodes are missing, and repeated numbers.
+    #[serde(default)]
+    pub addresses_dropped: u64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -206,7 +216,19 @@ pub struct Extract {
     pub stations: Vec<Station>,
     /// Name, longitude and latitude of each city, town, village, hamlet and suburb.
     pub towns: Vec<(String, f64, f64)>,
+    pub address_streets: Vec<AddressStreet>,
+    pub addresses: Vec<Address>,
     pub stats: ExtractStats,
+}
+
+/// Where an address is: a point, two nodes of a building outline (the first
+/// and the one halfway round, whose midpoint lies inside a simple outline),
+/// or the outer ways of a multipolygon (index into `FirstPass::address_rings`).
+#[derive(Clone, Copy)]
+enum At {
+    Point(f64, f64),
+    Outline(i64, i64),
+    Rings(u32),
 }
 
 #[derive(Default)]
@@ -215,12 +237,50 @@ struct FirstPass {
     areas: Vec<(Station, Vec<i64>)>,
     multipolygons: Vec<(Station, Vec<i64>)>,
     towns: Vec<(String, f64, f64)>,
+    settlements: Vec<Settlement>,
+    /// Street, city, number and position, as read.
+    addresses: Vec<(String, Option<String>, String, At)>,
+    address_rings: Vec<Vec<i64>>,
+}
+
+/// Addresses with their street and city interned while reading.
+#[derive(Default)]
+struct AddressDrafts {
+    keys: Vec<(String, Option<String>)>,
+    index: HashMap<(String, Option<String>), u32>,
+    drafts: Vec<(u32, Box<str>, At)>,
+    rings: Vec<Vec<i64>>,
 }
 
 #[derive(Default)]
 struct Resolved {
-    nodes: Vec<(i64, f64, f64)>,
+    nodes: Vec<(usize, f64, f64)>,
     ways: Vec<(i64, Vec<i64>)>,
+}
+
+/// Sorted, distinct node ids and their positions once found.
+struct NodeTable {
+    ids: Vec<i64>,
+    positions: Vec<(f64, f64)>,
+}
+
+impl NodeTable {
+    fn new(mut ids: Vec<i64>) -> Self {
+        ids.sort_unstable();
+        ids.dedup();
+        let positions = vec![(f64::NAN, f64::NAN); ids.len()];
+        Self { ids, positions }
+    }
+
+    fn index(&self, id: i64) -> Option<usize> {
+        self.ids.binary_search(&id).ok()
+    }
+
+    fn get(&self, id: i64) -> Option<(f64, f64)> {
+        self.index(id)
+            .map(|i| self.positions[i])
+            .filter(|(lat, _)| !lat.is_nan())
+    }
 }
 
 const ALL: Kinds = Kinds {
@@ -229,9 +289,9 @@ const ALL: Kinds = Kinds {
     relations: true,
 };
 
-/// Reads stations and towns from `path`. Areas need a second pass to find
-/// their nodes' positions, and multipolygons a third (their member ways come
-/// after the nodes in the file). `progress` receives (step, bytes read, file
+/// Reads stations, addresses and towns from `path`. Areas need a second pass
+/// to find their nodes' positions, and multipolygons a third (their member
+/// ways come after the nodes in the file). `progress` receives (step, bytes read, file
 /// length) with step 1 to 3.
 pub fn extract(
     path: &Path,
@@ -239,6 +299,7 @@ pub fn extract(
     progress: &mut dyn FnMut(u8, u64, u64),
 ) -> Result<Extract, PbfError> {
     let mut first = FirstPass::default();
+    let mut drafts = AddressDrafts::default();
     let header = scan(
         path,
         cancelled,
@@ -249,8 +310,17 @@ pub fn extract(
                 if tags.is_empty() {
                     return;
                 }
+                let address = crate::addresses::from_tags(tags);
                 match element {
                     Element::Node { id, lat, lon } => {
+                        if let Some((street, city, number)) = address {
+                            found
+                                .addresses
+                                .push((street, city, number, At::Point(lat, lon)));
+                        }
+                        if let Some(settlement) = Settlement::from_tags(tags, lon, lat) {
+                            found.settlements.push(settlement);
+                        }
                         if let (Some(place), Some(name)) = (tag(tags, "place"), tag(tags, "name"))
                             && TOWN_KINDS.contains(&place)
                             && !name.trim().is_empty()
@@ -264,23 +334,40 @@ pub fn extract(
                         }
                     }
                     Element::Way { id, refs } => {
+                        if let (Some((street, city, number)), Some(first)) = (address, refs.first())
+                        {
+                            let opposite = refs[refs.len() / 2];
+                            found.addresses.push((
+                                street,
+                                city,
+                                number,
+                                At::Outline(*first, opposite),
+                            ));
+                        }
                         if let Some(station) = Station::from_tags(format!("way/{id}"), tags) {
                             found.areas.push((station, refs.to_vec()));
                         }
                     }
                     Element::Relation { id, members } => {
-                        if tag(tags, "type") == Some("multipolygon")
-                            && let Some(station) =
-                                Station::from_tags(format!("relation/{id}"), tags)
-                        {
-                            let outer = members
-                                .iter()
-                                .filter(|m| {
-                                    m.kind == crate::osm_pbf::MemberKind::Way
-                                        && matches!(m.role, "outer" | "")
-                                })
-                                .map(|m| m.id)
-                                .collect();
+                        if tag(tags, "type") != Some("multipolygon") {
+                            return;
+                        }
+                        let outer: Vec<i64> = members
+                            .iter()
+                            .filter(|m| {
+                                m.kind == crate::osm_pbf::MemberKind::Way
+                                    && matches!(m.role, "outer" | "")
+                            })
+                            .map(|m| m.id)
+                            .collect();
+                        if let Some((street, city, number)) = address {
+                            let ring = found.address_rings.len() as u32;
+                            found.address_rings.push(outer.clone());
+                            found
+                                .addresses
+                                .push((street, city, number, At::Rings(ring)));
+                        }
+                        if let Some(station) = Station::from_tags(format!("relation/{id}"), tags) {
                             found.multipolygons.push((station, outer));
                         }
                     }
@@ -293,58 +380,87 @@ pub fn extract(
             first.areas.extend(found.areas);
             first.multipolygons.extend(found.multipolygons);
             first.towns.extend(found.towns);
+            first.settlements.extend(found.settlements);
+            let ring_base = drafts.rings.len() as u32;
+            drafts.rings.extend(found.address_rings);
+            for (street, city, number, at) in found.addresses {
+                let key = (street, city);
+                let street = match drafts.index.get(&key) {
+                    Some(i) => *i,
+                    None => {
+                        let i = drafts.keys.len() as u32;
+                        drafts.keys.push(key.clone());
+                        drafts.index.insert(key, i);
+                        i
+                    }
+                };
+                let at = match at {
+                    At::Rings(i) => At::Rings(ring_base + i),
+                    other => other,
+                };
+                drafts.drafts.push((street, number.into_boxed_str(), at));
+            }
         },
     )?;
+    drafts.index = HashMap::new();
 
-    // Second pass: node positions for areas, node lists for multipolygon ways.
-    let mut positions: HashMap<i64, (f64, f64)> = HashMap::new();
+    // Second pass: node positions for areas and address outlines, node lists
+    // for multipolygon ways.
     let mut member_ways: HashMap<i64, Vec<i64>> = HashMap::new();
-    let wanted_nodes: HashSet<i64> = first
+    let mut wanted: Vec<i64> = first
         .areas
         .iter()
         .flat_map(|(_, r)| r.iter().copied())
         .collect();
+    for (_, _, at) in &drafts.drafts {
+        if let At::Outline(a, b) = at {
+            wanted.extend([*a, *b]);
+        }
+    }
+    let mut second = NodeTable::new(wanted);
     let wanted_ways: HashSet<i64> = first
         .multipolygons
         .iter()
         .flat_map(|(_, w)| w.iter().copied())
+        .chain(drafts.rings.iter().flatten().copied())
         .collect();
-    if !wanted_nodes.is_empty() || !wanted_ways.is_empty() {
+    if !second.ids.is_empty() || !wanted_ways.is_empty() {
         resolve(
             path,
             2,
-            &wanted_nodes,
+            &mut second,
             &wanted_ways,
             cancelled,
             progress,
-            &mut positions,
             &mut member_ways,
         )?;
     }
     // Third pass: node positions for multipolygon ways.
-    let missing: HashSet<i64> = member_ways
-        .values()
-        .flatten()
-        .copied()
-        .filter(|n| !positions.contains_key(n))
-        .collect();
-    if !missing.is_empty() {
+    let mut third = NodeTable::new(
+        member_ways
+            .values()
+            .flatten()
+            .copied()
+            .filter(|n| second.get(*n).is_none())
+            .collect(),
+    );
+    if !third.ids.is_empty() {
         resolve(
             path,
             3,
-            &missing,
+            &mut third,
             &HashSet::new(),
             cancelled,
             progress,
-            &mut positions,
             &mut member_ways,
         )?;
     }
+    let locate = |id: i64| second.get(id).or_else(|| third.get(id));
 
     let mut stats = ExtractStats::default();
     let mut stations = first.stations;
     for (mut station, refs) in first.areas {
-        match centre(&refs, &positions) {
+        match centre(&refs, &locate) {
             Some((lat, lon)) => {
                 (station.latitude, station.longitude) = (lat, lon);
                 stations.push(station);
@@ -359,7 +475,7 @@ pub fn extract(
             .flatten()
             .copied()
             .collect();
-        match centre(&refs, &positions) {
+        match centre(&refs, &locate) {
             Some((lat, lon)) => {
                 (station.latitude, station.longitude) = (lat, lon);
                 stations.push(station);
@@ -367,6 +483,12 @@ pub fn extract(
             None => stats.unlocated += 1,
         }
     }
+    let settlements = Settlements::new(std::mem::take(&mut first.settlements));
+    let (address_streets, addresses, dropped) =
+        place_addresses(drafts, &settlements, &locate, &member_ways);
+    stats.addresses = addresses.len() as u64;
+    stats.address_streets = address_streets.len() as u64;
+    stats.addresses_dropped = dropped;
     let (stations, merged) = merge_duplicates(stations);
     stats.merged = merged;
     stats.fuel = stations.iter().filter(|s| s.category == "fuel").count() as u64;
@@ -376,26 +498,146 @@ pub fn extract(
         header,
         stations,
         towns: first.towns,
+        address_streets,
+        addresses,
         stats,
     })
 }
 
-#[allow(clippy::too_many_arguments)]
+/// Gives each address a position and a street-and-town group: `addr:city`
+/// when tagged, otherwise the settlement it most likely belongs to. Repeated
+/// numbers on one street keep their first position.
+fn place_addresses(
+    drafts: AddressDrafts,
+    settlements: &Settlements,
+    locate: &dyn Fn(i64) -> Option<(f64, f64)>,
+    member_ways: &HashMap<i64, Vec<i64>>,
+) -> (Vec<AddressStreet>, Vec<Address>, u64) {
+    let mut groups: Vec<(String, String)> = Vec::new();
+    let mut group_index: HashMap<(String, String), u32> = HashMap::new();
+    let mut areas: Vec<std::collections::BTreeSet<String>> = Vec::new();
+    // (group, number key, point before outline before multipolygon, lat, lon, number)
+    let mut placed: Vec<(u32, String, u8, f64, f64, Box<str>)> =
+        Vec::with_capacity(drafts.drafts.len());
+    let mut dropped = 0;
+    let mean = |points: &[Option<(f64, f64)>]| {
+        let found: Vec<(f64, f64)> = points.iter().flatten().copied().collect();
+        let n = found.len() as f64;
+        (n > 0.0).then(|| {
+            found
+                .iter()
+                .fold((0.0, 0.0), |(a, b), (la, lo)| (a + la / n, b + lo / n))
+        })
+    };
+    for (key, number, at) in drafts.drafts {
+        let (rank, position) = match at {
+            At::Point(lat, lon) => (0, Some((lat, lon))),
+            At::Outline(a, b) => (1, mean(&[locate(a), locate(b)])),
+            At::Rings(i) => (
+                2,
+                drafts.rings[i as usize]
+                    .iter()
+                    .find_map(|w| member_ways.get(w).filter(|r| !r.is_empty()))
+                    .and_then(|refs| mean(&[locate(refs[0]), locate(refs[refs.len() / 2])])),
+            ),
+        };
+        let Some((lat, lon)) = position else {
+            dropped += 1;
+            continue;
+        };
+        let (name, city) = &drafts.keys[key as usize];
+        let town = city
+            .clone()
+            .or_else(|| settlements.town(lon, lat).map(str::to_owned))
+            .unwrap_or_default();
+        let group = (name.clone(), town);
+        let id = match group_index.get(&group) {
+            Some(id) => *id,
+            None => {
+                let id = groups.len() as u32;
+                groups.push(group.clone());
+                areas.push(Default::default());
+                group_index.insert(group, id);
+                id
+            }
+        };
+        if let Some(area) = settlements.area(lon, lat)
+            && *area != groups[id as usize].1
+        {
+            areas[id as usize].insert(area.to_owned());
+        }
+        let number_key = crate::addresses::number_key(&number);
+        placed.push((id, number_key, rank, lat, lon, number));
+    }
+
+    // Reading order depends on thread timing; sort so the same extract always
+    // gives the same file and the same choice among repeated numbers.
+    let mut order: Vec<u32> = (0..groups.len() as u32).collect();
+    order.sort_by(|a, b| {
+        let (ga, gb) = (&groups[*a as usize], &groups[*b as usize]);
+        (&ga.1, &ga.0).cmp(&(&gb.1, &gb.0))
+    });
+    let mut renumber = vec![0_u32; groups.len()];
+    for (new, old) in order.iter().enumerate() {
+        renumber[*old as usize] = new as u32;
+    }
+    let mut areas: Vec<Option<std::collections::BTreeSet<String>>> =
+        areas.into_iter().map(Some).collect();
+    let streets: Vec<AddressStreet> = order
+        .iter()
+        .map(|old| {
+            let (name, town) = std::mem::take(&mut groups[*old as usize]);
+            AddressStreet {
+                name,
+                town,
+                areas: areas[*old as usize]
+                    .take()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .collect(),
+            }
+        })
+        .collect();
+    for p in &mut placed {
+        p.0 = renumber[p.0 as usize];
+    }
+    placed.sort_by(|a, b| {
+        (a.0, &a.1, a.2)
+            .cmp(&(b.0, &b.1, b.2))
+            .then(a.3.total_cmp(&b.3))
+            .then(a.4.total_cmp(&b.4))
+    });
+    let before = placed.len();
+    placed.dedup_by(|later, kept| later.0 == kept.0 && later.1 == kept.1);
+    dropped += (before - placed.len()) as u64;
+    let addresses = placed
+        .into_iter()
+        .map(|(street, _, _, latitude, longitude, number)| Address {
+            street,
+            number: number.into_string(),
+            latitude,
+            longitude,
+        })
+        .collect();
+    (streets, addresses, dropped)
+}
+
 fn resolve(
     path: &Path,
     step: u8,
-    nodes: &HashSet<i64>,
+    nodes: &mut NodeTable,
     ways: &HashSet<i64>,
     cancelled: &AtomicBool,
     progress: &mut dyn FnMut(u8, u64, u64),
-    positions: &mut HashMap<i64, (f64, f64)>,
     member_ways: &mut HashMap<i64, Vec<i64>>,
 ) -> Result<(), PbfError> {
     let kinds = Kinds {
-        nodes: !nodes.is_empty(),
+        nodes: !nodes.ids.is_empty(),
         ways: !ways.is_empty(),
         relations: false,
     };
+    let table: &NodeTable = nodes;
+    let mut found_nodes = Vec::new();
     scan(
         path,
         cancelled,
@@ -403,8 +645,10 @@ fn resolve(
         &|block| {
             let mut found = Resolved::default();
             block.for_each(kinds, &mut |element, _| match element {
-                Element::Node { id, lat, lon } if nodes.contains(&id) => {
-                    found.nodes.push((id, lat, lon))
+                Element::Node { id, lat, lon } => {
+                    if let Some(i) = table.index(id) {
+                        found.nodes.push((i, lat, lon));
+                    }
                 }
                 Element::Way { id, refs } if ways.contains(&id) => {
                     found.ways.push((id, refs.to_vec()))
@@ -414,27 +658,25 @@ fn resolve(
             Ok(found)
         },
         &mut |found| {
-            positions.extend(
-                found
-                    .nodes
-                    .into_iter()
-                    .map(|(id, lat, lon)| (id, (lat, lon))),
-            );
+            found_nodes.extend(found.nodes);
             member_ways.extend(found.ways);
         },
     )?;
+    for (i, lat, lon) in found_nodes {
+        nodes.positions[i] = (lat, lon);
+    }
     Ok(())
 }
 
 /// Mean position of an area's distinct nodes, ignoring nodes outside the
 /// extract. Station forecourts are small, so the mean lies on the site.
-fn centre(refs: &[i64], positions: &HashMap<i64, (f64, f64)>) -> Option<(f64, f64)> {
+fn centre(refs: &[i64], locate: &dyn Fn(i64) -> Option<(f64, f64)>) -> Option<(f64, f64)> {
     let mut seen = HashSet::new();
     let (mut lat, mut lon, mut n) = (0.0, 0.0, 0.0);
     for (la, lo) in refs
         .iter()
         .filter(|r| seen.insert(**r))
-        .filter_map(|r| positions.get(r))
+        .filter_map(|r| locate(*r))
     {
         lat += la;
         lon += lo;
@@ -483,8 +725,9 @@ fn merge_duplicates(mut stations: Vec<Station>) -> (Vec<Station>, u64) {
     (kept, merged)
 }
 
-/// Writes the extras database: the stations and towns themselves (so search
-/// entries can be rebuilt without the raw file) and their search entries.
+/// Writes the extras database: the stations, towns and addresses themselves
+/// (so search entries can be rebuilt without the raw file) and their search
+/// entries.
 pub fn write_extras(
     extract: &Extract,
     source_sha256: &str,
@@ -531,6 +774,7 @@ pub fn write_extras(
         for (name, lon, lat) in &extract.towns {
             town.execute(params![name, lon, lat])?;
         }
+        crate::addresses::write_tables(tx, &extract.address_streets, &extract.addresses)?;
         let mut meta = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
         meta.execute(params!["extras_schema", EXTRAS_SCHEMA.to_string()])?;
         meta.execute(params!["search_schema", SEARCH_SCHEMA.to_string()])?;
@@ -568,11 +812,14 @@ fn rebuild(path: &Path) -> Result<(), PackageError> {
             .collect::<Result<Vec<_>, _>>()?;
         let stats = serde_json::from_str(&meta(&db, "stats")?)
             .map_err(|e| PackageError::Invalid(e.to_string()))?;
+        let (address_streets, addresses) = crate::addresses::read_tables(&db)?;
         (
             Extract {
                 header: OsmHeader::default(),
                 stations,
                 towns,
+                address_streets,
+                addresses,
                 stats,
             },
             meta(&db, "source_sha256")?,
@@ -772,8 +1019,8 @@ fn is_same_source(record: &ExtrasRecord, url: &str, remote: &crate::download::Re
         }
 }
 
-/// Brings the region's fuel and charging stations up to date with
-/// `region.extras_url`. The raw extract is downloaded (resumably) into
+/// Brings the region's fuel and charging stations and addresses up to date
+/// with `region.extras_url`. The raw extract is downloaded (resumably) into
 /// staging, hashed, read, and deleted; only the extras database is kept.
 /// Progress reports downloading, `Verifying` while hashing, and `Indexing`
 /// with done/total in thousandths across the reading passes.
@@ -791,7 +1038,9 @@ pub fn update_extras(
         io::ErrorKind::WouldBlock => UpdateError::Busy,
         _ => UpdateError::Storage(e),
     })?;
-    let active = active_extras(store, region.id).ok().flatten();
+    // Extras in an older format (or damaged) are replaced like missing ones.
+    let installed = active_extras(store, region.id).ok().flatten();
+    let active = installed.clone().filter(|a| open_entries(&a.path).is_ok());
 
     progress(Progress::Checking);
     let remote = transport.probe(url).map_err(network)?;
@@ -885,7 +1134,7 @@ pub fn update_extras(
     let prune_pending = prune(store, region.id, &version);
     Ok(ExtrasOutcome::Activated {
         extras,
-        replaced: active.map(|a| a.version),
+        replaced: installed.map(|a| a.version),
         prune_pending,
     })
 }

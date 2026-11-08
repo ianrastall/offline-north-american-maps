@@ -8,7 +8,8 @@
 //!
 //! Geofabrik's Shortbread package has house numbers without street names, no
 //! county labels and no names on land areas, so address and county search are
-//! not possible from it.
+//! not possible from it. Addresses, fuel and charging stations come from the
+//! extras database (see `extras` and `addresses`) when one is attached.
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -39,6 +40,8 @@ pub enum EntryKind {
     Poi,
     Transit,
     Water,
+    /// A house number from the raw extract (see `addresses`).
+    Address,
 }
 
 impl EntryKind {
@@ -49,6 +52,7 @@ impl EntryKind {
             Self::Poi => "poi",
             Self::Transit => "transit",
             Self::Water => "water",
+            Self::Address => "address",
         }
     }
     fn from_code(code: &str) -> Option<Self> {
@@ -58,6 +62,7 @@ impl EntryKind {
             "poi" => Self::Poi,
             "transit" => Self::Transit,
             "water" => Self::Water,
+            "address" => Self::Address,
             _ => return None,
         })
     }
@@ -89,11 +94,13 @@ pub struct IndexStats {
     pub pois: u64,
     pub transit: u64,
     pub water: u64,
+    #[serde(default)]
+    pub addresses: u64,
 }
 
 impl IndexStats {
     pub fn entries(&self) -> u64 {
-        self.places + self.streets + self.pois + self.transit + self.water
+        self.places + self.streets + self.pois + self.transit + self.water + self.addresses
     }
 }
 
@@ -497,6 +504,7 @@ pub(crate) fn insert_entries(
             EntryKind::Poi => &mut stats.pois,
             EntryKind::Transit => &mut stats.transit,
             EntryKind::Water => &mut stats.water,
+            EntryKind::Address => &mut stats.addresses,
         } += 1;
     }
     Ok(())
@@ -577,7 +585,7 @@ const ABBREVIATIONS: [(&str, &str); 26] = [
 ];
 
 /// Lower-case alphanumeric tokens, the way the FTS tokenizer splits text.
-fn tokens(text: &str) -> Vec<String> {
+pub(crate) fn tokens(text: &str) -> Vec<String> {
     text.split(|c: char| !c.is_alphanumeric())
         .filter(|t| !t.is_empty())
         .map(str::to_lowercase)
@@ -600,7 +608,7 @@ fn alternatives(token: &str) -> Vec<&'static str> {
 }
 
 /// Index text: every token plus its abbreviation partner.
-fn expand(text: &str) -> String {
+pub(crate) fn expand(text: &str) -> String {
     let mut out = Vec::new();
     for token in tokens(text) {
         let alts = alternatives(&token);
@@ -611,7 +619,7 @@ fn expand(text: &str) -> String {
 }
 
 /// Comparison form: tokens with full words replaced by their short forms.
-fn canonical(text: &str) -> String {
+pub(crate) fn canonical(text: &str) -> String {
     tokens(text)
         .into_iter()
         .map(|t| {
@@ -626,7 +634,7 @@ fn canonical(text: &str) -> String {
 
 /// Drops a leading and trailing compass word from a canonical name
 /// ("w main st" -> "main st", "lake shore dr n" -> "lake shore dr").
-fn without_compass_words(canonical_name: &str) -> &str {
+pub(crate) fn without_compass_words(canonical_name: &str) -> &str {
     const COMPASS: [&str; 8] = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
     let mut name = canonical_name;
     if let Some((first, rest)) = name.split_once(' ')
@@ -724,30 +732,15 @@ impl SearchIndex {
         limit: usize,
     ) -> Result<Vec<SearchResult>, PackageError> {
         let words: Vec<String> = tokens(query).into_iter().take(8).collect();
-        let Some(last) = words.len().checked_sub(1) else {
+        if words.is_empty() {
             return Ok(Vec::new());
+        }
+        // A query starting with a house number looks for addresses first.
+        let addresses = match &self.extras {
+            Some(db) => crate::addresses::search(db, query, near, limit)?.unwrap_or_default(),
+            None => Vec::new(),
         };
-        let expression = words
-            .iter()
-            .enumerate()
-            .map(|(i, word)| {
-                let prefix = i == last && word.chars().count() >= 2;
-                let mut forms = vec![word.as_str()];
-                forms.extend(alternatives(word));
-                let terms: Vec<String> = forms
-                    .iter()
-                    .map(|f| {
-                        format!(
-                            "\"{}\"{}",
-                            f.replace('"', ""),
-                            if prefix { "*" } else { "" }
-                        )
-                    })
-                    .collect();
-                format!("({})", terms.join(" OR "))
-            })
-            .collect::<Vec<_>>()
-            .join(" AND ");
+        let expression = match_expression(&words);
         let query_canonical = canonical(query);
         let mut candidates = Vec::new();
         for db in std::iter::once(&self.db).chain(self.extras.as_ref()) {
@@ -762,9 +755,9 @@ impl SearchIndex {
         // and stops with the same name are kept apart unless they are within
         // a few hundred metres (the same place mapped twice).
         let mut seen = std::collections::HashSet::new();
-        Ok(candidates
+        Ok(addresses
             .into_iter()
-            .map(|(_, r)| r)
+            .chain(candidates.into_iter().map(|(_, r)| r))
             .filter(|r| {
                 let spot = matches!(r.kind, EntryKind::Poi | EntryKind::Transit)
                     .then(|| cell(r.longitude, r.latitude, 200.0));
@@ -813,6 +806,33 @@ impl SearchIndex {
         }
         Ok(best)
     }
+}
+
+/// FTS5 expression: every word must match (with its abbreviation partner);
+/// the last word of two or more characters may be a prefix.
+pub(crate) fn match_expression(words: &[String]) -> String {
+    let last = words.len().saturating_sub(1);
+    words
+        .iter()
+        .enumerate()
+        .map(|(i, word)| {
+            let prefix = i == last && word.chars().count() >= 2;
+            let mut forms = vec![word.as_str()];
+            forms.extend(alternatives(word));
+            let terms: Vec<String> = forms
+                .iter()
+                .map(|f| {
+                    format!(
+                        "\"{}\"{}",
+                        f.replace('"', ""),
+                        if prefix { "*" } else { "" }
+                    )
+                })
+                .collect();
+            format!("({})", terms.join(" OR "))
+        })
+        .collect::<Vec<_>>()
+        .join(" AND ")
 }
 
 /// Runs the full-text match on one database and ranks each row.
