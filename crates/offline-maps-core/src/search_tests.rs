@@ -256,3 +256,18 @@ fn compass_words_do_not_block_strong_matches() {
     let results = index.search("main st", Some(near), 5).unwrap();
     assert_eq!(names(&results)[..2], ["North Main Street", "Main Street"]);
 }
+
+#[test]
+fn searches_several_regions_as_one() {
+    // Two neighbouring regions' indexes with the same border data: each
+    // thing is listed once, in the same order as from one index.
+    let (_a_file, a, _) = built();
+    let (_b_file, b, _) = built();
+    let chicago = Coordinates::new(41.88, -87.63).unwrap();
+    for query in ["spring", "oak st", "main st", "hosp"] {
+        let one = a.search(query, Some(chicago), 10).unwrap();
+        let both = search_all(&[&a, &b], query, Some(chicago), 10).unwrap();
+        assert_eq!(names(&both), names(&one), "{query}");
+    }
+    assert!(search_all(&[], "spring", None, 10).unwrap().is_empty());
+}

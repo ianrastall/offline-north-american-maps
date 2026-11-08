@@ -55,8 +55,8 @@
                 </MenuFlyoutItem>
             </MenuBarItem>
             <MenuBarItem Title="Map">
-                <MenuFlyoutItem x:Name="UpdateMapItem" Click="UpdateMap_Click" Text="Download map…" />
-                <MenuFlyoutItem x:Name="UpdateExtrasItem" Click="UpdateExtras_Click" Text="Download stations and addresses…" />
+                <MenuFlyoutItem Click="Regions_Click" Text="Regions…" />
+                <MenuFlyoutItem x:Name="UpdateAllItem" Click="UpdateAll_Click" Text="Update all regions…" />
                 <MenuFlyoutItem x:Name="CancelUpdateItem" Click="CancelUpdate_Click" IsEnabled="False" Text="Cancel download" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Name="MapInfoItem" Click="MapInfo_Click" Text="Map information" />
@@ -83,9 +83,9 @@
                 IsClosable="False"
                 Severity="Informational"
                 Title="No map is installed"
-                Message="Download the Illinois map while you have a connection. After that, Offline Maps works without one.">
+                Message="Download the regions you need while you have a connection. After that, Offline Maps works without one.">
                 <InfoBar.ActionButton>
-                    <Button Click="UpdateMap_Click" Content="Download map…" Style="{StaticResource AccentButtonStyle}" />
+                    <Button Click="Regions_Click" Content="Choose regions…" Style="{StaticResource AccentButtonStyle}" />
                 </InfoBar.ActionButton>
             </InfoBar>
             <InfoBar
@@ -112,9 +112,9 @@
                 IsClosable="True"
                 Severity="Informational"
                 Title="Stations and addresses are not installed"
-                Message="Fuel stations, charging stations and street addresses need a second download.">
+                Message="Fuel stations, charging stations and street addresses need a second download for each region.">
                 <InfoBar.ActionButton>
-                    <Button Click="UpdateExtras_Click" Content="Download stations and addresses…" />
+                    <Button Click="MissingExtras_Click" Content="Download stations and addresses…" />
                 </InfoBar.ActionButton>
             </InfoBar>
         </StackPanel>

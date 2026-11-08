@@ -100,6 +100,18 @@ internal static class Format
         return text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
     }
 
+    /// <summary>"Iowa", "Iowa and Ohio", "Indiana, Iowa and Ohio".</summary>
+    public static string List(IEnumerable<string> items)
+    {
+        var list = items.ToList();
+        return list.Count switch
+        {
+            0 => "",
+            1 => list[0],
+            _ => $"{string.Join(", ", list[..^1])} and {list[^1]}",
+        };
+    }
+
     public static string Distance(double km, bool kilometres)
     {
         double value = kilometres ? km : km * 0.621371;

@@ -233,6 +233,24 @@ Completed 8 November 2026. Reported by Ian on 0.1.0: search did not seem connect
 
 Verified in the installed app (upgraded silently from 0.1.0; Start Menu entry, uninstall entry at 0.1.1, map store and settings kept): launched from the Start Menu, `carb` listed Carbondale first, and a mouse click on Carbon Hill selected it and moved the map there at zoom 13.
 
+## 0.2.0: more regions
+
+Completed 8 November 2026. Ian asked for other mapsets to be downloadable, to fill the map out to other states.
+
+- **Catalog.** 52 regions from Geofabrik's index (see [sources](sources-and-architecture.md#regions-020)), with approximate download sizes. Alaska is left out (29.6 GB package spanning the antimeridian).
+- **Core.** The service holds every installed region: tiles are read from each package that touches them and merged on borders, search ranks all regions' results together, stations come from all extras, and saved places count as covered inside any installed map. New commands: `GetCatalog`, `RemoveRegion`; `Update` names a region. The status lists installed regions and the box around them, and a content version that changes with any map or extras.
+- **App.** Map > Regions… opens a Regions window (collection workspace): filter, list of regions with their state, and a pane with Download or Update map, Download or Update stations and addresses, and Remove (asks first; Cancel is the default). Downloads are queued and run one at a time in the map window's progress bar; Cancel stops the current one and clears the queue. Map > Update all regions… queues every installed map and extras. The no-map and stations messages and Map information cover several regions.
+- **Tests.** Core: catalog consistency, tile merging (joined layers, renumbered tags, duplicates, bad tags), search across two indexes. ABI: catalog, removal of an absent and an unknown region, updates naming an unknown region. Interop: catalog and removal. 59 core, 2 HTTP and 6 ABI tests (Rust) and 9 interop tests (C#) pass; the real-store test passes against the Illinois store.
+
+Verified in the installed app (upgraded silently from 0.1.1; Illinois map, extras and settings kept; launched from the Start Menu):
+
+- Regions listed 52 regions; filtering "indi" left Indiana, "About 248 MB".
+- Download map for Indiana showed progress in its row ("Map: Downloading: 58 MB of 248 MB"), then installed and prepared search in about 25 seconds. The status bar read "Completed: the Indiana map installed" and the stations offer named Indiana.
+- Searching "hammond" listed Hammond, Indiana (city) before Hammond, Illinois (village). At zoom 10 and 14 the map was continuous across the state line at Calumet City and Hammond, with labels on both sides and no doubled labels.
+- Remove Indiana asked first, deleted `us-in`, and the map and search went back to Illinois alone. A message bug found here ("Completed 0 downloads and updates" after a removal) was fixed before release.
+
+Not covered: stations and addresses for a second region (a further 202 MB for Indiana), two downloads queued at once, and cancelling a queued download in the installed app.
+
 ## Next stages
 
 1. Download the Illinois map and the stations and addresses from Geofabrik in the installed app, then launch with networking disabled and verify map rendering, labels, search, stations, addresses and saved places from a clean process. This is the decisive first-workflow acceptance test.
@@ -240,3 +258,4 @@ Verified in the installed app (upgraded silently from 0.1.0; Start Menu entry, u
 3. Choose the app's license and add it to the installer and About.
 4. Install on a clean Windows 11 machine.
 5. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
+6. Terrain: hillshading and contour lines from Mapterhorn terrain tiles (USGS 3DEP and Copernicus GLO-30) for each installed region.

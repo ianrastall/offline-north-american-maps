@@ -717,61 +717,15 @@ impl SearchIndex {
         Ok(())
     }
 
-    /// Finds up to `limit` matches for `query`. Every query word must match a
-    /// word of the name, route number, category or nearest town; the last word
-    /// may be a prefix.
-    ///
-    /// Strong matches (name equal to or starting with the query, a route
-    /// number, or a category such as "hospital") come before matches on other
-    /// words, which come before matches through the nearest town. Within each,
-    /// cities, towns and villages come first, by exact name and then size; the
-    /// rest, with `near`, by distance, otherwise by place size and population.
+    /// Finds up to `limit` matches for `query` in this index and its extras;
+    /// see [`search_all`].
     pub fn search(
         &self,
         query: &str,
         near: Option<Coordinates>,
         limit: usize,
     ) -> Result<Vec<SearchResult>, PackageError> {
-        let words: Vec<String> = tokens(query).into_iter().take(8).collect();
-        if words.is_empty() {
-            return Ok(Vec::new());
-        }
-        // A query starting with a house number looks for addresses first.
-        let addresses = match &self.extras {
-            Some(db) => crate::addresses::search(db, query, near, limit)?.unwrap_or_default(),
-            None => Vec::new(),
-        };
-        let expression = match_expression(&words);
-        let query_canonical = canonical(query);
-        let mut candidates = Vec::new();
-        for db in std::iter::once(&self.db).chain(self.extras.as_ref()) {
-            collect_candidates(db, &expression, &query_canonical, near, &mut candidates)?;
-        }
-        candidates.sort_by(|(a, _), (b, _)| {
-            (a.0, a.1, a.2, a.3)
-                .cmp(&(b.0, b.1, b.2, b.3))
-                .then(a.4.total_cmp(&b.4))
-        });
-        // Streets are already one entry per name and town; points of interest
-        // and stops with the same name are kept apart unless they are within
-        // a few hundred metres (the same place mapped twice).
-        let mut seen = std::collections::HashSet::new();
-        Ok(addresses
-            .into_iter()
-            .chain(candidates.into_iter().map(|(_, r)| r))
-            .filter(|r| {
-                let spot = matches!(r.kind, EntryKind::Poi | EntryKind::Transit)
-                    .then(|| cell(r.longitude, r.latitude, 200.0));
-                seen.insert((
-                    r.name.clone(),
-                    r.kind,
-                    r.near.clone(),
-                    r.category.clone(),
-                    spot,
-                ))
-            })
-            .take(limit)
-            .collect())
+        search_all(&[self], query, near, limit)
     }
 
     /// The nearest city, town, village or hamlet within ~40 km.
@@ -807,6 +761,73 @@ impl SearchIndex {
         }
         Ok(best)
     }
+}
+
+/// Finds up to `limit` matches for `query` across several regions' indexes,
+/// ranked together. Every query word must match a word of the name, route
+/// number, category or nearest town; the last word may be a prefix. A query
+/// starting with a house number lists addresses first.
+///
+/// Strong matches (name equal to or starting with the query, a route
+/// number, or a category such as "hospital") come before matches on other
+/// words, which come before matches through the nearest town. Within each,
+/// cities, towns and villages come first, by exact name and then size; the
+/// rest, with `near`, by distance, otherwise by place size and population.
+///
+/// Things mapped in two neighbouring regions' data appear once.
+pub fn search_all(
+    indexes: &[&SearchIndex],
+    query: &str,
+    near: Option<Coordinates>,
+    limit: usize,
+) -> Result<Vec<SearchResult>, PackageError> {
+    let words: Vec<String> = tokens(query).into_iter().take(8).collect();
+    if words.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut found = Vec::new();
+    for db in indexes.iter().filter_map(|i| i.extras.as_ref()) {
+        if let Some(f) = crate::addresses::search_ranked(db, query, near)? {
+            found.push(f);
+        }
+    }
+    let addresses = crate::addresses::Found::join(found, limit);
+    let expression = match_expression(&words);
+    let query_canonical = canonical(query);
+    let mut candidates = Vec::new();
+    for index in indexes {
+        for db in std::iter::once(&index.db).chain(index.extras.as_ref()) {
+            collect_candidates(db, &expression, &query_canonical, near, &mut candidates)?;
+        }
+    }
+    candidates.sort_by(|(a, _), (b, _)| {
+        (a.0, a.1, a.2, a.3)
+            .cmp(&(b.0, b.1, b.2, b.3))
+            .then(a.4.total_cmp(&b.4))
+    });
+    // Streets are one entry per name and town; points of interest, stops
+    // and places with the same name are kept apart unless they are close
+    // together (the same thing mapped twice, or in two regions' data).
+    let mut seen = std::collections::HashSet::new();
+    Ok(addresses
+        .into_iter()
+        .chain(candidates.into_iter().map(|(_, r)| r))
+        .filter(|r| {
+            let spot = match r.kind {
+                EntryKind::Poi | EntryKind::Transit => Some(cell(r.longitude, r.latitude, 200.0)),
+                EntryKind::Place | EntryKind::Address => Some(cell(r.longitude, r.latitude, 20.0)),
+                EntryKind::Street | EntryKind::Water => None,
+            };
+            seen.insert((
+                r.name.clone(),
+                r.kind,
+                r.near.clone(),
+                r.category.clone(),
+                spot,
+            ))
+        })
+        .take(limit)
+        .collect())
 }
 
 /// FTS5 expression: every word must match (with its abbreviation partner);

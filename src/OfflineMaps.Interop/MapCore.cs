@@ -127,8 +127,15 @@ public sealed class MapCore : IDisposable
 
     public void ResetPlaces() => Call(new Request { ResetPlaces = new ResetPlaces() });
 
-    /// <summary>Downloads and activates a newer map or extras. Blocks for the whole download.</summary>
-    public UpdateResult Update(UpdateTarget target) => Call(new Request { Update = new Update { Target = target } }).Update;
+    /// <summary>Downloads and activates a region's newer map or extras. Blocks for the whole download.</summary>
+    public UpdateResult Update(UpdateTarget target, string regionId) =>
+        Call(new Request { Update = new Update { Target = target, RegionId = regionId } }).Update;
+
+    /// <summary>Deletes a region's map, search index and extras. Saved places are kept.</summary>
+    public void RemoveRegion(string regionId) => Call(new Request { RemoveRegion = new RemoveRegion { RegionId = regionId } });
+
+    /// <summary>The regions that can be downloaded, by name.</summary>
+    public IReadOnlyList<CatalogRegion> Catalog() => Call(new Request { GetCatalog = new GetCatalog() }).Catalog.Regions;
 
     public void PrepareSearch() => Call(new Request { PrepareSearch = new PrepareSearch() });
 

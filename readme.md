@@ -1,11 +1,12 @@
 # Offline Maps
 
-Jupiter desktop app for downloading road maps before an emergency and using them without internet access. First region: **Illinois**. Follows Jupiter style standard 1.1.
+Jupiter desktop app for downloading road maps before an emergency and using them without internet access. Regions: the US states except Alaska, the District of Columbia, Puerto Rico and the US Virgin Islands, in any combination. Follows Jupiter style standard 1.1.
 
-Status (8 November 2026): version 0.1.1 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
+Status (8 November 2026): version 0.2.0 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
 
-- **Map:** downloads Geofabrik's Illinois map package with resume, verification and atomic activation, and shows it with MapLibre in WebView2 entirely from local files. Light and dark map styles show interstate, US and Illinois route shields.
-- **Search:** finds places, streets, landmarks, transit and water offline. An optional second download adds fuel stations, charging stations and house-number addresses, read from Geofabrik's raw extract.
+- **Map:** downloads Geofabrik's map package for each chosen region (Map > Regions) with resume, verification and atomic activation, and shows the installed regions as one map with MapLibre in WebView2, entirely from local files. Tiles on a border between installed regions are merged. Light and dark map styles show interstate, US and state route shields.
+- **Downloads:** queued and run one at a time; Map > Update all regions checks every installed region.
+- **Search:** finds places, streets, landmarks, transit and water offline, across all installed regions. An optional second download adds fuel stations, charging stations and house-number addresses, read from Geofabrik's raw extract.
 - **Saved places:** kept apart from map packages, so they survive map updates, app upgrades and uninstalling.
 - **Not included:** routing.
 - **Not yet verified:** a launch with networking disabled.
@@ -20,7 +21,7 @@ Status (8 November 2026): version 0.1.1 is installed on Ian's machine. It is a W
 
 | Path | Contents |
 | --- | --- |
-| `crates/offline-maps-core` | Rust domain core: packages, downloads, store, search, extras, saved places |
+| `crates/offline-maps-core` | Rust domain core: region catalog, packages, downloads, store, tile merging, search, extras, saved places |
 | `crates/offline-maps-ffi` | C ABI facade (`offline_maps_ffi.dll`, ABI version 1) for the WinUI shell |
 | `crates/offline-maps-dev` | Development command-line tools (not shipped) |
 | `proto/offline_maps.proto` | Messages between the shell and the core |

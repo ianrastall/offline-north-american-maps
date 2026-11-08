@@ -855,6 +855,19 @@ pub fn open_entries(path: &Path) -> Result<Connection, PackageError> {
 /// Stations as a GeoJSON feature collection for the map, with `name`,
 /// `category` and `detail` properties.
 pub fn stations_geojson(path: &Path) -> Result<String, PackageError> {
+    stations_geojson_all(&[path])
+}
+
+/// Stations of several regions' extras in one feature collection.
+pub fn stations_geojson_all(paths: &[&Path]) -> Result<String, PackageError> {
+    let mut features = Vec::new();
+    for path in paths {
+        features.extend(station_features(path)?);
+    }
+    Ok(serde_json::json!({ "type": "FeatureCollection", "features": features }).to_string())
+}
+
+fn station_features(path: &Path) -> Result<Vec<serde_json::Value>, PackageError> {
     let db = open_entries(path)?;
     let mut statement = db.prepare("SELECT name, category, detail, lon, lat FROM entries")?;
     let features = statement
@@ -876,7 +889,7 @@ pub fn stations_geojson(path: &Path) -> Result<String, PackageError> {
             }))
         })?
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(serde_json::json!({ "type": "FeatureCollection", "features": features }).to_string())
+    Ok(features)
 }
 
 /// Persisted beside each extras version.

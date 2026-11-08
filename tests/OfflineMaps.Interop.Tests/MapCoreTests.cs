@@ -36,16 +36,19 @@ public class MapCoreTests
         using var store = new TempStore();
         using var core = MapCore.Open(store.Path);
         var status = core.GetStatus();
-        Assert.Null(status.Map);
-        Assert.Null(status.Extras);
-        Assert.False(status.SearchReady);
-        Assert.Equal("Illinois", status.RegionName);
+        Assert.Empty(status.Regions);
+        Assert.Null(status.Coverage);
         Assert.Equal(System.IO.Path.GetFullPath(store.Path), System.IO.Path.GetFullPath(status.StoreDirectory));
 
         var error = Assert.Throws<MapCoreException>(() => core.Search("springfield", 39.8, -89.65));
         Assert.Equal(ErrorKind.Unavailable, error.Kind);
         Assert.Empty(core.Tile(14, 4203, 6089));
         Assert.Empty(core.Tile(99, 0, 0));
+        var catalog = core.Catalog();
+        Assert.Equal(52, catalog.Count);
+        Assert.Contains(catalog, r => r.Id == "us-il" && r.Name == "Illinois");
+        core.RemoveRegion("us-in");
+        Assert.Equal(ErrorKind.InvalidArgument, Assert.Throws<MapCoreException>(() => core.RemoveRegion("us-ak")).Kind);
         Assert.Contains("FeatureCollection", core.StationsGeoJson());
         Assert.False(core.Progress().Active);
         core.Cancel();
@@ -88,7 +91,7 @@ public class MapCoreTests
     {
         using var store = new TempStore();
         using var core = MapCore.Open(store.Path, packageUrl: "http://127.0.0.1:9/package.mbtiles");
-        var error = Assert.Throws<MapCoreException>(() => core.Update(UpdateTarget.Map));
+        var error = Assert.Throws<MapCoreException>(() => core.Update(UpdateTarget.Map, "us-il"));
         Assert.Equal(ErrorKind.Network, error.Kind);
         Assert.False(core.GetStatus().Updating);
     }
@@ -114,11 +117,11 @@ public class MapCoreTests
     public void MessagesRoundTripWithUnknownFields()
     {
         // A newer core may add fields; this shell must still read what it knows.
-        var status = new Status { RegionName = "Illinois", SearchReady = true };
+        var status = new Status { ContentVersion = "us-il:1:", SearchReady = true };
         // Field 99, length-delimited: tag (99 << 3) | 2 = 794, as the varint 0x9A 0x06.
         byte[] bytes = [.. status.ToByteArray(), 0x9A, 0x06, 3, (byte)'n', (byte)'e', (byte)'w'];
         var parsed = Status.Parser.ParseFrom(bytes);
-        Assert.Equal("Illinois", parsed.RegionName);
+        Assert.Equal("us-il:1:", parsed.ContentVersion);
         Assert.True(parsed.SearchReady);
         Assert.Equal(bytes.Length, parsed.ToByteArray().Length);
     }
@@ -148,11 +151,12 @@ public class MapCoreTests
         }
         using var core = MapCore.Open(path);
         var status = core.GetStatus();
-        Assert.NotNull(status.Map);
+        var illinois = Assert.Single(status.Regions, r => r.Id == "us-il");
+        Assert.NotNull(illinois.Map);
         Assert.True(status.SearchReady, status.MapProblem);
         Assert.True(core.Tile(14, 4203, 6089).Length > 1000);
         var results = core.Search("905 e main st carbondale", 39.8, -89.65);
-        if (status.Extras is not null)
+        if (illinois.Extras is not null)
         {
             Assert.Equal("905 East Main Street", results[0].Name);
             Assert.Equal("address", results[0].Kind);

@@ -15,7 +15,8 @@ option csharp_namespace = "OfflineMaps.Interop.Messages";
 message Config {
   // Folder holding map packages, extras and saved places (created if missing).
   string store_directory = 1;
-  // Overrides of the region's download addresses; empty uses the defaults.
+  // Overrides of Illinois's (us-il) download addresses, for testing against a
+  // local server; empty uses the defaults. Other regions always use Geofabrik.
   string package_url = 2;
   string extras_url = 3;
 }
@@ -37,6 +38,8 @@ message Request {
     GetStations get_stations = 8;
     PrepareSearch prepare_search = 9;
     ResetPlaces reset_places = 10;
+    RemoveRegion remove_region = 11;
+    GetCatalog get_catalog = 12;
   }
 }
 
@@ -74,14 +77,25 @@ enum UpdateTarget {
   UPDATE_TARGET_EXTRAS = 2;
 }
 
-// Long-running: progress is read with om_progress, cancelled with om_cancel.
+// Downloads or updates one region's map or extras. Long-running: progress is
+// read with om_progress, cancelled with om_cancel. One update runs at a time.
 message Update {
   UpdateTarget target = 1;
+  // A catalog region ID such as "us-il".
+  string region_id = 2;
 }
+
+// Deletes a region's map, search index and extras from the store.
+message RemoveRegion {
+  string region_id = 1;
+}
+
+// The regions that can be downloaded.
+message GetCatalog {}
 
 message GetStations {}
 
-// Builds the search index of an active package installed without one. Long-running.
+// Builds the search index of every installed map that has none. Long-running.
 message PrepareSearch {}
 
 // Moves an unreadable saved-places file aside so a new list can be started.
@@ -116,6 +130,7 @@ message Response {
     Place place = 5;
     UpdateResult update = 6;
     Stations stations = 7;
+    Catalog catalog = 8;
   }
 }
 
@@ -154,33 +169,67 @@ message ExtrasInfo {
   uint64 source_bytes = 7;
 }
 
+message CatalogRegion {
+  string id = 1;
+  string name = 2;
+  // Approximate download sizes when the catalog was made.
+  uint64 package_bytes = 3;
+  uint64 extras_bytes = 4;
+  string source_page = 5;
+}
+
+message Catalog {
+  // By name.
+  repeated CatalogRegion regions = 1;
+}
+
+// An installed region: one with a map, extras, or files that could not be read.
+message RegionStatus {
+  string id = 1;
+  string name = 2;
+  // Absent when the region's map is not installed or cannot be opened.
+  MapInfo map = 3;
+  // Absent when its stations and addresses are not installed.
+  ExtrasInfo extras = 4;
+  // The map has a usable search index.
+  bool search_ready = 5;
+  // Set when the region's map or extras could not be opened.
+  string problem = 6;
+}
+
 message Place {
   uint64 id = 1;
   string name = 2;
   string note = 3;
   double latitude = 4;
   double longitude = 5;
-  // Inside the active map's bounds.
+  // Inside an installed map's bounds.
   bool covered = 6;
   string created_at = 7;
   string updated_at = 8;
 }
 
 message Status {
-  // Absent when no map is installed.
-  MapInfo map = 1;
-  // Absent when stations and addresses are not installed.
-  ExtrasInfo extras = 2;
+  // Replaced by regions in 0.2.0 (several regions can be installed).
+  reserved 1, 2, 8;
+  reserved "map", "extras", "region_name";
   repeated Place places = 3;
-  // The active map has a usable search index.
+  // Every installed map has a usable search index.
   bool search_ready = 4;
-  // Set when an installed map or extras could not be opened.
+  // The problems of all installed regions, joined.
   string map_problem = 5;
   // Set when the saved-places file cannot be read (it is left untouched).
   string places_problem = 6;
   string store_directory = 7;
-  string region_name = 8;
   bool updating = 9;
+  // Installed regions, by name.
+  repeated RegionStatus regions = 10;
+  // The box around all installed maps; absent when none is installed.
+  Bounds coverage = 11;
+  uint32 min_zoom = 12;
+  uint32 max_zoom = 13;
+  // Changes whenever an installed map or extras changes.
+  string content_version = 14;
 }
 
 message SearchResult {
@@ -222,4 +271,6 @@ message ProgressEvent {
   // 0 when unknown.
   uint64 total = 5;
   bool cancelling = 6;
+  string region_id = 7;
+  string region_name = 8;
 }

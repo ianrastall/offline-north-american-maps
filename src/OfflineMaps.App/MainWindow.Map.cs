@@ -22,8 +22,8 @@ public sealed partial class MainWindow
     private static readonly UISettings UiSettings = new();
     private CoreWebView2Environment? _environment;
     private bool _pageReady;
+    /// <summary>The content version of the installed maps and extras the page shows.</summary>
     private string? _shownMap;
-    private string? _shownExtras;
     private double _viewLatitude;
     private double _viewLongitude;
     private double _viewZoom;
@@ -258,28 +258,29 @@ public sealed partial class MainWindow
         menu.ShowAt(MapView, new FlyoutShowOptions { Position = new Windows.Foundation.Point(x, y) });
     }
 
-    /// <summary>Shows a newly installed map or extras, or the first map once the page is ready.</summary>
+    /// <summary>
+    /// Shows newly installed or removed regions and extras, or the first maps once the page is
+    /// ready. The page sees one map covering the box around all installed regions.
+    /// </summary>
     private void SyncMap()
     {
-        if (!_pageReady || _status?.Map is not { } map)
+        if (!_pageReady || _status is not { Coverage: { } b } status)
         {
             return;
         }
-        string extras = _status.Extras?.Version ?? "";
-        if (_shownMap == map.Version && _shownExtras == extras)
+        if (_shownMap == status.ContentVersion)
         {
             PostPlaces();
             return;
         }
-        var b = map.Bounds;
         var message = new JsonObject
         {
             ["kind"] = _shownMap is null ? "init" : "reload",
             ["metadata"] = new JsonObject
             {
                 ["bounds"] = new JsonObject { ["west"] = b.West, ["south"] = b.South, ["east"] = b.East, ["north"] = b.North },
-                ["minZoom"] = map.MinZoom,
-                ["maxZoom"] = map.MaxZoom,
+                ["minZoom"] = status.MinZoom,
+                ["maxZoom"] = status.MaxZoom,
             },
             ["theme"] = App.Current.Themes.IsDark ? "dark" : "light",
             ["colors"] = Colors(),
@@ -297,8 +298,7 @@ public sealed partial class MainWindow
             (_viewLatitude, _viewLongitude, _viewZoom) = ((b.South + b.North) / 2, (b.West + b.East) / 2, 7);
         }
         Post(message);
-        _shownMap = map.Version;
-        _shownExtras = extras;
+        _shownMap = status.ContentVersion;
         MapView.Visibility = Visibility.Visible;
         MapMessage.Visibility = Visibility.Collapsed;
         PostPlaces();

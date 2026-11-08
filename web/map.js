@@ -115,13 +115,19 @@ function reportView() {
   post({ kind: 'view', latitude: c.lat, longitude: c.lng, zoom: map.getZoom() });
 }
 
+// The installed maps' box with half a degree around it.
+function maxBounds() {
+  const b = metadata.bounds;
+  const pad = 0.5;
+  return [[b.west - pad, b.south - pad], [b.east + pad, b.north + pad]];
+}
+
 async function init(message) {
   metadata = message.metadata;
   theme = message.theme;
   animate = message.animate;
   applyColors(message.colors);
   const b = metadata.bounds;
-  const pad = 0.5;
   const view = message.view;
   map = new maplibregl.Map({
     container: 'map',
@@ -130,7 +136,7 @@ async function init(message) {
     zoom: view ? view.zoom : 7,
     minZoom: Math.max(0, metadata.minZoom),
     maxZoom: 19,
-    maxBounds: [[b.west - pad, b.south - pad], [b.east + pad, b.north + pad]],
+    maxBounds: maxBounds(),
     attributionControl: { compact: false },
     pitchWithRotate: false,
     dragRotate: false,
@@ -217,11 +223,13 @@ const handlers = {
   center(message) {
     if (map) move({ center: [message.longitude, message.latitude], zoom: message.zoom ?? map.getZoom() });
   },
-  // A new package or new stations: drop cached tiles and data.
+  // A region added, updated or removed, or new stations: drop cached tiles
+  // and data, and let the view reach the new area.
   async reload(message) {
     if (!map) return init(message);
     metadata = message.metadata;
     for (const key of Object.keys(styles)) delete styles[key];
+    map.setMaxBounds(maxBounds());
     map.setStyle(await loadStyle(theme), { diff: false });
   },
 };

@@ -146,13 +146,12 @@ fn dispatch(service: &Service, request: pb::Request) -> pb::Response {
             service.update_place(&update).map(|p| Some(R::Place(p)))
         }
         Some(Command::RemovePlace(remove)) => service.remove_place(remove.id).map(|()| None),
-        Some(Command::Update(update)) => match pb::UpdateTarget::try_from(update.target) {
-            Ok(target) => service.update(target).map(|r| Some(R::Update(r))),
-            Err(_) => Err(error(ErrorKind::InvalidArgument, "Unknown update target.")),
-        },
+        Some(Command::Update(update)) => service.update(&update).map(|r| Some(R::Update(r))),
         Some(Command::GetStations(_)) => service.stations().map(|s| Some(R::Stations(s))),
         Some(Command::PrepareSearch(_)) => service.prepare_search().map(|()| None),
         Some(Command::ResetPlaces(_)) => service.reset_places().map(|()| None),
+        Some(Command::RemoveRegion(remove)) => service.remove_region(&remove).map(|()| None),
+        Some(Command::GetCatalog(_)) => Ok(Some(R::Catalog(service.catalog()))),
     };
     match result {
         Ok(result) => pb::Response {

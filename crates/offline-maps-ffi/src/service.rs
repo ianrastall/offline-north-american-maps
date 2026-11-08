@@ -1,24 +1,28 @@
-//! The command layer behind the C ABI: one region's map package, extras, search
-//! and saved places. Safe to call from several threads at once: tile reads,
-//! searches and saved-place changes each take their own short lock, and an
+//! The command layer behind the C ABI: the installed regions' map packages,
+//! extras and search, and saved places. Safe to call from several threads at
+//! once: tile reads, searches and saved-place changes take short locks, and an
 //! update runs without holding any of them, so the map stays usable while a
-//! new package downloads. Only one update or search preparation runs at a time.
+//! new package downloads. Only one update, removal or search preparation runs
+//! at a time.
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, RwLock};
 
 use offline_maps_core::Coordinates;
 use offline_maps_core::download::{
     HttpTransport, Progress, UpdateError, UpdateOptions, UpdateOutcome, update_region,
 };
 use offline_maps_core::extras::{
-    ActiveExtras, ExtrasOutcome, active_extras, prune_extras, stations_geojson, update_extras,
+    ActiveExtras, ExtrasOutcome, active_extras, prune_extras, stations_geojson_all, update_extras,
 };
 use offline_maps_core::mbtiles::{Bounds, TileEncoding, TilePackage};
+use offline_maps_core::merge::merge_tiles;
+use offline_maps_core::mvt::tile_point_to_lon_lat;
 use offline_maps_core::package::{ILLINOIS, Region};
 use offline_maps_core::places::{PlacesError, SavedPlace, SavedPlaces};
-use offline_maps_core::search::{SearchIndex, open_or_build};
+use offline_maps_core::regions;
+use offline_maps_core::search::{SearchIndex, open_or_build, search_all};
 use offline_maps_core::store::{ActivePackage, PackageStore};
 
 use crate::messages as pb;
@@ -46,6 +50,17 @@ struct OpenMap {
     tiles: TilePackage,
 }
 
+/// One installed region and what of it could be opened.
+struct Slot {
+    region: Region,
+    /// The map's bounds, when it opened.
+    bounds: Option<Bounds>,
+    map: Mutex<Option<OpenMap>>,
+    search: Mutex<Option<SearchIndex>>,
+    extras: Option<ActiveExtras>,
+    problem: String,
+}
+
 enum Places {
     Ready(SavedPlaces),
     Unreadable(String),
@@ -53,11 +68,11 @@ enum Places {
 
 pub struct Service {
     store: PackageStore,
-    region: Region,
-    map: Mutex<Option<OpenMap>>,
-    search: Mutex<Option<SearchIndex>>,
-    extras: Mutex<Option<ActiveExtras>>,
-    problem: Mutex<String>,
+    /// Test overrides of Illinois's download addresses.
+    package_url: Option<&'static str>,
+    extras_url: Option<&'static str>,
+    /// Installed regions, in catalog order.
+    slots: RwLock<Vec<Arc<Slot>>>,
     places: Mutex<Places>,
     progress: Mutex<pb::ProgressEvent>,
     cancel: AtomicBool,
@@ -82,11 +97,11 @@ fn http_date_to_iso(value: Option<&str>) -> String {
         .unwrap_or_default()
 }
 
-fn covered(place: &SavedPlace, bounds: Option<&Bounds>) -> bool {
-    bounds.is_some_and(|b| place.is_covered_by(b))
+fn covered(place: &SavedPlace, bounds: &[Bounds]) -> bool {
+    bounds.iter().any(|b| place.is_covered_by(b))
 }
 
-fn place_message(place: &SavedPlace, bounds: Option<&Bounds>) -> pb::Place {
+fn place_message(place: &SavedPlace, bounds: &[Bounds]) -> pb::Place {
     pb::Place {
         id: place.id,
         name: place.name.clone(),
@@ -130,6 +145,91 @@ fn position(p: Option<&pb::Position>) -> Outcome<Option<Coordinates>> {
     .transpose()
 }
 
+fn bounds_message(b: Bounds) -> pb::Bounds {
+    pb::Bounds {
+        west: b.west,
+        south: b.south,
+        east: b.east,
+        north: b.north,
+    }
+}
+
+fn overlaps(a: &Bounds, b: &Bounds) -> bool {
+    a.west <= b.east && b.west <= a.east && a.south <= b.north && b.south <= a.north
+}
+
+fn decompress(z: u8, x: u32, y: u32, encoding: TileEncoding, data: Vec<u8>) -> Outcome<Vec<u8>> {
+    match encoding {
+        TileEncoding::Identity => Ok(data),
+        TileEncoding::Gzip => {
+            let mut out = Vec::with_capacity(data.len() * 3);
+            flate2::read::GzDecoder::new(&data[..])
+                .take(16 << 20)
+                .read_to_end(&mut out)
+                .map_err(|e| error(ErrorKind::InvalidData, format!("Tile {z}/{x}/{y}: {e}")))?;
+            Ok(out)
+        }
+    }
+}
+
+/// Opens what is installed for `region`; `None` when nothing is.
+fn open_slot(store: &PackageStore, region: Region) -> Option<Slot> {
+    let id = region.id;
+    let mut problems = Vec::new();
+    let has_files = store.region_dir(id).join("active.json").exists()
+        || store
+            .region_dir(id)
+            .join("extras")
+            .join("active.json")
+            .exists();
+    if !has_files {
+        return None;
+    }
+    let map = match store.active(id) {
+        Ok(Some(active)) => match TilePackage::open(&active.path) {
+            Ok(tiles) => Some(OpenMap { active, tiles }),
+            Err(e) => {
+                problems.push(format!("The {} map could not be opened: {e}.", region.name));
+                None
+            }
+        },
+        Ok(None) => None,
+        Err(e) => {
+            problems.push(format!("The {} map could not be read: {e}.", region.name));
+            None
+        }
+    };
+    let mut search = map.as_ref().and_then(|m| {
+        SearchIndex::open(&m.active.search_index_path(), &m.active.record.sha256).ok()
+    });
+    let extras = match active_extras(store, id) {
+        Ok(extras) => extras,
+        Err(e) => {
+            problems.push(format!(
+                "The {} stations and addresses could not be read: {e}.",
+                region.name
+            ));
+            None
+        }
+    };
+    if let (Some(index), Some(extras)) = (search.as_mut(), extras.as_ref())
+        && let Err(e) = index.attach_extras(&extras.path)
+    {
+        problems.push(format!(
+            "The {} stations and addresses could not be opened for search: {e}.",
+            region.name
+        ));
+    }
+    Some(Slot {
+        region,
+        bounds: map.as_ref().map(|m| m.active.record.metadata.bounds),
+        map: Mutex::new(map),
+        search: Mutex::new(search),
+        extras,
+        problem: problems.join(" "),
+    })
+}
+
 impl Service {
     pub fn open(config: &pb::Config) -> Outcome<Self> {
         let root = PathBuf::from(&config.store_directory);
@@ -148,17 +248,8 @@ impl Service {
                 ),
             )
         })?;
-        let leak = |s: &str| -> &'static str { Box::leak(s.to_owned().into_boxed_str()) };
-        let region = Region {
-            package_url: match config.package_url.as_str() {
-                "" => ILLINOIS.package_url,
-                url => leak(url),
-            },
-            extras_url: match config.extras_url.as_str() {
-                "" => ILLINOIS.extras_url,
-                url => leak(url),
-            },
-            ..ILLINOIS
+        let leak = |s: &str| -> Option<&'static str> {
+            (!s.is_empty()).then(|| &*Box::leak(s.to_owned().into_boxed_str()))
         };
         let places = match SavedPlaces::open(&root) {
             Ok(places) => Places::Ready(places),
@@ -166,11 +257,9 @@ impl Service {
         };
         let service = Self {
             store: PackageStore::new(root),
-            region,
-            map: Mutex::new(None),
-            search: Mutex::new(None),
-            extras: Mutex::new(None),
-            problem: Mutex::new(String::new()),
+            package_url: leak(&config.package_url),
+            extras_url: leak(&config.extras_url),
+            slots: RwLock::new(Vec::new()),
             places: Mutex::new(places),
             progress: Mutex::new(pb::ProgressEvent::default()),
             cancel: AtomicBool::new(false),
@@ -180,117 +269,166 @@ impl Service {
         Ok(service)
     }
 
-    /// Opens the active map, its search index and the extras, replacing what
-    /// was open. Problems are reported in the status, not as failures, so a
-    /// damaged package never prevents downloading a replacement.
-    fn reload(&self) {
-        let id = self.region.id;
-        let mut problems = Vec::new();
-        let map = match self.store.active(id) {
-            Ok(Some(active)) => match TilePackage::open(&active.path) {
-                Ok(tiles) => Some(OpenMap { active, tiles }),
-                Err(e) => {
-                    problems.push(format!("The installed map could not be opened: {e}."));
-                    None
-                }
-            },
-            Ok(None) => None,
-            Err(e) => {
-                problems.push(format!("The installed map could not be read: {e}."));
-                None
-            }
-        };
-        let mut search = map.as_ref().and_then(|m| {
-            SearchIndex::open(&m.active.search_index_path(), &m.active.record.sha256).ok()
-        });
-        let extras = match active_extras(&self.store, id) {
-            Ok(extras) => extras,
-            Err(e) => {
-                problems.push(format!(
-                    "The installed stations and addresses could not be read: {e}."
-                ));
-                None
-            }
-        };
-        if let (Some(index), Some(extras)) = (search.as_mut(), extras.as_ref())
-            && let Err(e) = index.attach_extras(&extras.path)
-        {
-            problems.push(format!(
-                "Stations and addresses could not be opened for search: {e}."
-            ));
+    /// The catalog region `id`, with the test overrides applied to Illinois.
+    fn region(&self, id: &str) -> Outcome<Region> {
+        let region = *regions::find(id).ok_or_else(|| {
+            error(
+                ErrorKind::InvalidArgument,
+                format!("There is no region {id:?}."),
+            )
+        })?;
+        if region.id != ILLINOIS.id {
+            return Ok(region);
         }
-        *lock(&self.map) = map;
-        *lock(&self.search) = search;
-        *lock(&self.extras) = extras;
-        *lock(&self.problem) = problems.join(" ");
+        Ok(Region {
+            package_url: self.package_url.unwrap_or(region.package_url),
+            extras_url: self.extras_url.unwrap_or(region.extras_url),
+            ..region
+        })
     }
 
-    fn bounds(&self) -> Option<Bounds> {
-        lock(&self.map)
-            .as_ref()
-            .map(|m| m.active.record.metadata.bounds)
+    fn slots(&self) -> Vec<Arc<Slot>> {
+        self.slots
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+    }
+
+    fn set_slots(&self, slots: Vec<Arc<Slot>>) {
+        *self
+            .slots
+            .write()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = slots;
+    }
+
+    /// Opens every installed region's map, search index and extras, replacing
+    /// what was open. Problems are reported in the status, not as failures, so
+    /// a damaged package never prevents downloading a replacement.
+    fn reload(&self) {
+        // The new set is opened before the old one is closed, so the map never
+        // goes blank; replaced versions are closed by the swap.
+        let slots = regions::ALL
+            .iter()
+            .filter_map(|r| self.region(r.id).ok())
+            .filter_map(|r| open_slot(&self.store, r))
+            .map(Arc::new)
+            .collect();
+        self.set_slots(slots);
+    }
+
+    fn all_bounds(&self) -> Vec<Bounds> {
+        self.slots().iter().filter_map(|s| s.bounds).collect()
+    }
+
+    pub fn catalog(&self) -> pb::Catalog {
+        pb::Catalog {
+            regions: regions::ALL
+                .iter()
+                .map(|r| pb::CatalogRegion {
+                    id: r.id.to_owned(),
+                    name: r.name.to_owned(),
+                    package_bytes: r.package_bytes,
+                    extras_bytes: r.extras_bytes,
+                    source_page: r.source_page.to_owned(),
+                })
+                .collect(),
+        }
     }
 
     pub fn status(&self) -> pb::Status {
-        let map = lock(&self.map).as_ref().map(|m| {
-            let r = &m.active.record;
-            let b = r.metadata.bounds;
-            pb::MapInfo {
-                version: m.active.version.clone(),
-                region_name: self.region.name.to_owned(),
-                data_date: http_date_to_iso(r.source.last_modified.as_deref()),
-                downloaded_at: r.downloaded_at.clone(),
-                bytes: r.byte_length,
-                bounds: Some(pb::Bounds {
-                    west: b.west,
-                    south: b.south,
-                    east: b.east,
-                    north: b.north,
-                }),
-                min_zoom: r.metadata.min_zoom.into(),
-                max_zoom: r.metadata.max_zoom.into(),
-                attribution: r.attribution.clone(),
-                source_url: r.source.url.clone(),
-                tiles: r.check.total_tiles,
-            }
-        });
-        let extras = lock(&self.extras).as_ref().map(|x| {
-            let r = &x.record;
-            pb::ExtrasInfo {
-                version: x.version.clone(),
-                data_date: r
-                    .data_timestamp
-                    .as_deref()
-                    .map(|t| t.chars().take(10).collect())
-                    .unwrap_or_else(|| http_date_to_iso(r.source.last_modified.as_deref())),
-                downloaded_at: r.downloaded_at.clone(),
-                fuel: r.stats.fuel,
-                charging: r.stats.charging,
-                addresses: r.stats.addresses,
-                source_bytes: r.byte_length,
-            }
-        });
-        let bounds = self.bounds();
+        let slots = self.slots();
+        let mut regions = Vec::new();
+        let mut coverage: Option<Bounds> = None;
+        let (mut min_zoom, mut max_zoom) = (u32::MAX, 0);
+        let mut versions = Vec::new();
+        for slot in &slots {
+            let map = lock(&slot.map).as_ref().map(|m| {
+                let r = &m.active.record;
+                let b = r.metadata.bounds;
+                coverage = Some(match coverage {
+                    None => b,
+                    Some(c) => Bounds {
+                        west: c.west.min(b.west),
+                        south: c.south.min(b.south),
+                        east: c.east.max(b.east),
+                        north: c.north.max(b.north),
+                    },
+                });
+                min_zoom = min_zoom.min(r.metadata.min_zoom.into());
+                max_zoom = max_zoom.max(r.metadata.max_zoom.into());
+                pb::MapInfo {
+                    version: m.active.version.clone(),
+                    region_name: slot.region.name.to_owned(),
+                    data_date: http_date_to_iso(r.source.last_modified.as_deref()),
+                    downloaded_at: r.downloaded_at.clone(),
+                    bytes: r.byte_length,
+                    bounds: Some(bounds_message(b)),
+                    min_zoom: r.metadata.min_zoom.into(),
+                    max_zoom: r.metadata.max_zoom.into(),
+                    attribution: r.attribution.clone(),
+                    source_url: r.source.url.clone(),
+                    tiles: r.check.total_tiles,
+                }
+            });
+            let extras = slot.extras.as_ref().map(|x| {
+                let r = &x.record;
+                pb::ExtrasInfo {
+                    version: x.version.clone(),
+                    data_date: r
+                        .data_timestamp
+                        .as_deref()
+                        .map(|t| t.chars().take(10).collect())
+                        .unwrap_or_else(|| http_date_to_iso(r.source.last_modified.as_deref())),
+                    downloaded_at: r.downloaded_at.clone(),
+                    fuel: r.stats.fuel,
+                    charging: r.stats.charging,
+                    addresses: r.stats.addresses,
+                    source_bytes: r.byte_length,
+                }
+            });
+            versions.push(format!(
+                "{}:{}:{}",
+                slot.region.id,
+                map.as_ref().map_or("", |m| m.version.as_str()),
+                extras.as_ref().map_or("", |x| x.version.as_str())
+            ));
+            regions.push(pb::RegionStatus {
+                id: slot.region.id.to_owned(),
+                name: slot.region.name.to_owned(),
+                search_ready: lock(&slot.search).is_some(),
+                map,
+                extras,
+                problem: slot.problem.clone(),
+            });
+        }
+        let bounds = self.all_bounds();
         let (places, places_problem) = match &*lock(&self.places) {
             Places::Ready(list) => (
                 list.list()
                     .iter()
-                    .map(|p| place_message(p, bounds.as_ref()))
+                    .map(|p| place_message(p, &bounds))
                     .collect(),
                 String::new(),
             ),
             Places::Unreadable(problem) => (Vec::new(), problem.clone()),
         };
         pb::Status {
-            map,
-            extras,
+            search_ready: regions.iter().all(|r| r.map.is_none() || r.search_ready),
+            map_problem: regions
+                .iter()
+                .map(|r| r.problem.as_str())
+                .filter(|p| !p.is_empty())
+                .collect::<Vec<_>>()
+                .join(" "),
             places,
-            search_ready: lock(&self.search).is_some(),
-            map_problem: lock(&self.problem).clone(),
             places_problem,
             store_directory: self.store.root().display().to_string(),
-            region_name: self.region.name.to_owned(),
             updating: self.busy.load(Ordering::Acquire),
+            coverage: coverage.map(bounds_message),
+            min_zoom: if max_zoom == 0 { 0 } else { min_zoom },
+            max_zoom,
+            content_version: versions.join(";"),
+            regions,
         }
     }
 
@@ -309,15 +447,17 @@ impl Service {
         if request.query.chars().count() > 200 {
             return Err(error(ErrorKind::InvalidArgument, "The search is too long."));
         }
-        let guard = lock(&self.search);
-        let Some(index) = guard.as_ref() else {
+        let slots = self.slots();
+        // Always in catalog order, so two searches never wait on each other's locks.
+        let guards: Vec<_> = slots.iter().map(|s| lock(&s.search)).collect();
+        let indexes: Vec<&SearchIndex> = guards.iter().filter_map(|g| g.as_ref()).collect();
+        if indexes.is_empty() {
             return Err(error(
                 ErrorKind::Unavailable,
                 "Search is not available until a map is installed.",
             ));
-        };
-        let results = index
-            .search(&request.query, near, limit)
+        }
+        let results = search_all(&indexes, &request.query, near, limit)
             .map_err(|e| error(ErrorKind::Internal, format!("Search failed: {e}")))?;
         Ok(pb::SearchResults {
             results: results
@@ -338,46 +478,68 @@ impl Service {
         })
     }
 
-    /// The tile at z/x/y, decompressed; `None` where the package has none.
+    /// The tile at z/x/y, decompressed; `None` where no installed map has one.
+    /// A tile on a border between installed regions is merged from each.
     pub fn tile(&self, z: u32, x: u32, y: u32) -> Outcome<Option<Vec<u8>>> {
         let z = u8::try_from(z)
             .ok()
             .filter(|z| *z <= 24)
             .ok_or_else(|| error(ErrorKind::InvalidArgument, "Invalid zoom."))?;
-        let guard = lock(&self.map);
-        let Some(map) = guard.as_ref() else {
+        let n = 1_u64 << z;
+        if u64::from(x) >= n || u64::from(y) >= n {
             return Ok(None);
+        }
+        let (west, north) = tile_point_to_lon_lat(z, x, y, 4096, 0, 0);
+        let (east, south) = tile_point_to_lon_lat(z, x, y, 4096, 4096, 4096);
+        let area = Bounds {
+            west,
+            south,
+            east,
+            north,
         };
-        let tile = map
-            .tiles
-            .tile(z, x, y)
-            .map_err(|e| error(ErrorKind::InvalidData, format!("Tile {z}/{x}/{y}: {e}")))?;
-        drop(guard);
-        let Some(tile) = tile else { return Ok(None) };
-        match tile.encoding {
-            TileEncoding::Identity => Ok(Some(tile.data)),
-            TileEncoding::Gzip => {
-                let mut out = Vec::with_capacity(tile.data.len() * 3);
-                flate2::read::GzDecoder::new(&tile.data[..])
-                    .take(16 << 20)
-                    .read_to_end(&mut out)
-                    .map_err(|e| error(ErrorKind::InvalidData, format!("Tile {z}/{x}/{y}: {e}")))?;
-                Ok(Some(out))
+        let mut found = Vec::new();
+        for slot in self.slots() {
+            if !slot.bounds.is_some_and(|b| overlaps(&b, &area)) {
+                continue;
+            }
+            let guard = lock(&slot.map);
+            let Some(map) = guard.as_ref() else { continue };
+            let tile = map
+                .tiles
+                .tile(z, x, y)
+                .map_err(|e| error(ErrorKind::InvalidData, format!("Tile {z}/{x}/{y}: {e}")))?;
+            drop(guard);
+            if let Some(tile) = tile {
+                found.push(decompress(z, x, y, tile.encoding, tile.data)?);
+            }
+        }
+        match found.len() {
+            0 => Ok(None),
+            1 => Ok(found.pop()),
+            _ => {
+                let parts: Vec<&[u8]> = found.iter().map(Vec::as_slice).collect();
+                merge_tiles(&parts).map(Some).map_err(|e| {
+                    error(
+                        ErrorKind::InvalidData,
+                        format!("Tile {z}/{x}/{y} could not be merged: {e}"),
+                    )
+                })
             }
         }
     }
 
     pub fn stations(&self) -> Outcome<pb::Stations> {
-        let path = lock(&self.extras).as_ref().map(|x| x.path.clone());
-        let geojson = match path {
-            Some(path) => stations_geojson(&path).map_err(|e| {
-                error(
-                    ErrorKind::InvalidData,
-                    format!("Stations could not be read: {e}"),
-                )
-            })?,
-            None => r#"{"type":"FeatureCollection","features":[]}"#.to_owned(),
-        };
+        let slots = self.slots();
+        let paths: Vec<&Path> = slots
+            .iter()
+            .filter_map(|s| s.extras.as_ref().map(|x| x.path.as_path()))
+            .collect();
+        let geojson = stations_geojson_all(&paths).map_err(|e| {
+            error(
+                ErrorKind::InvalidData,
+                format!("Stations could not be read: {e}"),
+            )
+        })?;
         Ok(pb::Stations { geojson })
     }
 
@@ -391,17 +553,17 @@ impl Service {
     pub fn add_place(&self, request: &pb::AddPlace) -> Outcome<pb::Place> {
         let at = position(request.position.as_ref())?
             .ok_or_else(|| error(ErrorKind::InvalidArgument, "A position is required."))?;
-        let bounds = self.bounds();
+        let bounds = self.all_bounds();
         self.with_places(|places| {
             places
                 .add(&request.name, &request.note, at)
-                .map(|p| place_message(&p, bounds.as_ref()))
+                .map(|p| place_message(&p, &bounds))
                 .map_err(places_error)
         })
     }
 
     pub fn update_place(&self, request: &pb::UpdatePlace) -> Outcome<pb::Place> {
-        let bounds = self.bounds();
+        let bounds = self.all_bounds();
         self.with_places(|places| {
             places
                 .update(request.id, &request.name, &request.note)
@@ -409,7 +571,7 @@ impl Service {
             let place = places
                 .get(request.id)
                 .ok_or_else(|| places_error(PlacesError::NotFound(request.id)))?;
-            Ok(place_message(place, bounds.as_ref()))
+            Ok(place_message(place, &bounds))
         })
     }
 
@@ -429,7 +591,7 @@ impl Service {
         Ok(())
     }
 
-    fn begin(&self, target: pb::UpdateTarget) -> Outcome<BusyGuard<'_>> {
+    fn begin(&self, target: pb::UpdateTarget, region: Option<&Region>) -> Outcome<BusyGuard<'_>> {
         if self.busy.swap(true, Ordering::AcqRel) {
             return Err(error(
                 ErrorKind::Busy,
@@ -441,6 +603,8 @@ impl Service {
             active: true,
             target: target as i32,
             phase: "Checking".into(),
+            region_id: region.map(|r| r.id.to_owned()).unwrap_or_default(),
+            region_name: region.map(|r| r.name.to_owned()).unwrap_or_default(),
             ..Default::default()
         };
         Ok(BusyGuard(self))
@@ -473,15 +637,20 @@ impl Service {
         }
     }
 
-    pub fn update(&self, target: pb::UpdateTarget) -> Outcome<pb::UpdateResult> {
-        let _busy = self.begin(target)?;
+    pub fn update(&self, request: &pb::Update) -> Outcome<pb::UpdateResult> {
+        let target = pb::UpdateTarget::try_from(request.target)
+            .ok()
+            .filter(|t| *t != pb::UpdateTarget::Unspecified)
+            .ok_or_else(|| error(ErrorKind::InvalidArgument, "No update target."))?;
+        let region = self.region(&request.region_id)?;
+        let _busy = self.begin(target, Some(&region))?;
         let transport = HttpTransport::new();
         let options = UpdateOptions::default();
-        let id = self.region.id;
+        let id = region.id;
         let result = match target {
             pb::UpdateTarget::Map => update_region(
                 &self.store,
-                &self.region,
+                &region,
                 &transport,
                 &options,
                 &mut |p| self.report(p),
@@ -501,9 +670,9 @@ impl Service {
                     replaced: replaced.unwrap_or_default(),
                 },
             }),
-            pb::UpdateTarget::Extras => update_extras(
+            _ => update_extras(
                 &self.store,
-                &self.region,
+                &region,
                 &transport,
                 &options,
                 &mut |p| self.report(p),
@@ -523,9 +692,6 @@ impl Service {
                     replaced: replaced.unwrap_or_default(),
                 },
             }),
-            pb::UpdateTarget::Unspecified => {
-                return Err(error(ErrorKind::InvalidArgument, "No update target."));
-            }
         }
         .map_err(update_error)?;
         if !result.up_to_date {
@@ -543,28 +709,77 @@ impl Service {
         Ok(result)
     }
 
-    /// Builds the active map's missing search index (packages installed before
-    /// search existed).
-    pub fn prepare_search(&self) -> Outcome<()> {
-        let _busy = self.begin(pb::UpdateTarget::Map)?;
-        let active = lock(&self.map)
-            .as_ref()
-            .map(|m| m.active.clone())
-            .ok_or_else(|| error(ErrorKind::NotFound, "No map is installed."))?;
-        open_or_build(&active, &self.cancel, &mut |done, total| {
-            self.report(Progress::Indexing { done, total })
-        })
-        .map_err(|e| match e {
-            offline_maps_core::mbtiles::PackageError::Io(io)
-                if io.kind() == std::io::ErrorKind::Interrupted =>
-            {
-                error(ErrorKind::Cancelled, "Preparing search was cancelled.")
+    /// Deletes a region's map, search index and extras. Saved places are kept.
+    pub fn remove_region(&self, request: &pb::RemoveRegion) -> Outcome<()> {
+        let region = self.region(&request.region_id)?;
+        let _busy = self.begin(pb::UpdateTarget::Map, Some(&region))?;
+        lock(&self.progress).phase = "Removing".into();
+        let dir = self.store.region_dir(region.id);
+        let kept: Vec<Arc<Slot>> = self
+            .slots()
+            .into_iter()
+            .filter(|s| s.region.id != region.id)
+            .collect();
+        self.set_slots(kept);
+        // A tile read that started before the swap may hold the files briefly.
+        let mut last = None;
+        for attempt in 0..20 {
+            match std::fs::remove_dir_all(&dir) {
+                Ok(()) => {
+                    last = None;
+                    break;
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                    last = None;
+                    break;
+                }
+                Err(e) => {
+                    last = Some(e);
+                    std::thread::sleep(std::time::Duration::from_millis(25 * (attempt + 1)));
+                }
             }
-            other => error(
-                ErrorKind::InvalidData,
-                format!("Search could not be prepared: {other}"),
-            ),
-        })?;
+        }
+        let outcome = match last {
+            None => Ok(()),
+            Some(e) => Err(error(
+                ErrorKind::Storage,
+                format!("The {} map could not be removed: {e}", region.name),
+            )),
+        };
+        // Reopen whatever is left of it if removal failed part-way.
+        self.reload();
+        outcome
+    }
+
+    /// Builds the search index of every installed map that has none
+    /// (packages installed before search existed).
+    pub fn prepare_search(&self) -> Outcome<()> {
+        let missing: Vec<(Region, ActivePackage)> = self
+            .slots()
+            .iter()
+            .filter(|s| lock(&s.search).is_none())
+            .filter_map(|s| lock(&s.map).as_ref().map(|m| (s.region, m.active.clone())))
+            .collect();
+        if missing.is_empty() {
+            return Ok(());
+        }
+        for (region, active) in missing {
+            let _busy = self.begin(pb::UpdateTarget::Map, Some(&region))?;
+            open_or_build(&active, &self.cancel, &mut |done, total| {
+                self.report(Progress::Indexing { done, total })
+            })
+            .map_err(|e| match e {
+                offline_maps_core::mbtiles::PackageError::Io(io)
+                    if io.kind() == std::io::ErrorKind::Interrupted =>
+                {
+                    error(ErrorKind::Cancelled, "Preparing search was cancelled.")
+                }
+                other => error(
+                    ErrorKind::InvalidData,
+                    format!("Search for {} could not be prepared: {other}", region.name),
+                ),
+            })?;
+        }
         self.reload();
         Ok(())
     }

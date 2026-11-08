@@ -36,6 +36,10 @@ pub struct Region {
     pub outer: Bounds,
     /// Package bounds must cover each of these (longitude, latitude) points.
     pub required_points: &'static [(f64, f64)],
+    /// Approximate download sizes, for showing before a download (the files
+    /// are rebuilt regularly; the server's figure is used while downloading).
+    pub package_bytes: u64,
+    pub extras_bytes: u64,
 }
 
 pub const ILLINOIS: Region = Region {
@@ -58,6 +62,8 @@ pub const ILLINOIS: Region = Region {
         (-89.176, 37.005),
         (-91.410, 39.936),
     ],
+    package_bytes: 362_586_112,
+    extras_bytes: 363_155_297,
 };
 
 /// What the server said about the file when it was downloaded.

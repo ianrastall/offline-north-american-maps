@@ -281,16 +281,38 @@ pub(crate) fn read_tables(db: &Connection) -> rusqlite::Result<(Vec<AddressStree
     Ok((streets, addresses))
 }
 
+/// Address matches from one extras database, best first: (match strength,
+/// distance or number gap, result). `exact` is false when only the nearest
+/// listed numbers were found.
+pub(crate) struct Found {
+    pub(crate) exact: bool,
+    pub(crate) matches: Vec<(u8, f64, SearchResult)>,
+}
+
+impl Found {
+    /// Joins matches from several regions: exact numbers win over nearest
+    /// listed ones, then by strength and distance.
+    pub(crate) fn join(all: Vec<Found>, limit: usize) -> Vec<SearchResult> {
+        let any_exact = all.iter().any(|f| f.exact);
+        let mut matches: Vec<_> = all
+            .into_iter()
+            .filter(|f| f.exact == any_exact)
+            .flat_map(|f| f.matches)
+            .collect();
+        matches.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.total_cmp(&b.1)));
+        matches.into_iter().map(|(_, _, r)| r).take(limit).collect()
+    }
+}
+
 /// Address results for a query that starts with a house number, or `None`
 /// when the query is not shaped like an address. Exact numbers are returned
 /// when any street has one; otherwise the nearest listed number on each
 /// matching street, marked in `detail`.
-pub(crate) fn search(
+pub(crate) fn search_ranked(
     db: &Connection,
     query: &str,
     near: Option<Coordinates>,
-    limit: usize,
-) -> Result<Option<Vec<SearchResult>>, PackageError> {
+) -> Result<Option<Found>, PackageError> {
     let query = query.trim();
     let (first, rest) = query
         .split_once(char::is_whitespace)
@@ -323,8 +345,8 @@ pub(crate) fn search(
          ORDER BY abs(num - ?2), num LIMIT 1",
     )?;
 
-    type Found = (u8, f64, SearchResult);
-    let (mut exact, mut approximate): (Vec<Found>, Vec<Found>) = (Vec::new(), Vec::new());
+    type Match = (u8, f64, SearchResult);
+    let (mut exact, mut approximate): (Vec<Match>, Vec<Match>) = (Vec::new(), Vec::new());
     let mut rows = streets.query(params![
         match_expression(&words),
         near.is_some(),
@@ -380,9 +402,11 @@ pub(crate) fn search(
             approximate.push((strength, order, r));
         }
     }
-    let mut found = if exact.is_empty() { approximate } else { exact };
-    found.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.total_cmp(&b.1)));
-    Ok(Some(
-        found.into_iter().map(|(_, _, r)| r).take(limit).collect(),
-    ))
+    let is_exact = !exact.is_empty();
+    let mut matches = if is_exact { exact } else { approximate };
+    matches.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.total_cmp(&b.1)));
+    Ok(Some(Found {
+        exact: is_exact,
+        matches,
+    }))
 }

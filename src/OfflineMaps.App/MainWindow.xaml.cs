@@ -68,6 +68,7 @@ public sealed partial class MainWindow : Window
             App.Current.Themes.Changed -= PushTheme;
             App.Current.Accent.Changed -= PushTheme;
             _settingsWindow?.Close();
+            _regionsWindow?.Close();
             App.Current.Accent.Detach(Root);
             App.Current.Themes.Detach(this);
         };
@@ -92,10 +93,19 @@ public sealed partial class MainWindow : Window
             StatusText.Text = "Not started";
             return;
         }
+        try
+        {
+            var opened = _core;
+            _catalog = await Task.Run(opened.Catalog);
+        }
+        catch (MapCoreException ex)
+        {
+            AppLog.Write($"The region list could not be read: {ex.Message}");
+        }
         await RefreshStatusAsync();
         ShowPlaces();
         await StartMapViewAsync();
-        if (_status?.Map is not null && !_status.SearchReady && _status.MapProblem.Length == 0)
+        if (_status is { SearchReady: false } && _status.Regions.Any(r => r.Map is not null))
         {
             await PrepareSearchAsync();
         }
@@ -169,14 +179,13 @@ public sealed partial class MainWindow : Window
             return;
         }
         var status = _status;
-        bool hasMap = status.Map is not null;
+        bool hasMap = status.Coverage is not null;
         bool busy = _update is not null;
-        NoMapBar.IsOpen = !hasMap && !busy;
-        ExtrasBar.IsOpen = hasMap && status.Extras is null && !busy && !_settings.ExtrasOfferClosed;
-        UpdateMapItem.Text = hasMap ? "Update map…" : "Download map…";
-        UpdateExtrasItem.Text = status.Extras is null ? "Download stations and addresses…" : "Update stations and addresses…";
-        UpdateMapItem.IsEnabled = !busy;
-        UpdateExtrasItem.IsEnabled = !busy && hasMap;
+        var missingExtras = status.Regions.Where(r => r.Map is not null && r.Extras is null).Select(r => r.Name).ToList();
+        NoMapBar.IsOpen = !hasMap && !busy && _queue.Count == 0;
+        ExtrasBar.IsOpen = missingExtras.Count > 0 && !busy && !_settings.ExtrasOfferClosed;
+        ExtrasBar.Title = $"Stations and addresses are not installed for {Format.List(missingExtras)}";
+        UpdateAllItem.IsEnabled = !busy && hasMap;
         MapInfoItem.IsEnabled = hasMap;
         foreach (var item in new[] { ZoomInItem, ZoomOutItem, FitItem })
         {
@@ -184,7 +193,7 @@ public sealed partial class MainWindow : Window
         }
         if (status.MapProblem.Length > 0)
         {
-            ShowError("The installed map has a problem", $"{status.MapProblem} Download the map again to replace it.");
+            ShowError("An installed map has a problem", $"{status.MapProblem} Download the region again in Regions to replace it, or remove it.", "Regions…", Regions_Click);
         }
         else if (status.PlacesProblem.Length > 0)
         {
@@ -204,20 +213,40 @@ public sealed partial class MainWindow : Window
         }
         UpdatePlaceCommands();
         SyncMap();
+        RegionsChanged?.Invoke();
     }
 
     private static string Summary(Status status)
     {
-        if (status.Map is not { } map)
+        var maps = status.Regions.Where(r => r.Map is not null).ToList();
+        if (maps.Count == 0)
         {
             return "No map installed";
         }
-        string text = map.DataDate.Length > 0
-            ? $"{map.RegionName} map, data of {Format.Date(map.DataDate)}"
-            : $"{map.RegionName} map, downloaded {Format.Date(map.DownloadedAt)}";
-        if (status.Extras is { } extras)
+        string text;
+        if (maps.Count == 1)
         {
-            text += $" · stations and addresses, data of {Format.Date(extras.DataDate)}";
+            var map = maps[0].Map;
+            text = map.DataDate.Length > 0
+                ? $"{map.RegionName} map, data of {Format.Date(map.DataDate)}"
+                : $"{map.RegionName} map, downloaded {Format.Date(map.DownloadedAt)}";
+            if (maps[0].Extras is { } extras)
+            {
+                text += $" · stations and addresses, data of {Format.Date(extras.DataDate)}";
+            }
+        }
+        else
+        {
+            var dates = maps.Select(r => r.Map.DataDate).Where(d => d.Length > 0).Order().ToList();
+            string names = maps.Count <= 3 ? Format.List(maps.Select(r => r.Name)) : $"{maps.Count} regions";
+            text = dates.Count == 0 ? $"{names} maps"
+                : dates[0] == dates[^1] ? $"{names} maps, data of {Format.Date(dates[0])}"
+                : $"{names} maps, data from {Format.Date(dates[0])} to {Format.Date(dates[^1])}";
+            int extras = maps.Count(r => r.Extras is not null);
+            if (extras > 0)
+            {
+                text += extras == maps.Count ? " · stations and addresses" : $" · stations and addresses for {extras} of {maps.Count}";
+            }
         }
         return status.SearchReady ? text : text + " · search not ready";
     }
@@ -338,7 +367,7 @@ public sealed partial class MainWindow : Window
 
     private async void MapInfo_Click(object sender, RoutedEventArgs e)
     {
-        if (_status?.Map is not { } map)
+        if (_status is not { } status || status.Coverage is null)
         {
             return;
         }
@@ -350,19 +379,26 @@ public sealed partial class MainWindow : Window
             row.Children.Add(Text(value));
             panel.Children.Add(row);
         }
-        Row("Map data date", map.DataDate.Length > 0 ? $"{Format.Date(map.DataDate)} (date of the package on the server)" : "Not reported by the server");
-        Row("Downloaded", Format.Date(map.DownloadedAt));
-        Row("Size", $"{Format.Megabytes(map.Bytes)}, {map.Tiles:N0} tiles, zoom {map.MinZoom}–{map.MaxZoom}");
-        Row("Source", map.SourceUrl);
-        if (_status.Extras is { } extras)
+        foreach (var region in status.Regions)
         {
-            Row("Stations and addresses", $"Data of {Format.Date(extras.DataDate)}, downloaded {Format.Date(extras.DownloadedAt)}: {extras.Fuel:N0} fuel stations, {extras.Charging:N0} charging stations, {extras.Addresses:N0} addresses");
+            var lines = new List<string>();
+            if (region.Map is { } map)
+            {
+                lines.Add(map.DataDate.Length > 0
+                    ? $"Map data of {Format.Date(map.DataDate)} (date of the package on the server), downloaded {Format.Date(map.DownloadedAt)}"
+                    : $"Map downloaded {Format.Date(map.DownloadedAt)}; the server reported no data date");
+                lines.Add($"{Format.Megabytes(map.Bytes)}, {map.Tiles:N0} tiles, zoom {map.MinZoom}–{map.MaxZoom}, from {map.SourceUrl}");
+            }
+            lines.Add(region.Extras is { } extras
+                ? $"Stations and addresses: data of {Format.Date(extras.DataDate)}, downloaded {Format.Date(extras.DownloadedAt)}: {extras.Fuel:N0} fuel stations, {extras.Charging:N0} charging stations, {extras.Addresses:N0} addresses"
+                : "Stations and addresses: not installed");
+            if (region.Problem.Length > 0)
+            {
+                lines.Add(region.Problem);
+            }
+            Row(region.Name, string.Join(Environment.NewLine, lines));
         }
-        else
-        {
-            Row("Stations and addresses", "Not installed");
-        }
-        Row("Map folder", _status.StoreDirectory);
+        Row("Map folder", status.StoreDirectory);
         Row("Attribution", "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL). Map package and extracts by Geofabrik.");
         panel.Children.Add(Text("Offline maps show roads as mapped on the data date. They do not show current closures, detours, traffic or emergency conditions.", "JupiterCaptionTextStyle"));
         await ShowDialogAsync(new ContentDialog

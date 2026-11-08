@@ -4,7 +4,7 @@
 
 ## Confirmed purpose
 
-Ian wants road maps for getting around during an emergency, available offline. Satellite imagery is not the main requirement. Illinois is the first region. The original Google satellite downloader reference prompted the project, but does not define its data provider or visual design.
+Ian wants road maps for getting around during an emergency, available offline. Satellite imagery is not the main requirement. Illinois is the first region; from 0.2.0 any US state except Alaska can be added, alongside DC, Puerto Rico and the US Virgin Islands. The original Google satellite downloader reference prompted the project, but does not define its data provider or visual design.
 
 ## First useful workflow
 

@@ -72,9 +72,39 @@ fn empty_store_reports_no_map_and_refuses_search() {
     let dir = TempDir::new();
     let core = create(&dir.0);
     let s = status(core);
-    assert!(s.map.is_none() && s.extras.is_none() && !s.search_ready && !s.updating);
-    assert_eq!(s.region_name, "Illinois");
+    assert!(s.regions.is_empty() && s.coverage.is_none() && !s.updating);
+    assert!(s.content_version.is_empty());
     assert!(dir.0.is_dir());
+
+    let catalog = call(core, 6, pb::request::Command::GetCatalog(pb::GetCatalog {}));
+    let Some(pb::response::Result::Catalog(catalog)) = catalog.result else {
+        panic!("{catalog:?}");
+    };
+    assert_eq!(catalog.regions.len(), 52);
+    let illinois = catalog.regions.iter().find(|r| r.id == "us-il").unwrap();
+    assert_eq!(illinois.name, "Illinois");
+    assert!(illinois.package_bytes > 100_000_000);
+
+    // Removing a region that is not installed succeeds; an unknown one does not.
+    let removed = call(
+        core,
+        11,
+        pb::request::Command::RemoveRegion(pb::RemoveRegion {
+            region_id: "us-in".into(),
+        }),
+    );
+    assert!(removed.error.is_none(), "{removed:?}");
+    let unknown = call(
+        core,
+        12,
+        pb::request::Command::RemoveRegion(pb::RemoveRegion {
+            region_id: "us-ak".into(),
+        }),
+    );
+    assert_eq!(
+        unknown.error.unwrap().kind,
+        ErrorKind::InvalidArgument as i32
+    );
 
     let search = call(
         core,
@@ -290,7 +320,10 @@ fn transport_contract() {
         // Unknown update target.
         let bad_target = pb::Request {
             request_id: 9,
-            command: Some(pb::request::Command::Update(pb::Update { target: 42 })),
+            command: Some(pb::request::Command::Update(pb::Update {
+                target: 42,
+                region_id: "us-il".into(),
+            })),
         }
         .encode_to_vec();
         assert_eq!(
@@ -338,11 +371,25 @@ fn update_against_an_unreachable_server_fails_cleanly() {
         3,
         pb::request::Command::Update(pb::Update {
             target: pb::UpdateTarget::Map as i32,
+            region_id: "us-il".into(),
         }),
     );
     assert_eq!(response.error.unwrap().kind, ErrorKind::Network as i32);
     let s = status(core);
-    assert!(s.map.is_none() && !s.updating);
+    assert!(s.regions.is_empty() && !s.updating);
+    // A region outside the catalog is refused before anything is downloaded.
+    let response = call(
+        core,
+        4,
+        pb::request::Command::Update(pb::Update {
+            target: pb::UpdateTarget::Map as i32,
+            region_id: "us-zz".into(),
+        }),
+    );
+    assert_eq!(
+        response.error.unwrap().kind,
+        ErrorKind::InvalidArgument as i32
+    );
     unsafe { om_destroy(core) };
 }
 
@@ -355,9 +402,16 @@ fn real_store_when_available() {
     };
     let core = create(std::path::Path::new(&store));
     let s = status(core);
-    let map = s.map.expect("the test store has a map");
+    let illinois = s
+        .regions
+        .iter()
+        .find(|r| r.id == "us-il")
+        .expect("the test store has Illinois");
+    let map = illinois.map.as_ref().expect("the test store has a map");
     assert!(s.search_ready, "{}", s.map_problem);
     assert_eq!(map.max_zoom, 14);
+    assert_eq!(s.max_zoom, 14);
+    assert!(s.coverage.is_some() && !s.content_version.is_empty());
     let mut result = ptr::null_mut();
     assert_eq!(
         unsafe { om_tile(core, 14, 4203, 6089, &mut result) },

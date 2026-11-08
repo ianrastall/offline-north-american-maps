@@ -6,54 +6,194 @@ using OfflineMaps.Interop.Messages;
 namespace OfflineMaps.App;
 
 /// <summary>
-/// Map and extras downloads. The core downloads, verifies and activates; the current map stays
-/// in use throughout, and a cancelled download resumes next time.
+/// Region downloads, updates and removal. Work is queued and runs one item at a time; the core
+/// downloads, verifies and activates, the installed maps stay in use throughout, and a cancelled
+/// download resumes next time.
 /// </summary>
 public sealed partial class MainWindow
 {
-    private Task? _update;
-    private UpdateTarget _updateTarget;
+    /// <summary>One queued download or update.</summary>
+    internal sealed record Job(string RegionId, UpdateTarget Target);
 
-    private async void UpdateMap_Click(object sender, RoutedEventArgs e)
+    private readonly List<Job> _queue = [];
+    private Task? _update;
+    private Job? _current;
+    private IReadOnlyList<CatalogRegion> _catalog = [];
+    private RegionsWindow? _regionsWindow;
+
+    /// <summary>Raised when the installed regions, the queue or the progress change.</summary>
+    internal event Action? RegionsChanged;
+
+    internal IReadOnlyList<CatalogRegion> Catalog => _catalog;
+
+    internal Status? CurrentStatus => _status;
+
+    internal Job? CurrentJob => _current;
+
+    internal string ProgressText { get; private set; } = "";
+
+    internal bool IsQueued(string regionId, UpdateTarget target) => _queue.Contains(new Job(regionId, target));
+
+    internal bool IsBusy => _update is not null;
+
+    internal string RegionName(string id) => _catalog.FirstOrDefault(r => r.Id == id)?.Name ?? id;
+
+    private void Regions_Click(object sender, RoutedEventArgs e) => OpenRegions();
+
+    internal void OpenRegions()
     {
-        bool hasMap = _status?.Map is not null;
+        if (_regionsWindow is null)
+        {
+            _regionsWindow = new RegionsWindow(this);
+            _regionsWindow.Closed += (_, _) => _regionsWindow = null;
+        }
+        _regionsWindow.Activate();
+    }
+
+    /// <summary>Adds a download or update to the queue and starts the queue if it is idle.</summary>
+    internal void Enqueue(string regionId, UpdateTarget target)
+    {
+        var job = new Job(regionId, target);
+        if (_current == job || _queue.Contains(job))
+        {
+            return;
+        }
+        _queue.Add(job);
+        RegionsChanged?.Invoke();
+        _ = RunQueueAsync();
+    }
+
+    private async void UpdateAll_Click(object sender, RoutedEventArgs e)
+    {
+        var installed = (_status?.Regions ?? []).Where(r => r.Map is not null).ToList();
+        if (installed.Count == 0)
+        {
+            return;
+        }
+        int extras = installed.Count(r => r.Extras is not null);
+        string names = Format.List(installed.Select(r => r.Name));
         var answer = await ShowDialogAsync(new ContentDialog
         {
-            Title = hasMap ? "Update the Illinois map?" : "Download the Illinois map?",
-            Content = Text(hasMap
-                ? "Offline Maps checks Geofabrik (download.geofabrik.de) for a newer Illinois map and downloads it if there is one, about 360 MB as of November 2026. The current map stays in use until the new one has been downloaded and checked."
-                : "Offline Maps downloads the Illinois map from Geofabrik (download.geofabrik.de), about 360 MB as of November 2026, and prepares it for offline search. After that, no connection is needed."),
-            PrimaryButtonText = hasMap ? "Update map" : "Download map",
+            Title = "Update all regions?",
+            Content = Text($"Offline Maps checks Geofabrik (download.geofabrik.de) for newer maps of {names}"
+                + (extras > 0 ? " and newer stations and addresses where they are installed" : "")
+                + ", and downloads what has changed. Each map is about the size shown in Regions. The installed maps stay in use until each new one has been downloaded and checked."),
+            PrimaryButtonText = "Update all",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
         });
-        if (answer == ContentDialogResult.Primary)
+        if (answer != ContentDialogResult.Primary)
         {
-            await RunUpdateAsync(UpdateTarget.Map);
+            return;
+        }
+        foreach (var region in installed)
+        {
+            Enqueue(region.Id, UpdateTarget.Map);
+            if (region.Extras is not null)
+            {
+                Enqueue(region.Id, UpdateTarget.Extras);
+            }
         }
     }
 
-    private async void UpdateExtras_Click(object sender, RoutedEventArgs e)
+    /// <summary>Offers stations and addresses for every installed region that has none.</summary>
+    private async void MissingExtras_Click(object sender, RoutedEventArgs e)
     {
-        bool installed = _status?.Extras is not null;
+        var missing = (_status?.Regions ?? []).Where(r => r.Map is not null && r.Extras is null).ToList();
+        if (missing.Count == 0)
+        {
+            return;
+        }
+        ulong bytes = (ulong)missing.Sum(r => (decimal)(_catalog.FirstOrDefault(c => c.Id == r.Id)?.ExtrasBytes ?? 0));
         var answer = await ShowDialogAsync(new ContentDialog
         {
-            Title = installed ? "Update stations and addresses?" : "Download stations and addresses?",
-            Content = Text("Fuel stations, charging stations and street addresses are read from Geofabrik's full Illinois data file, about 360 MB as of November 2026. Only what is read from it (about 35 MB) is kept. The map itself is not changed."),
-            PrimaryButtonText = installed ? "Update" : "Download",
+            Title = "Download stations and addresses?",
+            Content = Text($"Fuel stations, charging stations and street addresses for {Format.List(missing.Select(r => r.Name))} are read from Geofabrik's full data files, about {Format.Megabytes(bytes)} in all as of November 2026. Only what is read from them is kept. The maps themselves are not changed."),
+            PrimaryButtonText = "Download",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
         });
         if (answer == ContentDialogResult.Primary)
         {
-            await RunUpdateAsync(UpdateTarget.Extras);
+            foreach (var region in missing)
+            {
+                Enqueue(region.Id, UpdateTarget.Extras);
+            }
         }
+    }
+
+    /// <summary>Asks, then removes a region's map, stations and addresses.</summary>
+    internal async Task RemoveRegionAsync(string regionId, XamlRoot root)
+    {
+        if (_core is not { } core || _update is not null)
+        {
+            return;
+        }
+        string name = RegionName(regionId);
+        var dialog = new ContentDialog
+        {
+            Title = $"Remove {name}?",
+            Content = Text($"The {name} map, its search and its stations and addresses are deleted from this computer. Saved places are kept. Downloading the region again needs a connection."),
+            PrimaryButtonText = $"Remove {name}",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = root,
+        };
+        App.Current.Themes.Attach(dialog);
+        ContentDialogResult answer;
+        try
+        {
+            answer = await dialog.ShowAsync();
+        }
+        finally
+        {
+            App.Current.Themes.Detach(dialog);
+        }
+        if (answer != ContentDialogResult.Primary)
+        {
+            return;
+        }
+        if (_update is not null)
+        {
+            return;
+        }
+        _queue.RemoveAll(j => j.RegionId == regionId);
+        var work = Task.Run(() => core.RemoveRegion(regionId));
+        _update = work;
+        CancelUpdateItem.IsEnabled = false;
+        UpdateAllItem.IsEnabled = false;
+        StatusText.Text = $"Removing {name}";
+        RegionsChanged?.Invoke();
+        try
+        {
+            await work;
+            StatusText.Text = $"Removed {name}";
+        }
+        catch (MapCoreException ex)
+        {
+            AppLog.Write($"Removing {regionId} failed: {ex.Kind} {ex.Message}");
+            ShowError($"{name} could not be removed", ex.Message);
+        }
+        finally
+        {
+            _update = null;
+        }
+        string message = StatusText.Text;
+        await RefreshStatusAsync();
+        StatusText.Text = message;
+        if (SearchBox.Text.Trim().Length > 0)
+        {
+            await RunSearchAsync();
+        }
+        RegionsChanged?.Invoke();
+        _ = RunQueueAsync();
     }
 
     private void CancelUpdate_Click(object sender, RoutedEventArgs e)
     {
         if (_update is not null)
         {
+            _queue.Clear();
             _core?.Cancel();
             CancelButton.IsEnabled = false;
             CancelUpdateItem.IsEnabled = false;
@@ -70,75 +210,115 @@ public sealed partial class MainWindow
         }
     }
 
-    private Task PrepareSearchAsync() => RunAsync(UpdateTarget.Map, prepareSearch: true);
+    private string Subject(Job job) => job.Target == UpdateTarget.Map
+        ? $"the {RegionName(job.RegionId)} map"
+        : $"{RegionName(job.RegionId)} stations and addresses";
 
-    private Task RunUpdateAsync(UpdateTarget target) => RunAsync(target, prepareSearch: false);
+    /// <summary>Runs queued jobs until the queue is empty.</summary>
+    private async Task RunQueueAsync()
+    {
+        if (_core is null || _update is not null || _queue.Count == 0)
+        {
+            return;
+        }
+        var messages = new List<string>();
+        bool cancelled = false;
+        while (_queue.Count > 0 && _core is { } core)
+        {
+            var job = _queue[0];
+            _queue.RemoveAt(0);
+            string subject = Subject(job);
+            string? message = await RunAsync(job, $"Updating {subject}", () => Task.Run(() =>
+            {
+                var result = core.Update(job.Target, job.RegionId);
+                return result.UpToDate ? $"{Format.Sentence(subject)} {(job.Target == UpdateTarget.Map ? "is" : "are")} already up to date" : $"Completed: {subject} installed";
+            }));
+            if (message is null)
+            {
+                cancelled = true;
+                break;
+            }
+            messages.Add(message);
+            await RefreshStatusAsync();
+        }
+        await FinishAsync(cancelled
+            ? "Cancelled. What was downloaded is kept, and the download continues from there next time."
+            : messages.Count == 1 ? messages[0] : $"Completed {messages.Count} downloads and updates");
+    }
 
-    private async Task RunAsync(UpdateTarget target, bool prepareSearch)
+    private async Task PrepareSearchAsync()
     {
         if (_core is not { } core || _update is not null)
         {
             return;
         }
-        _updateTarget = target;
-        string subject = target == UpdateTarget.Map ? "map" : "stations and addresses";
+        string? message = await RunAsync(null, "Preparing search", () => Task.Run(() =>
+        {
+            core.PrepareSearch();
+            return "Search is ready";
+        }));
+        await FinishAsync(message ?? "Cancelled. Search is prepared next time Offline Maps starts.");
+    }
+
+    /// <summary>Runs one job with the progress bar shown. Returns the result message, or null when cancelled or failed.</summary>
+    private async Task<string?> RunAsync(Job? job, string title, Func<Task<string>> start)
+    {
+        _current = job;
         ErrorBar.IsOpen = false;
         NoMapBar.IsOpen = false;
         ExtrasBar.IsOpen = false;
-        UpdateBar.Title = prepareSearch ? "Preparing search" : target == UpdateTarget.Map ? "Updating the map" : "Updating stations and addresses";
+        UpdateBar.Title = title;
         UpdateBar.Message = "Running";
+        ProgressText = "Running";
         UpdateProgress.IsIndeterminate = true;
         CancelButton.IsEnabled = true;
-        CancelButton.Content = prepareSearch ? "Cancel" : "Cancel download";
+        CancelButton.Content = job is null ? "Cancel" : "Cancel download";
         UpdateBar.IsOpen = true;
         CancelUpdateItem.IsEnabled = true;
-        UpdateMapItem.IsEnabled = false;
-        UpdateExtrasItem.IsEnabled = false;
+        UpdateAllItem.IsEnabled = false;
+        RegionsChanged?.Invoke();
         _progressTimer.Start();
         try
         {
-            if (prepareSearch)
-            {
-                var work = Task.Run(core.PrepareSearch);
-                _update = work;
-                await work;
-                StatusText.Text = "Search is ready";
-            }
-            else
-            {
-                var work = Task.Run(() => core.Update(target));
-                _update = work;
-                var result = await work;
-                StatusText.Text = result.UpToDate
-                    ? $"The {subject} {(target == UpdateTarget.Map ? "is" : "are")} already up to date"
-                    : $"Completed: {subject} installed";
-            }
+            var work = start();
+            _update = work;
+            return await work;
         }
         catch (MapCoreException ex) when (ex.Kind == ErrorKind.Cancelled)
         {
-            StatusText.Text = prepareSearch
-                ? "Cancelled. Search is prepared next time Offline Maps starts."
-                : "Cancelled. What was downloaded is kept, and the download continues from there next time.";
+            return null;
         }
         catch (MapCoreException ex)
         {
-            AppLog.Write($"Update of {subject} failed: {ex.Kind} {ex.Message}");
-            ShowError(prepareSearch ? "Search could not be prepared" : $"The {subject} could not be updated", ex.Message);
+            AppLog.Write($"{title} failed: {ex.Kind} {ex.Message}");
+            _queue.Clear();
+            ShowError(job is null ? "Search could not be prepared" : $"{Format.Sentence(Subject(job))} could not be updated", ex.Message);
+            return null;
         }
         finally
         {
             _progressTimer.Stop();
             _update = null;
-            UpdateBar.IsOpen = false;
-            CancelUpdateItem.IsEnabled = false;
+            _current = null;
+            ProgressText = "";
         }
-        string message = StatusText.Text;
+    }
+
+    private async Task FinishAsync(string message)
+    {
+        UpdateBar.IsOpen = false;
+        CancelUpdateItem.IsEnabled = false;
+        bool failed = ErrorBar.IsOpen;
         await RefreshStatusAsync();
-        StatusText.Text = message;
+        if (!failed)
+        {
+            StatusText.Text = message;
+        }
         if (SearchBox.Text.Trim().Length > 0)
         {
             await RunSearchAsync();
         }
+        RegionsChanged?.Invoke();
     }
 
     /// <summary>Reads the core's progress (polled, not pushed) into the progress bar and status bar.</summary>
@@ -167,9 +347,10 @@ public sealed partial class MainWindow
             "Downloading" when progress.Total > 0 => $"Downloading: {Format.Megabytes(progress.Done)} of {Format.Megabytes(progress.Total)}",
             "Downloading" => $"Downloading: {Format.Megabytes(progress.Done)}",
             "Verifying" => "Checking the download",
-            "Preparing" when _updateTarget == UpdateTarget.Extras => "Reading stations and addresses",
+            "Preparing" when progress.Target == UpdateTarget.Extras => "Reading stations and addresses",
             "Preparing" => "Preparing search",
             "Activating" => "Installing",
+            "Removing" => "Removing",
             _ => "Running",
         };
         if (progress.Cancelling)
@@ -182,7 +363,19 @@ public sealed partial class MainWindow
         {
             UpdateProgress.Value = 100.0 * progress.Done / progress.Total;
         }
-        UpdateBar.Message = text;
-        StatusText.Text = $"{UpdateBar.Title}: {char.ToLowerInvariant(text[0])}{text[1..]}";
+        if (_current is null && progress.RegionName.Length > 0)
+        {
+            UpdateBar.Title = $"Preparing search for {progress.RegionName}";
+        }
+        string queued = _queue.Count switch
+        {
+            0 => "",
+            1 => " · 1 more queued",
+            int n => $" · {n} more queued",
+        };
+        UpdateBar.Message = text + queued;
+        ProgressText = text;
+        StatusText.Text = $"{UpdateBar.Title}: {char.ToLowerInvariant(text[0])}{text[1..]}{queued}";
+        RegionsChanged?.Invoke();
     }
 }
