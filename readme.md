@@ -2,7 +2,7 @@
 
 Jupiter desktop app for downloading road maps before an emergency and using them without internet access. Regions: the US states except Alaska, the District of Columbia, Puerto Rico and the US Virgin Islands, in any combination. Follows Jupiter style standard 1.1.
 
-Status (8 November 2026): version 0.3.0 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
+Status (8 November 2026): version 0.3.1 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
 
 - **Map:** downloads Geofabrik's map package for each chosen region (Map > Regions) with resume, verification and atomic activation, and shows the installed regions as one map with MapLibre in WebView2, entirely from local files. Tiles on a border between installed regions are merged. Light and dark map styles show interstate, US and state route shields.
 - **Terrain:** an optional download per region of Mapterhorn elevation tiles (USGS 3DEP and Copernicus GLO-30, to zoom 12, about 15 m per pixel), drawn as hillshading and contour lines in feet or metres. View > Terrain shading and View > Contour lines turn them on and off.

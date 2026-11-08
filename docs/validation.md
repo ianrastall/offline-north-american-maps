@@ -269,6 +269,10 @@ Verified in the installed app (upgraded silently from 0.2.0; launched from the S
 
 Not covered: terrain for a region other than Illinois, metric contours, the light theme with terrain, and an update of terrain when Mapterhorn publishes a new archive.
 
+## 0.3.1: Show whole map
+
+Completed 8 November 2026. Reported by Ian: View > Show whole map stopped short of the installed maps (with Illinois and Indiana: zoom 6.0, southern Illinois and the top of both states cut off). The view was only allowed half a degree beyond the maps, and MapLibre does not zoom out past that limit, so a tall box in a wide window could not fit. The limit now leaves the box's larger side free in every direction, and a first launch opens on the whole map. Verified in the installed app: zoom 5.7 with both states in view.
+
 ## Next stages
 
 1. Download the Illinois map and the stations and addresses from Geofabrik in the installed app, then launch with networking disabled and verify map rendering, labels, search, stations, addresses and saved places from a clean process. This is the decisive first-workflow acceptance test.

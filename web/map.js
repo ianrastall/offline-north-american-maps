@@ -247,10 +247,28 @@ function reportView() {
 }
 
 // The installed maps' box with half a degree around it.
+// How far the view may move: the installed maps' box with room around it in
+// both directions, so that "Show whole map" can fit the box in a window of any
+// shape. MapLibre will not zoom out past the point where the view would leave
+// these bounds, so a tight margin cut off a tall box in a wide window.
 function maxBounds() {
   const b = metadata.bounds;
-  const pad = 0.5;
-  return [[b.west - pad, b.south - pad], [b.east + pad, b.north + pad]];
+  const cos = Math.cos((((b.south + b.north) / 2) * Math.PI) / 180);
+  const width = b.east - b.west;
+  const height = b.north - b.south;
+  // The box's larger side, in each direction's degrees (east-west degrees are
+  // shorter on the ground by cos(latitude)), plus half a degree.
+  const padLon = Math.max(width, height / cos) + 0.5;
+  const padLat = Math.max(height, width * cos) + 0.5;
+  return [
+    [Math.max(-180, b.west - padLon), Math.max(-85, b.south - padLat)],
+    [Math.min(180, b.east + padLon), Math.min(85, b.north + padLat)],
+  ];
+}
+
+function wholeMap() {
+  const b = metadata.bounds;
+  return [[b.west, b.south], [b.east, b.north]];
 }
 
 async function init(message) {
@@ -260,13 +278,14 @@ async function init(message) {
   units = message.units;
   readTerrain(message);
   applyColors(message.colors);
-  const b = metadata.bounds;
   const view = message.view;
   map = new maplibregl.Map({
     container: 'map',
     style: await loadStyle(theme),
-    center: view ? [view.longitude, view.latitude] : [(b.west + b.east) / 2, (b.south + b.north) / 2],
-    zoom: view ? view.zoom : 7,
+    // A saved view, or the whole map on first use.
+    ...(view
+      ? { center: [view.longitude, view.latitude], zoom: view.zoom }
+      : { bounds: wholeMap(), fitBoundsOptions: { padding: 24 } }),
     minZoom: Math.max(0, metadata.minZoom),
     maxZoom: 19,
     maxBounds: maxBounds(),
@@ -368,8 +387,7 @@ const handlers = {
   },
   fit() {
     if (!map) return;
-    const b = metadata.bounds;
-    map.fitBounds([[b.west, b.south], [b.east, b.north]], { padding: 24, duration: animate ? 167 : 0 });
+    map.fitBounds(wholeMap(), { padding: 24, duration: animate ? 167 : 0 });
   },
   center(message) {
     if (map) move({ center: [message.longitude, message.latitude], zoom: message.zoom ?? map.getZoom() });
