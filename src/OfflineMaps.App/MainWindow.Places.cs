@@ -56,7 +56,7 @@ public sealed partial class MainWindow
             ListHeading.Text = items.Count == 1 ? "1 result" : $"{items.Count} results";
             Results.ItemsSource = items;
             ListEmpty.Text = items.Count == 0
-                ? "Nothing found. Search finds towns, streets, landmarks, transit and water; with stations and addresses installed, also fuel and charging stations and house numbers (\"905 e main st carbondale\")."
+                ? "Nothing found. Search finds towns, streets, landmarks, transit and water; with stations and addresses installed, also fuel and charging stations, shelters, drinking water, campgrounds, toilets and house numbers (\"905 e main st carbondale\"). Parks and forests are found by their roads and features, not their area names."
                 : "";
             if (showFirst && items.Count > 0)
             {

@@ -420,6 +420,11 @@ impl Service {
                     charging: r.stats.charging,
                     addresses: r.stats.addresses,
                     source_bytes: r.byte_length,
+                    shelters: r.stats.shelters,
+                    drinking_water: r.stats.drinking_water,
+                    campgrounds: r.stats.campgrounds,
+                    toilets: r.stats.toilets,
+                    outdoor: r.extract_version >= offline_maps_core::extras::EXTRACT_VERSION,
                 }
             });
             let terrain = slot.terrain.as_ref().map(|t| {

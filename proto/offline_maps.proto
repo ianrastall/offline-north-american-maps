@@ -185,6 +185,13 @@ message ExtrasInfo {
   uint64 addresses = 6;
   // Size of the raw extract that was read (it is not kept).
   uint64 source_bytes = 7;
+  uint64 shelters = 8;
+  uint64 drinking_water = 9;
+  uint64 campgrounds = 10;
+  uint64 toilets = 11;
+  // Built with outdoor places (shelters, water, campgrounds, toilets); false
+  // for extras installed before 0.4.0, which an update rebuilds.
+  bool outdoor = 12;
 }
 
 message CatalogRegion {

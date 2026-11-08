@@ -86,6 +86,8 @@ public sealed class PaneItem
         {
             "fuel" => "Fuel station",
             "charging_station" => "Charging station",
+            "camp_site" => "Campground",
+            "drinking_water" => "Drinking water",
             "" => Format.Sentence(r.Kind),
             _ => Format.Sentence(r.Category),
         },

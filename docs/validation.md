@@ -273,6 +273,17 @@ Not covered: terrain for a region other than Illinois, metric contours, the ligh
 
 Completed 8 November 2026. Reported by Ian: View > Show whole map stopped short of the installed maps (with Illinois and Indiana: zoom 6.0, southern Illinois and the top of both states cut off). The view was only allowed half a degree beyond the maps, and MapLibre does not zoom out past that limit, so a tall box in a wide window could not fit. The limit now leaves the box's larger side free in every direction, and a first launch opens on the whole map. Verified in the installed app: zoom 5.7 with both states in view.
 
+## 0.4.0: outdoor places
+
+Completed 8 November 2026. The first of three layers Ian approved (outdoor places, flood zones, public lands).
+
+- **Extraction.** The extras now also keep shelters (`amenity=shelter` except public-transport shelters, wilderness and alpine huts), drinking water (`amenity=drinking_water` and `water_point`, taps and springs marked drinkable; not water marked undrinkable), campgrounds (`tourism=camp_site` and `caravan_site`) and public toilets. Private places, and customers-only shelters and toilets, are left out. Extras record an extraction version; older extras are rebuilt on update even from an unchanged data file.
+- **Map and search.** Four layers draw them from the stations source with icons drawn by the page (shelters from zoom 12, campgrounds 11, water 13, toilets 14; names from 15); View > Outdoor places turns them off. Search finds them by name or by words such as "campground", "water", "shelter", "restroom".
+- **App.** Regions and Map information show the counts; regions whose extras predate outdoor places get an offer to update them.
+- **Tests.** Classification rules (including bus shelters, undrinkable water and customers-only toilets) and extraction with names; 68 core tests pass.
+
+Verified in the installed app (upgraded from 0.3.1): the offer named Illinois and Indiana; the update rebuilt both in about 70 seconds (Illinois 3,363 shelters, 951 drinking water, 516 campgrounds, 1,861 toilets; Indiana 1,635, 288, 407, 848). Searching "campground" and "shelter" listed nearby places with their towns; around Lincoln Park Zoo the map showed toilets, drinking water and shelters with labels at zoom 15. Found here and fixed before release: the offer's button said "Download" for regions that only needed an update. Park names are not searchable: Shortbread tiles carry no names for land areas.
+
 ## Next stages
 
 1. Download the Illinois map and the stations and addresses from Geofabrik in the installed app, then launch with networking disabled and verify map rendering, labels, search, stations, addresses and saved places from a clean process. This is the decisive first-workflow acceptance test.
@@ -280,4 +291,5 @@ Completed 8 November 2026. Reported by Ian: View > Show whole map stopped short 
 3. Choose the app's license and add it to the installer and About.
 4. Install on a clean Windows 11 machine.
 5. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
-6. Further layers worth considering: PAD-US public lands (USGS, public domain), FEMA flood hazard zones (public domain), and more from the raw OSM extract already downloaded (shelters, water points, campgrounds, trails).
+6. Flood zones (FEMA National Flood Hazard Layer) and public lands (PAD-US): both public domain, both distributed as GIS files (shapefiles; Esri geodatabase or KMZ) that need converting into map tiles.
+7. Publish as Offline US Maps under The Unlicense, with Jupiter.UI (see the [project brief](project-brief.md#publication-decided-8-november-2026)).

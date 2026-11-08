@@ -108,13 +108,18 @@ public sealed partial class MainWindow
         var missing = (_status?.Regions ?? []).Where(r => r.Map is not null && r.Extras is null).ToList();
         if (missing.Count == 0)
         {
+            // Installed before outdoor places: rebuild them.
+            missing = (_status?.Regions ?? []).Where(r => r.Extras is { Outdoor: false }).ToList();
+        }
+        if (missing.Count == 0)
+        {
             return;
         }
         ulong bytes = (ulong)missing.Sum(r => (decimal)(_catalog.FirstOrDefault(c => c.Id == r.Id)?.ExtrasBytes ?? 0));
         var answer = await ShowDialogAsync(new ContentDialog
         {
             Title = "Download stations and addresses?",
-            Content = Text($"Fuel stations, charging stations and street addresses for {Format.List(missing.Select(r => r.Name))} are read from Geofabrik's full data files, about {Format.Megabytes(bytes)} in all as of November 2026. Only what is read from them is kept. The maps themselves are not changed."),
+            Content = Text($"Fuel and charging stations, street addresses and outdoor places for {Format.List(missing.Select(r => r.Name))} are read from Geofabrik's full data files, about {Format.Megabytes(bytes)} in all as of November 2026. Only what is read from them is kept. The maps themselves are not changed."),
             PrimaryButtonText = "Download",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
@@ -211,7 +216,15 @@ public sealed partial class MainWindow
     {
         if (args.Reason == InfoBarCloseReason.CloseButton)
         {
-            _settings.ExtrasOfferClosed = true;
+            bool missing = (_status?.Regions ?? []).Any(r => r.Map is not null && r.Extras is null);
+            if (missing)
+            {
+                _settings.ExtrasOfferClosed = true;
+            }
+            else
+            {
+                _settings.OutdoorOfferClosed = true;
+            }
             _settings.Save();
         }
     }

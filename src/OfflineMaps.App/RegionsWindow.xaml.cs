@@ -209,7 +209,10 @@ public sealed partial class RegionsWindow : Window
         }
         if (installed?.Extras is { } extras)
         {
-            lines.Add($"Stations and addresses: data of {Format.Date(extras.DataDate)}; {extras.Fuel:N0} fuel stations, {extras.Charging:N0} charging stations, {extras.Addresses:N0} addresses.");
+            lines.Add($"Stations and addresses: data of {Format.Date(extras.DataDate)}; {extras.Fuel:N0} fuel stations, {extras.Charging:N0} charging stations, {extras.Addresses:N0} addresses"
+                + (extras.Outdoor
+                    ? $", {extras.Shelters:N0} shelters, {extras.DrinkingWater:N0} drinking water points, {extras.Campgrounds:N0} campgrounds, {extras.Toilets:N0} toilets."
+                    : ". Update to add shelters, drinking water, campgrounds and toilets."));
         }
         else
         {

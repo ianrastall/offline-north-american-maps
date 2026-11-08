@@ -19250,6 +19250,246 @@
    }
   },
   {
+   "id": "outdoor-shelter",
+   "type": "symbol",
+   "source": "stations",
+   "minzoom": 12,
+   "filter": [
+    "==",
+    [
+     "get",
+     "category"
+    ],
+    "shelter"
+   ],
+   "layout": {
+    "icon-image": "outdoor-shelter",
+    "icon-size": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     11,
+     0.45,
+     15,
+     0.6,
+     19,
+     0.8
+    ],
+    "text-field": [
+     "step",
+     [
+      "zoom"
+     ],
+     "",
+     15,
+     [
+      "get",
+      "name"
+     ]
+    ],
+    "text-font": [
+     "noto_sans_regular"
+    ],
+    "text-size": 11,
+    "text-anchor": "top",
+    "text-offset": [
+     0,
+     1
+    ],
+    "text-optional": true,
+    "text-max-width": 8
+   },
+   "paint": {
+    "text-color": "#d6d3d1",
+    "text-halo-color": "#000000",
+    "text-halo-width": 1
+   }
+  },
+  {
+   "id": "outdoor-water",
+   "type": "symbol",
+   "source": "stations",
+   "minzoom": 13,
+   "filter": [
+    "==",
+    [
+     "get",
+     "category"
+    ],
+    "drinking_water"
+   ],
+   "layout": {
+    "icon-image": "outdoor-water",
+    "icon-size": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     11,
+     0.45,
+     15,
+     0.6,
+     19,
+     0.8
+    ],
+    "text-field": [
+     "step",
+     [
+      "zoom"
+     ],
+     "",
+     15,
+     [
+      "get",
+      "name"
+     ]
+    ],
+    "text-font": [
+     "noto_sans_regular"
+    ],
+    "text-size": 11,
+    "text-anchor": "top",
+    "text-offset": [
+     0,
+     1
+    ],
+    "text-optional": true,
+    "text-max-width": 8
+   },
+   "paint": {
+    "text-color": "#d6d3d1",
+    "text-halo-color": "#000000",
+    "text-halo-width": 1
+   }
+  },
+  {
+   "id": "outdoor-camp",
+   "type": "symbol",
+   "source": "stations",
+   "minzoom": 11,
+   "filter": [
+    "==",
+    [
+     "get",
+     "category"
+    ],
+    "camp_site"
+   ],
+   "layout": {
+    "icon-image": "outdoor-camp",
+    "icon-size": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     11,
+     0.45,
+     15,
+     0.6,
+     19,
+     0.8
+    ],
+    "text-field": [
+     "step",
+     [
+      "zoom"
+     ],
+     "",
+     15,
+     [
+      "get",
+      "name"
+     ]
+    ],
+    "text-font": [
+     "noto_sans_regular"
+    ],
+    "text-size": 11,
+    "text-anchor": "top",
+    "text-offset": [
+     0,
+     1
+    ],
+    "text-optional": true,
+    "text-max-width": 8
+   },
+   "paint": {
+    "text-color": "#d6d3d1",
+    "text-halo-color": "#000000",
+    "text-halo-width": 1
+   }
+  },
+  {
+   "id": "outdoor-toilets",
+   "type": "symbol",
+   "source": "stations",
+   "minzoom": 14,
+   "filter": [
+    "==",
+    [
+     "get",
+     "category"
+    ],
+    "toilets"
+   ],
+   "layout": {
+    "icon-image": "outdoor-toilets",
+    "icon-size": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     11,
+     0.45,
+     15,
+     0.6,
+     19,
+     0.8
+    ],
+    "text-field": [
+     "step",
+     [
+      "zoom"
+     ],
+     "",
+     15,
+     [
+      "get",
+      "name"
+     ]
+    ],
+    "text-font": [
+     "noto_sans_regular"
+    ],
+    "text-size": 11,
+    "text-anchor": "top",
+    "text-offset": [
+     0,
+     1
+    ],
+    "text-optional": true,
+    "text-max-width": 8
+   },
+   "paint": {
+    "text-color": "#d6d3d1",
+    "text-halo-color": "#000000",
+    "text-halo-width": 1
+   }
+  },
+  {
    "id": "station-charging",
    "type": "symbol",
    "source": "stations",

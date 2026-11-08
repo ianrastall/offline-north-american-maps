@@ -2,12 +2,12 @@
 
 Jupiter desktop app for downloading road maps before an emergency and using them without internet access. Regions: the US states except Alaska, the District of Columbia, Puerto Rico and the US Virgin Islands, in any combination. Follows Jupiter style standard 1.1.
 
-Status (8 November 2026): version 0.3.1 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
+Status (8 November 2026): version 0.4.0 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
 
 - **Map:** downloads Geofabrik's map package for each chosen region (Map > Regions) with resume, verification and atomic activation, and shows the installed regions as one map with MapLibre in WebView2, entirely from local files. Tiles on a border between installed regions are merged. Light and dark map styles show interstate, US and state route shields.
 - **Terrain:** an optional download per region of Mapterhorn elevation tiles (USGS 3DEP and Copernicus GLO-30, to zoom 12, about 15 m per pixel), drawn as hillshading and contour lines in feet or metres. View > Terrain shading and View > Contour lines turn them on and off.
 - **Downloads:** queued and run one at a time; Map > Update all regions checks every installed region.
-- **Search:** finds places, streets, landmarks, transit and water offline, across all installed regions. An optional second download adds fuel stations, charging stations and house-number addresses, read from Geofabrik's raw extract.
+- **Search:** finds places, streets, landmarks, transit and water offline, across all installed regions. An optional second download adds fuel stations, charging stations, house-number addresses and outdoor places (shelters, drinking water, campgrounds, public toilets), read from Geofabrik's raw extract; outdoor places are also drawn on the map (View > Outdoor places).
 - **Saved places:** kept apart from map packages, so they survive map updates, app upgrades and uninstalling.
 - **Not included:** routing.
 - **Not yet verified:** a launch with networking disabled.

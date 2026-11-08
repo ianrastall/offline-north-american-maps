@@ -44,6 +44,7 @@
                     </ToggleMenuFlyoutItem.KeyboardAccelerators>
                 </ToggleMenuFlyoutItem>
                 <MenuFlyoutSeparator />
+                <ToggleMenuFlyoutItem x:Name="OutdoorItem" Click="Outdoor_Click" Text="Outdoor places" />
                 <ToggleMenuFlyoutItem x:Name="ShadingItem" Click="Terrain_Click" Text="Terrain shading" />
                 <ToggleMenuFlyoutItem x:Name="ContoursItem" Click="Terrain_Click" Text="Contour lines" />
                 <MenuFlyoutSeparator />
@@ -115,9 +116,9 @@
                 IsClosable="True"
                 Severity="Informational"
                 Title="Stations and addresses are not installed"
-                Message="Fuel stations, charging stations and street addresses need a second download for each region.">
+                Message="Fuel and charging stations, street addresses and outdoor places (shelters, drinking water, campgrounds, toilets) need a second download for each region.">
                 <InfoBar.ActionButton>
-                    <Button Click="MissingExtras_Click" Content="Download stations and addresses…" />
+                    <Button x:Name="ExtrasButton" Click="MissingExtras_Click" Content="Download stations and addresses…" />
                 </InfoBar.ActionButton>
             </InfoBar>
         </StackPanel>

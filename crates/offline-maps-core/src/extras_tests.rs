@@ -172,6 +172,10 @@ fn extracts_points_areas_and_multipolygons() {
         ExtractStats {
             fuel: 3,
             charging: 1,
+            shelters: 0,
+            drinking_water: 0,
+            campgrounds: 0,
+            toilets: 0,
             merged: 1,
             unlocated: 0,
             towns: 3,
@@ -469,4 +473,97 @@ fn house_number_forms() {
     let r = index.search("101a main", None, 1).unwrap();
     assert_eq!(r[0].name, "101 North Main Street");
     assert!(r[0].detail.is_some());
+}
+
+#[test]
+fn outdoor_places_are_classified() {
+    let category = |pairs: &[(&str, &str)]| {
+        let tags: Vec<(&str, &str)> = pairs.to_vec();
+        point_category(&tags)
+    };
+    assert_eq!(category(&[("amenity", "shelter")]), Some("shelter"));
+    assert_eq!(
+        category(&[("amenity", "shelter"), ("shelter_type", "public_transport")]),
+        None
+    );
+    assert_eq!(
+        category(&[("amenity", "shelter"), ("highway", "bus_stop")]),
+        None
+    );
+    assert_eq!(category(&[("tourism", "wilderness_hut")]), Some("shelter"));
+    assert_eq!(
+        category(&[("amenity", "drinking_water")]),
+        Some("drinking_water")
+    );
+    assert_eq!(
+        category(&[("amenity", "water_point"), ("drinking_water", "no")]),
+        None
+    );
+    assert_eq!(
+        category(&[("natural", "spring"), ("drinking_water", "yes")]),
+        Some("drinking_water")
+    );
+    assert_eq!(category(&[("natural", "spring")]), None);
+    assert_eq!(category(&[("tourism", "camp_site")]), Some("camp_site"));
+    assert_eq!(category(&[("tourism", "caravan_site")]), Some("camp_site"));
+    assert_eq!(category(&[("amenity", "toilets")]), Some("toilets"));
+    assert_eq!(category(&[("amenity", "fuel")]), Some("fuel"));
+    assert_eq!(category(&[("amenity", "bench")]), None);
+}
+
+#[test]
+fn outdoor_places_are_extracted_and_named() {
+    let dir = TempDir::new();
+    let path = dir.0.join("outdoor.osm.pbf");
+    fs::write(
+        &path,
+        write_pbf(
+            &[&[
+                E::Node(
+                    1,
+                    37.60,
+                    -88.38,
+                    &[("amenity", "shelter"), ("shelter_type", "lean_to")],
+                ),
+                E::Node(2, 37.61, -88.38, &[("amenity", "drinking_water")]),
+                E::Node(
+                    3,
+                    37.62,
+                    -88.38,
+                    &[("tourism", "camp_site"), ("name", "Pharaoh Campground")],
+                ),
+                E::Node(
+                    4,
+                    37.63,
+                    -88.38,
+                    &[("amenity", "toilets"), ("access", "customers")],
+                ),
+                E::Node(5, 37.64, -88.38, &[("amenity", "toilets")]),
+                E::Node(
+                    6,
+                    37.65,
+                    -88.38,
+                    &[("amenity", "shelter"), ("shelter_type", "public_transport")],
+                ),
+            ]],
+            FEATURES,
+        ),
+    )
+    .unwrap();
+    let extract = extract(&path, &AtomicBool::new(false), &mut |_, _, _| {}).unwrap();
+    assert_eq!(
+        (
+            extract.stats.shelters,
+            extract.stats.drinking_water,
+            extract.stats.campgrounds,
+            extract.stats.toilets
+        ),
+        (1, 1, 1, 1)
+    );
+    let names: Vec<String> = extract.stations.iter().map(Station::display_name).collect();
+    assert_eq!(
+        names,
+        ["Shelter", "Drinking water", "Pharaoh Campground", "Toilets"]
+    );
+    assert!(extract.stations.iter().all(|s| s.fuels.is_empty()));
 }

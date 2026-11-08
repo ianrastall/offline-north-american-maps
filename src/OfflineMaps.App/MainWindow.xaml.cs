@@ -182,9 +182,23 @@ public sealed partial class MainWindow : Window
         bool hasMap = status.Coverage is not null;
         bool busy = _update is not null;
         var missingExtras = status.Regions.Where(r => r.Map is not null && r.Extras is null).Select(r => r.Name).ToList();
+        var oldExtras = status.Regions.Where(r => r.Extras is { Outdoor: false }).Select(r => r.Name).ToList();
         NoMapBar.IsOpen = !hasMap && !busy && _queue.Count == 0;
-        ExtrasBar.IsOpen = missingExtras.Count > 0 && !busy && !_settings.ExtrasOfferClosed;
-        ExtrasBar.Title = $"Stations and addresses are not installed for {Format.List(missingExtras)}";
+        if (missingExtras.Count > 0)
+        {
+            ExtrasBar.IsOpen = !busy && !_settings.ExtrasOfferClosed;
+            ExtrasBar.Title = $"Stations and addresses are not installed for {Format.List(missingExtras)}";
+            ExtrasBar.Message = "Fuel and charging stations, street addresses and outdoor places (shelters, drinking water, campgrounds, toilets) need a second download for each region.";
+            ExtrasButton.Content = "Download stations and addresses…";
+        }
+        else
+        {
+            ExtrasBar.IsOpen = oldExtras.Count > 0 && !busy && !_settings.OutdoorOfferClosed;
+            ExtrasBar.Title = $"Outdoor places are not installed for {Format.List(oldExtras)}";
+            ExtrasBar.Message = "Updating stations and addresses adds shelters, drinking water, campgrounds and toilets. It downloads the region's data file again.";
+            ExtrasButton.Content = "Update stations and addresses…";
+        }
+        OutdoorItem.IsChecked = _settings.OutdoorPlaces;
         UpdateAllItem.IsEnabled = !busy && hasMap;
         MapInfoItem.IsEnabled = hasMap;
         bool hasTerrain = status.TerrainCoverage is not null;
@@ -336,6 +350,13 @@ public sealed partial class MainWindow : Window
 
     private void Exit_Click(object sender, RoutedEventArgs e) => Close();
 
+    private void Outdoor_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.OutdoorPlaces = OutdoorItem.IsChecked;
+        _settings.Save();
+        Post(new System.Text.Json.Nodes.JsonObject { ["kind"] = "outdoor", ["visible"] = _settings.OutdoorPlaces });
+    }
+
     private void Terrain_Click(object sender, RoutedEventArgs e)
     {
         _settings.TerrainShading = ShadingItem.IsChecked;
@@ -404,6 +425,7 @@ public sealed partial class MainWindow : Window
             }
             lines.Add(region.Extras is { } extras
                 ? $"Stations and addresses: data of {Format.Date(extras.DataDate)}, downloaded {Format.Date(extras.DownloadedAt)}: {extras.Fuel:N0} fuel stations, {extras.Charging:N0} charging stations, {extras.Addresses:N0} addresses"
+                    + (extras.Outdoor ? $", {extras.Shelters:N0} shelters, {extras.DrinkingWater:N0} drinking water points, {extras.Campgrounds:N0} campgrounds, {extras.Toilets:N0} toilets" : "; outdoor places not installed (update to add them)")
                 : "Stations and addresses: not installed");
             lines.Add(region.Terrain is { } terrain
                 ? $"Terrain: downloaded {Format.Date(terrain.DownloadedAt)}, {Format.Megabytes(terrain.Bytes)}, {terrain.Tiles:N0} tiles to zoom {terrain.MaxZoom}"

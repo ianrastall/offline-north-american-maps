@@ -37,6 +37,12 @@ public sealed class AppSettings : Jupiter.UI.IAccentPreferences, Jupiter.UI.IThe
     /// <summary>Contour lines from installed terrain, in feet or metres with the distance unit.</summary>
     public bool ContourLines { get; set; } = true;
 
+    /// <summary>Shelters, drinking water, campgrounds and toilets on the map.</summary>
+    public bool OutdoorPlaces { get; set; } = true;
+
+    /// <summary>The offer to rebuild stations and addresses with outdoor places was closed.</summary>
+    public bool OutdoorOfferClosed { get; set; }
+
     public double? ViewLatitude { get; set; }
 
     public double? ViewLongitude { get; set; }

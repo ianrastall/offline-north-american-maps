@@ -40,7 +40,42 @@ use crate::store::{PackageStore, RECORD_FILE, is_version_name, write_atomic};
 
 pub const EXTRAS_FILE: &str = "extras.sqlite";
 pub const EXTRAS_SCHEMA: u32 = 2;
-const STATION_KINDS: [&str; 2] = ["fuel", "charging_station"];
+/// What the extraction collects, as of this version: 1 fuel and charging
+/// stations and addresses; 2 also shelters, drinking water, campgrounds and
+/// public toilets. Extras built by an older version are rebuilt on update.
+pub const EXTRACT_VERSION: u32 = 2;
+
+/// The point category of a feature, if it is one the extras keep:
+/// `fuel`, `charging_station`, `shelter`, `drinking_water`, `camp_site` or
+/// `toilets`. Bus-stop shelters and water marked undrinkable are left out.
+pub fn point_category(tags: &Tags<'_>) -> Option<&'static str> {
+    let amenity = tag(tags, "amenity");
+    let tourism = tag(tags, "tourism");
+    let drinkable = tag(tags, "drinking_water");
+    match (amenity, tourism) {
+        (Some("fuel"), _) => Some("fuel"),
+        (Some("charging_station"), _) => Some("charging_station"),
+        (Some("shelter"), _) => {
+            let transit = tag(tags, "shelter_type") == Some("public_transport")
+                || tag(tags, "highway") == Some("bus_stop")
+                || tag(tags, "public_transport").is_some();
+            (!transit).then_some("shelter")
+        }
+        (_, Some("wilderness_hut" | "alpine_hut")) => Some("shelter"),
+        (Some("drinking_water" | "water_point"), _) => {
+            (drinkable != Some("no")).then_some("drinking_water")
+        }
+        (_, Some("camp_site" | "caravan_site")) => Some("camp_site"),
+        (Some("toilets"), _) => Some("toilets"),
+        _ if drinkable == Some("yes")
+            && (tag(tags, "man_made") == Some("water_tap")
+                || tag(tags, "natural") == Some("spring")) =>
+        {
+            Some("drinking_water")
+        }
+        _ => None,
+    }
+}
 const TOWN_KINDS: [&str; 5] = ["city", "town", "village", "hamlet", "suburb"];
 /// Fuels worth showing, with display names. Octane grades are left out.
 const FUELS: [(&str, &str); 7] = [
@@ -60,7 +95,7 @@ const DUPLICATE_KM: f64 = 0.15;
 pub struct Station {
     /// `node/1`, `way/2` or `relation/3`.
     pub osm_id: String,
-    /// `fuel` or `charging_station`.
+    /// See [`point_category`].
     pub category: String,
     /// `name`, else `brand`, else `operator`; may be empty.
     pub name: String,
@@ -75,8 +110,13 @@ pub struct Station {
 
 impl Station {
     fn from_tags(osm_id: String, tags: &Tags<'_>) -> Option<Self> {
-        let category = tag(tags, "amenity").filter(|a| STATION_KINDS.contains(a))?;
-        if matches!(tag(tags, "access"), Some("private" | "no")) {
+        let category = point_category(tags)?;
+        // Fuel stations serve customers anyway; a customers-only shelter or
+        // toilet (in a shop, say) is no use to anyone else.
+        let access = tag(tags, "access");
+        let closed = matches!(access, Some("private" | "no"))
+            || (category != "fuel" && access == Some("customers"));
+        if closed {
             return None;
         }
         let text = |key: &str| {
@@ -93,6 +133,7 @@ impl Station {
             .unwrap_or_default();
         let fuels = FUELS
             .iter()
+            .filter(|_| category == "fuel")
             .filter(|(key, _)| tag(tags, &format!("fuel:{key}")) == Some("yes"))
             .map(|(_, label)| (*label).to_owned())
             .collect();
@@ -121,11 +162,19 @@ impl Station {
 
     /// The name shown in search and on the map.
     pub fn display_name(&self) -> String {
-        match (self.name.is_empty(), self.category.as_str()) {
-            (false, _) => self.name.clone(),
-            (true, "fuel") => "Fuel station".into(),
-            (true, _) => "Charging station".into(),
+        if !self.name.is_empty() {
+            return self.name.clone();
         }
+        match self.category.as_str() {
+            "fuel" => "Fuel station",
+            "charging_station" => "Charging station",
+            "shelter" => "Shelter",
+            "drinking_water" => "Drinking water",
+            "camp_site" => "Campground",
+            "toilets" => "Toilets",
+            _ => "Place",
+        }
+        .into()
     }
 
     /// Brand, hours, fuels and address, for example
@@ -195,6 +244,14 @@ impl Station {
 pub struct ExtractStats {
     pub fuel: u64,
     pub charging: u64,
+    #[serde(default)]
+    pub shelters: u64,
+    #[serde(default)]
+    pub drinking_water: u64,
+    #[serde(default)]
+    pub campgrounds: u64,
+    #[serde(default)]
+    pub toilets: u64,
     /// Copies of a station merged into another (area plus point, for example).
     pub merged: u64,
     /// Areas whose nodes are missing from the extract.
@@ -491,8 +548,13 @@ pub fn extract(
     stats.addresses_dropped = dropped;
     let (stations, merged) = merge_duplicates(stations);
     stats.merged = merged;
-    stats.fuel = stations.iter().filter(|s| s.category == "fuel").count() as u64;
-    stats.charging = stations.len() as u64 - stats.fuel;
+    let count = |category: &str| stations.iter().filter(|s| s.category == category).count() as u64;
+    stats.fuel = count("fuel");
+    stats.charging = count("charging_station");
+    stats.shelters = count("shelter");
+    stats.drinking_water = count("drinking_water");
+    stats.campgrounds = count("camp_site");
+    stats.toilets = count("toilets");
     stats.towns = first.towns.len() as u64;
     Ok(Extract {
         header,
@@ -908,6 +970,13 @@ pub struct ExtrasRecord {
     pub stats: ExtractStats,
     pub attribution: String,
     pub license: String,
+    /// [`EXTRACT_VERSION`] when built; 1 for extras built before it was recorded.
+    #[serde(default = "first_extract_version")]
+    pub extract_version: u32,
+}
+
+fn first_extract_version() -> u32 {
+    1
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1066,13 +1135,18 @@ pub fn update_extras(
 
     progress(Progress::Checking);
     let remote = transport.probe(url).map_err(network)?;
-    if let Some(active) = active.as_ref().filter(|a| {
-        is_same_source(&a.record, url, &remote)
-            || is_older(
-                remote.last_modified.as_deref(),
-                a.record.source.last_modified.as_deref(),
-            )
-    }) {
+    // Extras from an older extraction are rebuilt even from the same file.
+    if let Some(active) = active
+        .as_ref()
+        .filter(|a| a.record.extract_version >= EXTRACT_VERSION)
+        .filter(|a| {
+            is_same_source(&a.record, url, &remote)
+                || is_older(
+                    remote.last_modified.as_deref(),
+                    a.record.source.last_modified.as_deref(),
+                )
+        })
+    {
         return Ok(ExtrasOutcome::UpToDate(active.clone()));
     }
     check_size(remote.length, options)?;
@@ -1141,6 +1215,7 @@ pub fn update_extras(
         stats: extract.stats.clone(),
         attribution: crate::OSM_ATTRIBUTION.to_owned(),
         license: "ODbL-1.0".to_owned(),
+        extract_version: EXTRACT_VERSION,
     };
     let stamp: String = built_at
         .chars()

@@ -241,6 +241,98 @@ function setTerrainVisibility() {
   show('contour-labels', contours);
 }
 
+// Outdoor places (map content colors): a disc with a white symbol.
+const OUTDOOR_ICONS = {
+  'outdoor-shelter': {
+    fill: '#92400e',
+    draw: (ctx, p) => {
+      ctx.beginPath();
+      ctx.moveTo(...p(8, 17));
+      ctx.lineTo(...p(16, 9));
+      ctx.lineTo(...p(24, 17));
+      ctx.moveTo(...p(11, 15));
+      ctx.lineTo(...p(11, 23));
+      ctx.lineTo(...p(21, 23));
+      ctx.lineTo(...p(21, 15));
+      ctx.stroke();
+    },
+  },
+  'outdoor-water': {
+    fill: '#0369a1',
+    draw: (ctx, p) => {
+      ctx.beginPath();
+      ctx.moveTo(...p(16, 7));
+      ctx.bezierCurveTo(...p(16, 7), ...p(9, 15), ...p(9, 19));
+      ctx.bezierCurveTo(...p(9, 23), ...p(12, 25), ...p(16, 25));
+      ctx.bezierCurveTo(...p(20, 25), ...p(23, 23), ...p(23, 19));
+      ctx.bezierCurveTo(...p(23, 15), ...p(16, 7), ...p(16, 7));
+      ctx.fill();
+    },
+  },
+  'outdoor-camp': {
+    fill: '#166534',
+    draw: (ctx, p) => {
+      ctx.beginPath();
+      ctx.moveTo(...p(16, 8));
+      ctx.lineTo(...p(25, 24));
+      ctx.lineTo(...p(7, 24));
+      ctx.closePath();
+      ctx.fill();
+    },
+    after: (ctx, p) => {
+      ctx.beginPath();
+      ctx.moveTo(...p(16, 15));
+      ctx.lineTo(...p(19, 24));
+      ctx.lineTo(...p(13, 24));
+      ctx.closePath();
+      ctx.fill();
+    },
+  },
+  'outdoor-toilets': {
+    fill: '#475569',
+    draw: (ctx, p, ratio) => {
+      ctx.font = `bold ${11 * ratio}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('WC', ...p(16, 16.5));
+    },
+  },
+};
+
+function addOutdoorIcon(id) {
+  const spec = OUTDOOR_ICONS[id];
+  if (!spec || map.hasImage(id)) return;
+  const ratio = 2, size = 32 * ratio;
+  const ctx = new OffscreenCanvas(size, size).getContext('2d');
+  const p = (x, y) => [x * ratio, y * ratio];
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 2 * ratio, 0, Math.PI * 2);
+  ctx.fillStyle = spec.fill;
+  ctx.fill();
+  ctx.lineWidth = 2 * ratio;
+  ctx.strokeStyle = '#ffffff';
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  spec.draw(ctx, p, ratio);
+  if (spec.after) {
+    ctx.fillStyle = spec.fill;
+    spec.after(ctx, p, ratio);
+  }
+  map.addImage(id, ctx.getImageData(0, 0, size, size), { pixelRatio: ratio });
+}
+
+let outdoor = true;
+const OUTDOOR_LAYERS = Object.keys(OUTDOOR_ICONS);
+
+function setOutdoorVisibility() {
+  if (!map || !styleReady) return;
+  for (const id of OUTDOOR_LAYERS) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', outdoor ? 'visible' : 'none');
+  }
+}
+
 function reportView() {
   const c = map.getCenter();
   post({ kind: 'view', latitude: c.lat, longitude: c.lng, zoom: map.getZoom() });
@@ -301,9 +393,15 @@ async function init(message) {
     styleReady = true;
     Object.keys(SHIELDS).forEach(addShield);
     addChargingIcon();
+    OUTDOOR_LAYERS.forEach(addOutdoorIcon);
+    setOutdoorVisibility();
     applyTerrain();
   });
-  map.on('styleimagemissing', ({ id }) => (id === 'station-charging' ? addChargingIcon() : addShield(id)));
+  map.on('styleimagemissing', ({ id }) => {
+    if (id === 'station-charging') addChargingIcon();
+    else if (OUTDOOR_ICONS[id]) addOutdoorIcon(id);
+    else addShield(id);
+  });
   map.on('moveend', reportView);
   map.on('error', (e) => post({ kind: 'error', message: String(e.error?.message ?? e.error ?? e) }));
   map.on('contextmenu', (e) => {
@@ -323,6 +421,7 @@ function setUnits(value) {
 }
 
 function readTerrain(message) {
+  outdoor = message.outdoor ?? outdoor;
   terrain = message.terrain ?? null;
   shading = message.shading ?? shading;
   contours = message.contours ?? contours;
@@ -381,6 +480,10 @@ const handlers = {
     shading = message.shading;
     contours = message.contours;
     setTerrainVisibility();
+  },
+  outdoor(message) {
+    outdoor = message.visible;
+    setOutdoorVisibility();
   },
   zoom(message) {
     if (map) move({ zoom: map.getZoom() + message.delta });

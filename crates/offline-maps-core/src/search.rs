@@ -176,6 +176,10 @@ fn category_words(category: &str) -> String {
     match category {
         "fuel" => "fuel gas station petrol".into(),
         "charging_station" => "charging station ev charger electric vehicle".into(),
+        "shelter" => "shelter hut".into(),
+        "drinking_water" => "drinking water fountain tap spring".into(),
+        "camp_site" => "campground camping camp site rv park".into(),
+        "toilets" => "toilets toilet restroom restrooms bathroom".into(),
         other => other.replace('_', " "),
     }
 }

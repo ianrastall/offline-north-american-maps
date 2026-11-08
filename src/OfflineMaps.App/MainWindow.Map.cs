@@ -298,6 +298,7 @@ public sealed partial class MainWindow
             ["terrain"] = status.TerrainCoverage is { } t
                 ? new JsonObject { ["bounds"] = new JsonObject { ["west"] = t.West, ["south"] = t.South, ["east"] = t.East, ["north"] = t.North } }
                 : null,
+            ["outdoor"] = _settings.OutdoorPlaces,
             ["shading"] = _settings.TerrainShading,
             ["contours"] = _settings.ContourLines,
         };

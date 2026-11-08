@@ -10,7 +10,8 @@
 //   from zoom 10, US/Illinois routes on trunk/primary roads from zoom 12 and
 //   secondary roads from zoom 13 (the zooms at which the Shortbread tiles
 //   carry refs). Shield images are drawn by the map page on demand;
-// - fuel and charging stations, which the tiles lack, come from a GeoJSON
+// - fuel and charging stations and outdoor places (shelters, drinking water,
+//   campgrounds, toilets), which the tiles lack, come from a GeoJSON
 //   source (`/extras/stations.geojson`, served from the region's extras) and
 //   are shown from zoom 11 with priority over street names and shields. The charging
 //   icon is drawn by the map page.
@@ -79,6 +80,41 @@ function shieldLayer(id, kinds, minzoom) {
 }
 
 const STATIONS = 'stations';
+
+// Outdoor places from the same source: icons drawn by the map page
+// (web/map.js, OUTDOOR_ICONS), names from zoom 15.
+const OUTDOOR = [
+  ['outdoor-shelter', 'shelter', 12],
+  ['outdoor-water', 'drinking_water', 13],
+  ['outdoor-camp', 'camp_site', 11],
+  ['outdoor-toilets', 'toilets', 14],
+];
+
+function outdoorLayers(dark) {
+  return OUTDOOR.map(([id, category, minzoom]) => ({
+    id,
+    type: 'symbol',
+    source: STATIONS,
+    minzoom,
+    filter: ['==', ['get', 'category'], category],
+    layout: {
+      'icon-image': id,
+      'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.45, 15, 0.6, 19, 0.8],
+      'text-field': ['step', ['zoom'], '', 15, ['get', 'name']],
+      'text-font': ['noto_sans_regular'],
+      'text-size': 11,
+      'text-anchor': 'top',
+      'text-offset': [0, 1.0],
+      'text-optional': true,
+      'text-max-width': 8,
+    },
+    paint: {
+      'text-color': dark ? '#d6d3d1' : '#44403c',
+      'text-halo-color': dark ? '#000000' : '#ffffff',
+      'text-halo-width': 1,
+    },
+  }));
+}
 
 function stationLayers(dark) {
   const text = {
@@ -159,6 +195,7 @@ function build(sourceName, outName, title, dark) {
     shieldLayer('route-shield-secondary', ['secondary'], 13),
     shieldLayer('route-shield-major', ['trunk', 'primary'], 12),
     shieldLayer('route-shield-motorway', ['motorway'], 10),
+    ...outdoorLayers(dark),
     ...stationLayers(dark),
   );
 

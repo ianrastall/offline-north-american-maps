@@ -20,6 +20,13 @@ Offline search is part of the intended first workflow. A downloadable file alone
 
 Map workspace with a traditional menu bar, compact map controls, a regions/search pane and a status bar showing current package and data date. Settings includes the shared Jupiter theme and accent controls. Display source attribution on the map and include license information with exported data. Use numeric TextBox, ComboBox or Slider controls; never NumberBox.
 
+## Publication (decided 8 November 2026)
+
+- Published on GitHub after the three new layers (outdoor places, flood zones, public lands) as **Offline US Maps** (repository `offline-us-maps`), covering the US regions in the catalog. Anyone with the installer can use it locally; no account or service is involved.
+- Licence: public domain, as The Unlicense, for the app's own code. Bundled components keep their own licences and notices (MapLibre GL JS and maplibre-contour BSD-3-Clause, VersaTiles style MIT, sprites CC0, Noto Sans OFL, Rust crates MIT/Apache-2.0). Map data is downloaded by the user under its own terms.
+- Jupiter.UI is published as its own public repository under the same licence, so the source can be built by others.
+- World coverage was considered and set aside: Geofabrik publishes Shortbread packages for 356 of its 554 regions (checked 8 November 2026; none for Germany, Japan, Brazil, Ontario or Britain, for example), and search abbreviations, address parsing and route shields are US-specific. The region catalog itself is not US-specific.
+
 ## Acceptance conditions
 
 - Illinois roads and labels render from local storage after a fresh launch with networking disabled.
