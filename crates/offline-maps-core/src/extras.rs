@@ -973,6 +973,15 @@ fn install(
     write_atomic(&store.region_dir(&id).join("active.json"), &pointer)
 }
 
+/// Removes every extras version except the active one, for versions that were
+/// still open when an update finished. Returns how many could not be removed.
+pub fn prune_extras(store: &PackageStore, region_id: &str) -> usize {
+    match active_extras(store, region_id) {
+        Ok(Some(active)) => prune(store, region_id, &active.version),
+        _ => 0,
+    }
+}
+
 /// Removes inactive extras versions; returns how many could not be removed yet.
 fn prune(store: &PackageStore, region_id: &str, active: &str) -> usize {
     let id = extras_id(region_id);

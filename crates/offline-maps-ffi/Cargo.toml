@@ -1,0 +1,20 @@
+[package]
+name = "offline-maps-ffi"
+description = "C ABI facade over the Offline Maps core for the WinUI shell."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+name = "offline_maps_ffi"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+offline-maps-core = { path = "../offline-maps-core" }
+flate2 = "1"
+prost = "0.14.4"
+
+[build-dependencies]
+prost-build = "0.14.4"
+protox = "0.10.0"

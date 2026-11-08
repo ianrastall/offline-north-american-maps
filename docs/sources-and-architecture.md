@@ -31,6 +31,7 @@ Do not implement a bulk downloader against tile.openstreetmap.org. Its public ti
 - Search is a derived artifact built from the package's own tiles at preparation time (`search.sqlite`, about 98 MB for Illinois, SQLite FTS5), installed beside the package. Saved places are user data at the store root, independent of any package. See stage 5 in [validation](validation.md) for what the Shortbread package cannot provide (fuel stations, addresses, counties).
 - Fuel and charging stations come from the raw `.osm.pbf` (about 363 MB for Illinois). The core's own PBF reader extracts them into a per-region extras database (about 2 MB) with its own source record and update cycle, and the raw file is deleted afterwards. Map and search use the extras when present and work without them. See stage 6 in [validation](validation.md).
 - Addresses (about 843,000 in Illinois) come from the same raw extract into the extras database (about 35 MB with them). A query starting with a house number searches them first. See stage 7 in [validation](validation.md).
+- The WinUI shell reaches the core through a protobuf C ABI (`proto/offline_maps.proto`, `crates/offline-maps-ffi`); map tiles have their own export. The map page in WebView2 gets tiles and stations through the shell's request handler, never over a socket. See stage 8 in [validation](validation.md).
 
 ## Licensing obligations
 

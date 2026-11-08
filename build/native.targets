@@ -1,0 +1,22 @@
+<Project>
+  <!-- Builds the Rust C ABI facade (crates/offline-maps-ffi) with Cargo and ships
+       offline_maps_ffi.dll beside the managed assemblies. Imported by OfflineMaps.Interop,
+       so it flows to the app and the tests. -->
+  <PropertyGroup>
+    <CargoProfileDir Condition="'$(Configuration)' == 'Release'">release</CargoProfileDir>
+    <CargoProfileDir Condition="'$(Configuration)' != 'Release'">debug</CargoProfileDir>
+    <CargoProfileFlag Condition="'$(Configuration)' == 'Release'">--release</CargoProfileFlag>
+    <CargoTargetDir>$(RepoRoot)target</CargoTargetDir>
+    <NativeCoreDll>$(CargoTargetDir)\x86_64-pc-windows-msvc\$(CargoProfileDir)\offline_maps_ffi.dll</NativeCoreDll>
+  </PropertyGroup>
+
+  <Target Name="BuildNativeCore" BeforeTargets="AssignTargetPaths" Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipNativeBuild)' != 'true'">
+    <!-- Cargo runs from the repository root so .cargo/config.toml (static CRT, CFG) applies. -->
+    <Exec Command="cargo build -p offline-maps-ffi --locked --target x86_64-pc-windows-msvc --target-dir &quot;$(CargoTargetDir)&quot; $(CargoProfileFlag)" WorkingDirectory="$(RepoRoot)" />
+  </Target>
+
+  <ItemGroup>
+    <None Include="$(NativeCoreDll)" Link="offline_maps_ffi.dll" Visible="false"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

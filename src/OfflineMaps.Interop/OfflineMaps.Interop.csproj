@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>OfflineMaps.Interop</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="$(RepoRoot)proto\offline_maps.proto" ProtoRoot="$(RepoRoot)proto" GrpcServices="None" Access="Public" Link="proto\offline_maps.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OfflineMaps.Interop.Tests" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)build\native.targets" />
+</Project>

@@ -45,7 +45,8 @@ pub enum EntryKind {
 }
 
 impl EntryKind {
-    fn code(self) -> &'static str {
+    /// The stored and reported name: `place`, `street`, `poi`, `transit`, `water`, `address`.
+    pub fn code(self) -> &'static str {
         match self {
             Self::Place => "place",
             Self::Street => "street",

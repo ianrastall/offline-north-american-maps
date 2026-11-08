@@ -1,0 +1,39 @@
+/* Map surface for the Offline Maps shell. Colors come from the shell's Jupiter.UI theme
+   (set as custom properties at runtime); map colors are the map style's content palette. */
+:root {
+  --window: #1C1B19;
+  --surface: #24221F;
+  --separator: #3B3732;
+  --text: #E8E4DC;
+  --secondary: #B8B2A8;
+  --accent: #0078D4;
+  --accent-text: #FFFFFF;
+  color-scheme: dark;
+}
+
+html, body, #map { margin: 0; height: 100%; background: var(--window); }
+body { font: 12px/16px "Segoe UI Variable Text", "Segoe UI", sans-serif; color: var(--text); }
+#map:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
+
+/* MapLibre's own controls in Jupiter colors. */
+#map .maplibregl-ctrl.maplibregl-ctrl-attrib {
+  background: var(--surface); color: var(--secondary); border-top-left-radius: 4px;
+}
+#map .maplibregl-ctrl-attrib a { color: var(--secondary); text-decoration: underline; }
+#map .maplibregl-ctrl.maplibregl-ctrl-scale {
+  background: var(--surface); color: var(--text); border-color: var(--secondary);
+  font-size: 12px; line-height: 16px;
+}
+
+/* The selected search result. */
+.marker-selected {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--window); box-shadow: 0 0 0 2px var(--accent);
+}
+/* Saved places. */
+.marker-place {
+  width: 12px; height: 12px; border-radius: 2px;
+  background: var(--text); border: 2px solid var(--window);
+  cursor: pointer;
+}
+.marker-place.outside { opacity: 0.6; }

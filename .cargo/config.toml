@@ -1,0 +1,4 @@
+# Static C runtime (no Visual C++ redistributable needed by offline_maps_ffi.dll)
+# and Control Flow Guard, as in the other Jupiter apps.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static", "-C", "control-flow-guard=yes"]

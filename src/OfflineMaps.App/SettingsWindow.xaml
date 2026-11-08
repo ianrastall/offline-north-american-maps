@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="OfflineMaps.App.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:jupiter="using:Jupiter.UI"
+    Title="Settings - Offline Maps">
+
+    <Grid x:Name="Root" Background="{ThemeResource JupiterWindowBrush}">
+        <ScrollViewer>
+            <StackPanel
+                MaxWidth="{StaticResource JupiterContentMaxWidth}"
+                Padding="{StaticResource JupiterContentPadding}"
+                HorizontalAlignment="Left"
+                Spacing="16">
+                <TextBlock Style="{StaticResource JupiterPageHeadingTextStyle}" Text="Settings" />
+
+                <TextBlock Style="{StaticResource JupiterSectionHeadingTextStyle}" Text="Appearance" />
+                <jupiter:ThemeSetting x:Name="ThemeControl" />
+                <jupiter:AccentColorSetting x:Name="AccentControl" />
+                <TextBlock Style="{StaticResource JupiterCaptionTextStyle}" Text="The map uses its light or dark style with the theme." TextWrapping="Wrap" />
+
+                <TextBlock Margin="0,16,0,0" Style="{StaticResource JupiterSectionHeadingTextStyle}" Text="Map" />
+                <RadioButtons x:Name="DistanceChoice" Header="Distances" SelectionChanged="DistanceChoice_SelectionChanged">
+                    <x:String>Miles</x:String>
+                    <x:String>Kilometres</x:String>
+                </RadioButtons>
+                <StackPanel Spacing="4">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox
+                            x:Name="FolderBox"
+                            Header="Map folder"
+                            IsReadOnly="True"
+                            TextWrapping="Wrap" />
+                        <Button
+                            Grid.Column="1"
+                            VerticalAlignment="Bottom"
+                            Click="OpenFolder_Click"
+                            Content="Open folder" />
+                    </Grid>
+                    <TextBlock
+                        Style="{StaticResource JupiterCaptionTextStyle}"
+                        Text="Maps, stations and addresses, and saved places. Kept when Offline Maps is updated or uninstalled."
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

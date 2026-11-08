@@ -1,0 +1,225 @@
+// Messages between the WinUI shell and the Rust core (crates/offline-maps-ffi).
+//
+// Evolution rules: never reuse a field number; reserve removed fields and names.
+// Unknown fields are ignored. An unknown enum value is treated as UNSPECIFIED and
+// rejected as an invalid argument. Every request carries a request ID that the
+// response echoes. This schema is versioned separately from the ABI (ABI_VERSION)
+// and from the on-disk formats of the package store.
+syntax = "proto3";
+
+package offline_maps;
+
+option csharp_namespace = "OfflineMaps.Interop.Messages";
+
+// Passed to om_create.
+message Config {
+  // Folder holding map packages, extras and saved places (created if missing).
+  string store_directory = 1;
+  // Overrides of the region's download addresses; empty uses the defaults.
+  string package_url = 2;
+  string extras_url = 3;
+}
+
+message Position {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+message Request {
+  uint64 request_id = 1;
+  oneof command {
+    GetStatus get_status = 2;
+    Search search = 3;
+    AddPlace add_place = 4;
+    UpdatePlace update_place = 5;
+    RemovePlace remove_place = 6;
+    Update update = 7;
+    GetStations get_stations = 8;
+    PrepareSearch prepare_search = 9;
+    ResetPlaces reset_places = 10;
+  }
+}
+
+message GetStatus {}
+
+message Search {
+  string query = 1;
+  // The map position; results are ordered by distance from it when present.
+  Position near = 2;
+  // 1 to 100; 0 means 20.
+  uint32 limit = 3;
+}
+
+message AddPlace {
+  string name = 1;
+  string note = 2;
+  Position position = 3;
+}
+
+message UpdatePlace {
+  uint64 id = 1;
+  string name = 2;
+  string note = 3;
+}
+
+message RemovePlace {
+  uint64 id = 1;
+}
+
+enum UpdateTarget {
+  UPDATE_TARGET_UNSPECIFIED = 0;
+  // The map package (tiles and search).
+  UPDATE_TARGET_MAP = 1;
+  // Fuel and charging stations and addresses from the raw extract.
+  UPDATE_TARGET_EXTRAS = 2;
+}
+
+// Long-running: progress is read with om_progress, cancelled with om_cancel.
+message Update {
+  UpdateTarget target = 1;
+}
+
+message GetStations {}
+
+// Builds the search index of an active package installed without one. Long-running.
+message PrepareSearch {}
+
+// Moves an unreadable saved-places file aside so a new list can be started.
+message ResetPlaces {}
+
+enum ErrorKind {
+  ERROR_KIND_UNSPECIFIED = 0;
+  ERROR_KIND_INVALID_ARGUMENT = 1;
+  ERROR_KIND_NOT_FOUND = 2;
+  ERROR_KIND_BUSY = 3;
+  ERROR_KIND_CANCELLED = 4;
+  ERROR_KIND_NETWORK = 5;
+  ERROR_KIND_STORAGE = 6;
+  ERROR_KIND_INVALID_DATA = 7;
+  ERROR_KIND_UNAVAILABLE = 8;
+  ERROR_KIND_INTERNAL = 9;
+}
+
+// An expected failure. The message is written for the person using the app.
+message Error {
+  ErrorKind kind = 1;
+  string message = 2;
+}
+
+message Response {
+  uint64 request_id = 1;
+  // Set when the request failed; no result is set then.
+  Error error = 2;
+  oneof result {
+    Status status = 3;
+    SearchResults search = 4;
+    Place place = 5;
+    UpdateResult update = 6;
+    Stations stations = 7;
+  }
+}
+
+message Bounds {
+  double west = 1;
+  double south = 2;
+  double east = 3;
+  double north = 4;
+}
+
+message MapInfo {
+  string version = 1;
+  string region_name = 2;
+  // Server date of the package (YYYY-MM-DD), the closest proxy for the data date.
+  string data_date = 3;
+  // RFC 3339.
+  string downloaded_at = 4;
+  uint64 bytes = 5;
+  Bounds bounds = 6;
+  uint32 min_zoom = 7;
+  uint32 max_zoom = 8;
+  string attribution = 9;
+  string source_url = 10;
+  uint64 tiles = 11;
+}
+
+message ExtrasInfo {
+  string version = 1;
+  // OSM data time of the raw extract (YYYY-MM-DD).
+  string data_date = 2;
+  string downloaded_at = 3;
+  uint64 fuel = 4;
+  uint64 charging = 5;
+  uint64 addresses = 6;
+  // Size of the raw extract that was read (it is not kept).
+  uint64 source_bytes = 7;
+}
+
+message Place {
+  uint64 id = 1;
+  string name = 2;
+  string note = 3;
+  double latitude = 4;
+  double longitude = 5;
+  // Inside the active map's bounds.
+  bool covered = 6;
+  string created_at = 7;
+  string updated_at = 8;
+}
+
+message Status {
+  // Absent when no map is installed.
+  MapInfo map = 1;
+  // Absent when stations and addresses are not installed.
+  ExtrasInfo extras = 2;
+  repeated Place places = 3;
+  // The active map has a usable search index.
+  bool search_ready = 4;
+  // Set when an installed map or extras could not be opened.
+  string map_problem = 5;
+  // Set when the saved-places file cannot be read (it is left untouched).
+  string places_problem = 6;
+  string store_directory = 7;
+  string region_name = 8;
+  bool updating = 9;
+}
+
+message SearchResult {
+  string name = 1;
+  // place, street, poi, transit, water or address.
+  string kind = 2;
+  string category = 3;
+  string near = 4;
+  double latitude = 5;
+  double longitude = 6;
+  string reference = 7;
+  bool has_distance = 8;
+  double distance_km = 9;
+  string detail = 10;
+}
+
+message SearchResults {
+  repeated SearchResult results = 1;
+}
+
+message UpdateResult {
+  bool up_to_date = 1;
+  string version = 2;
+  string replaced = 3;
+}
+
+message Stations {
+  // GeoJSON FeatureCollection with name, category and detail properties.
+  string geojson = 1;
+}
+
+// Returned by om_progress.
+message ProgressEvent {
+  bool active = 1;
+  UpdateTarget target = 2;
+  // Checking, Downloading, Verifying, Preparing, Activating.
+  string phase = 3;
+  uint64 done = 4;
+  // 0 when unknown.
+  uint64 total = 5;
+  bool cancelling = 6;
+}

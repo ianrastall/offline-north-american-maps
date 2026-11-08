@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="OfflineMaps.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:local="using:OfflineMaps.App"
+    Title="Offline Maps">
+
+    <!--  Canvas workspace (standard section 7): the map fills the content region; search and saved
+          places are in the inspector pane on the right. The map itself is an embedded WebView2
+          surface, recorded in docs/jupiter-exceptions.md.  -->
+    <Grid x:Name="Root" Background="{ThemeResource JupiterWindowBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <MenuBar x:Name="Menu">
+            <MenuBarItem Title="File">
+                <MenuFlyoutItem Click="Settings_Click" KeyboardAcceleratorTextOverride="Ctrl+," Text="Settings" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Click="Exit_Click" KeyboardAcceleratorTextOverride="Alt+F4" Text="Exit" />
+            </MenuBarItem>
+            <MenuBarItem Title="Edit">
+                <MenuFlyoutItem x:Name="CopyCoordinatesItem" Click="CopyCoordinates_Click" Text="Copy coordinates">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="C" Modifiers="Control,Shift" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Click="Find_Click" Text="Find…">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F" Modifiers="Control" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+            <MenuBarItem Title="View">
+                <ToggleMenuFlyoutItem x:Name="PaneToggle" Click="Pane_Click" IsChecked="True" Text="Search pane">
+                    <ToggleMenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="B" Modifiers="Control" />
+                    </ToggleMenuFlyoutItem.KeyboardAccelerators>
+                </ToggleMenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="ZoomInItem" Click="ZoomIn_Click" KeyboardAcceleratorTextOverride="Ctrl++" Text="Zoom in" />
+                <MenuFlyoutItem x:Name="ZoomOutItem" Click="ZoomOut_Click" KeyboardAcceleratorTextOverride="Ctrl+-" Text="Zoom out" />
+                <MenuFlyoutItem x:Name="FitItem" Click="Fit_Click" KeyboardAcceleratorTextOverride="Ctrl+0" Text="Show whole map" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Click="FullScreen_Click" Text="Full screen">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F11" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+            <MenuBarItem Title="Map">
+                <MenuFlyoutItem x:Name="UpdateMapItem" Click="UpdateMap_Click" Text="Download map…" />
+                <MenuFlyoutItem x:Name="UpdateExtrasItem" Click="UpdateExtras_Click" Text="Download stations and addresses…" />
+                <MenuFlyoutItem x:Name="CancelUpdateItem" Click="CancelUpdate_Click" IsEnabled="False" Text="Cancel download" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="MapInfoItem" Click="MapInfo_Click" Text="Map information" />
+            </MenuBarItem>
+            <MenuBarItem Title="Places">
+                <MenuFlyoutItem x:Name="SavePlaceItem" Click="SavePlace_Click" Text="Save location…">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="D" Modifiers="Control" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="EditPlaceItem" Click="EditPlace_Click" Text="Edit place…" />
+                <MenuFlyoutItem x:Name="RemovePlaceItem" Click="RemovePlace_Click" Text="Remove place…" />
+            </MenuBarItem>
+            <MenuBarItem Title="Help">
+                <MenuFlyoutItem Click="About_Click" Text="About Offline Maps" />
+            </MenuBarItem>
+        </MenuBar>
+
+        <!--  Messages at the top of the content region (standard section 10)  -->
+        <StackPanel Grid.Row="1">
+            <InfoBar
+                x:Name="NoMapBar"
+                Margin="8,8,8,0"
+                IsClosable="False"
+                Severity="Informational"
+                Title="No map is installed"
+                Message="Download the Illinois map while you have a connection. After that, Offline Maps works without one.">
+                <InfoBar.ActionButton>
+                    <Button Click="UpdateMap_Click" Content="Download map…" Style="{StaticResource AccentButtonStyle}" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+            <InfoBar
+                x:Name="UpdateBar"
+                Margin="8,8,8,0"
+                IsClosable="False"
+                Severity="Informational">
+                <InfoBar.ActionButton>
+                    <Button x:Name="CancelButton" Click="CancelUpdate_Click" Content="Cancel download" />
+                </InfoBar.ActionButton>
+                <InfoBar.Content>
+                    <ProgressBar x:Name="UpdateProgress" Margin="0,0,0,12" IsIndeterminate="True" />
+                </InfoBar.Content>
+            </InfoBar>
+            <InfoBar
+                x:Name="ErrorBar"
+                Margin="8,8,8,0"
+                IsClosable="True"
+                Severity="Error" />
+            <InfoBar
+                x:Name="ExtrasBar"
+                Margin="8,8,8,0"
+                Closed="ExtrasBar_Closed"
+                IsClosable="True"
+                Severity="Informational"
+                Title="Stations and addresses are not installed"
+                Message="Fuel stations, charging stations and street addresses need a second download.">
+                <InfoBar.ActionButton>
+                    <Button Click="UpdateExtras_Click" Content="Download stations and addresses…" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+        </StackPanel>
+
+        <Grid x:Name="Workspace" Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="240" />
+                <ColumnDefinition x:Name="SplitterColumn" Width="Auto" />
+                <ColumnDefinition x:Name="PaneColumn" Width="320" MinWidth="{StaticResource JupiterPaneMinWidth}" />
+            </Grid.ColumnDefinitions>
+
+            <!--  jupiter-exception: the map is a WebView2 content surface (docs/jupiter-exceptions.md)  -->
+            <WebView2 x:Name="MapView" AutomationProperties.Name="Map" Visibility="Collapsed" />
+            <TextBlock
+                x:Name="MapMessage"
+                MaxWidth="{StaticResource JupiterContentMaxWidth}"
+                Padding="24"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Style="{StaticResource JupiterBodyTextStyle}"
+                Text="Opening the map…"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+
+            <controls:GridSplitter
+                x:Name="PaneSplitter"
+                Grid.Column="1"
+                Width="8"
+                AutomationProperties.Name="Resize search pane"
+                Background="{ThemeResource JupiterWindowBrush}"
+                ManipulationCompleted="PaneSplitter_ManipulationCompleted"
+                ResizeBehavior="BasedOnAlignment"
+                ResizeDirection="Columns" />
+
+            <!--  Search and saved places  -->
+            <Grid
+                x:Name="Pane"
+                Grid.Column="2"
+                Padding="{StaticResource JupiterPanePadding}"
+                Background="{ThemeResource JupiterSurfaceBrush}"
+                RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Style="{StaticResource JupiterPaneHeadingTextStyle}" Text="Search" />
+                <AutoSuggestBox
+                    x:Name="SearchBox"
+                    Grid.Row="1"
+                    AutomationProperties.Name="Search places, streets, addresses and stations"
+                    PlaceholderText="Town, street, address, fuel"
+                    QueryIcon="Find"
+                    QuerySubmitted="SearchBox_QuerySubmitted"
+                    TextChanged="SearchBox_TextChanged" />
+                <TextBlock
+                    x:Name="ListHeading"
+                    Grid.Row="2"
+                    Margin="0,8,0,0"
+                    Style="{StaticResource JupiterCaptionStrongTextStyle}"
+                    Text="Saved places" />
+                <ListView
+                    x:Name="Results"
+                    Grid.Row="3"
+                    AutomationProperties.Name="Results"
+                    IsItemClickEnabled="True"
+                    ItemClick="Results_ItemClick"
+                    RightTapped="Results_RightTapped"
+                    SelectionChanged="Results_SelectionChanged"
+                    SelectionMode="Single">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:PaneItem">
+                            <StackPanel Padding="0,8" AutomationProperties.Name="{x:Bind AutomationName}" Spacing="4">
+                                <TextBlock Style="{StaticResource JupiterBodyTextStyle}" Text="{x:Bind Title}" TextWrapping="Wrap" />
+                                <TextBlock
+                                    Style="{StaticResource JupiterCaptionTextStyle}"
+                                    Text="{x:Bind Caption}"
+                                    TextWrapping="Wrap"
+                                    Visibility="{x:Bind HasCaption}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <TextBlock
+                    x:Name="ListEmpty"
+                    Grid.Row="3"
+                    Style="{StaticResource JupiterCaptionTextStyle}"
+                    TextWrapping="Wrap" />
+                <Button
+                    x:Name="SaveButton"
+                    Grid.Row="4"
+                    HorizontalAlignment="Stretch"
+                    Click="SavePlace_Click"
+                    Content="Save location…" />
+            </Grid>
+        </Grid>
+
+        <!--  Status bar (standard section 6): persistent state only  -->
+        <Border Grid.Row="3" Style="{StaticResource JupiterStatusBarStyle}">
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    x:Name="StatusText"
+                    VerticalAlignment="Center"
+                    AutomationProperties.LiveSetting="Polite"
+                    Style="{StaticResource JupiterCaptionTextStyle}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    x:Name="ViewText"
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource JupiterCaptionTextStyle}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
