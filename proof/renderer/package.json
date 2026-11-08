@@ -1,0 +1,12 @@
+{
+  "name": "offline-maps-renderer-proof",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch-assets": "node fetch-assets.mjs",
+    "serve": "node --disable-warning=ExperimentalWarning serve.mjs"
+  },
+  "dependencies": {
+    "maplibre-gl": "6.16.0"
+  }
+}

@@ -10,7 +10,7 @@ Google's Maps Static API supports satellite images, but its ordinary size is 640
 - https://cloud.google.com/maps-platform/terms
 - https://developers.google.com/maps/documentation/tile/policies
 
-OpenStreetMap data is available under ODbL with attribution and applicable share-alike obligations. Geofabrik distributes regional extracts suitable for local processing. Its Illinois page lists the raw .osm.pbf extract and an experimental Shortbread vector tile package. The vector tile package is the first renderer candidate; PBF is the source-processing fallback. Neither has been downloaded or renderer-tested in this milestone.
+OpenStreetMap data is available under ODbL with attribution and applicable share-alike obligations. Geofabrik distributes regional extracts suitable for local processing. Its Illinois page lists the raw .osm.pbf extract and an experimental Shortbread vector tile package. The vector tile package is the selected map package and renders directly without local preparation; PBF is the source-processing fallback (for example, for search indexing or routing).
 
 - Illinois: https://download.geofabrik.de/north-america/us/illinois.html
 - Source data: https://download.geofabrik.de/north-america/us/illinois-latest.osm.pbf
@@ -26,8 +26,14 @@ Do not implement a bulk downloader against tile.openstreetmap.org. Its public ti
 - Rust core: package catalogue, bounded download streaming, validation, package persistence, local search index and map-domain queries.
 - WinUI 3/C#: map workspace, MVVM, Windows pickers, accessibility, credentials if later needed, window state and Jupiter.UI appearance settings.
 - Narrow versioned C ABI with protobuf commands/results and SafeHandle ownership. Add at the integration stage; it is not implemented yet.
-- Renderer evaluation: prove local vector tiles, labels, bundled style/glyphs/sprites, hit testing and offline startup. Evaluate a locally hosted MapLibre renderer within WebView2 against native alternatives. No renderer or stack exception is selected yet; record one if needed before implementation.
+- Renderer, selected 8 November 2026 after the [renderer proof](renderer-proof.md): MapLibre GL JS in WebView2 renders Geofabrik Shortbread MBTiles with bundled style (derived from VersaTiles, MIT), sprites (CC0) and Noto Sans glyphs (OFL). Static assets load through a WebView2 virtual host; tiles come from the Rust core through request interception. Recorded as a [Jupiter exception](jupiter-exceptions.md).
 - Raw PBF is road/source data, not a renderable map package. Rendering conversion, local place search and a routing graph are distinct derived artifacts with separate validation and storage costs.
+
+## Licensing obligations
+
+- OpenStreetMap data (ODbL 1.0): show "© OpenStreetMap contributors" on the map and keep license details with packages. Distributing tiles or a derived database (for example committing them to a public repository or bundling them in a release) triggers share-alike obligations, so map data stays out of git and out of the installer; the app downloads it from Geofabrik.
+- MapLibre GL JS: BSD-3-Clause. VersaTiles Style: MIT. VersaTiles sprites: CC0. Noto Sans: OFL 1.1. Ship their license texts with the app.
+- Geofabrik labels the Shortbread package experimental. Its file is rebuilt about weekly; record ETag and Last-Modified per download.
 
 ## Package storage contract to implement
 

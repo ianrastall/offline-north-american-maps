@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "renderer-proof",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--disable-warning=ExperimentalWarning", "proof/renderer/serve.mjs", "--port", "8765"],
+      "port": 8765
+    }
+  ]
+}
