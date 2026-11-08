@@ -3,7 +3,7 @@
 // needed at render time except the extracted files.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -47,7 +47,8 @@ for (const item of PINNED) {
     if (actual !== item.sha256) throw new Error(`${item.name}: SHA-256 ${actual} does not match pinned ${item.sha256}`);
     writeFileSync(archive, bytes);
   }
-  const target = join(assets, item.name);
+  // Glyphs are extracted in full outside the asset tree, then subset.
+  const target = join(item.name === 'glyphs' ? downloads : assets, item.name === 'glyphs' ? 'glyphs-full' : item.name);
   rmSync(target, { recursive: true, force: true });
   mkdirSync(target, { recursive: true });
   // Windows' bundled bsdtar accepts drive-letter paths; GNU tar from Git Bash does not.
@@ -56,4 +57,20 @@ for (const item of PINNED) {
   if (tar.status !== 0) throw new Error(`${item.name}: tar exited with ${tar.status}`);
   console.log(`${item.name}: verified and extracted (${item.license})`);
 }
+
+// Copy only the glyph ranges listed in assets/glyph-ranges.json.
+const subset = JSON.parse(readFileSync(join(root, 'assets', 'glyph-ranges.json'), 'utf8'));
+const glyphs = join(assets, 'glyphs');
+rmSync(glyphs, { recursive: true, force: true });
+let glyphBytes = 0;
+for (const font of subset.fonts) {
+  mkdirSync(join(glyphs, font), { recursive: true });
+  for (const range of subset.ranges) {
+    const from = join(downloads, 'glyphs-full', font, `${range}.pbf`);
+    if (!existsSync(from)) throw new Error(`glyph range ${font}/${range} is not in the font package`);
+    copyFileSync(from, join(glyphs, font, `${range}.pbf`));
+    glyphBytes += statSync(from).size;
+  }
+}
+console.log(`glyphs: ${subset.fonts.length} fonts × ${subset.ranges.length} ranges, ${(glyphBytes / 1e6).toFixed(1)} MB`);
 writeFileSync(join(assets, 'manifest.json'), JSON.stringify(PINNED, null, 2));

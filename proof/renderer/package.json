@@ -3,8 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "fetch-assets": "node fetch-assets.mjs",
-    "serve": "node --disable-warning=ExperimentalWarning serve.mjs"
+    "fetch-assets": "node fetch-assets.mjs"
   },
   "dependencies": {
     "maplibre-gl": "6.16.0"

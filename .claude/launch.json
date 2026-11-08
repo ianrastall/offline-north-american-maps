@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "renderer-proof",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["--disable-warning=ExperimentalWarning", "proof/renderer/serve.mjs", "--port", "8765"],
+      "runtimeExecutable": "cargo",
+      "runtimeArgs": ["run", "-q", "--release", "-p", "offline-maps-dev", "--", "serve", "data/sources/illinois-shortbread-1.0.mbtiles", "--port", "8765"],
       "port": 8765
     }
   ]

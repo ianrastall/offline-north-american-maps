@@ -23,13 +23,13 @@ Full hashes are pinned in `proof/renderer/fetch-assets.mjs`, which refuses misma
 ## Package contents
 
 - MBTiles (SQLite) with `PRAGMA quick_check` = ok. Metadata: name Shortbread, version 1.0, format pbf, zoom 0–14, bounds −91.51608, 36.96731, −87.49264, 42.50941, author "OpenStreetMap contributors, Geofabrik GmbH", license "Open Database License 1.0".
-- 81,301 gzip-compressed Mapbox Vector Tiles: 60,649 at zoom 14 (228 MB), 15,344 at zoom 13 (44 MB), the remainder under 50 MB.
+- 81,302 gzip-compressed Mapbox Vector Tiles: 60,649 at zoom 14 (228 MB), 15,344 at zoom 13 (44 MB), the remainder under 50 MB.
 - Shortbread layers include `streets`, `street_labels` (with `name`, `name_en`, `ref`), `place_labels`, `pois`, `water_*`, `land`, `buildings`, `boundaries`, `public_transport`.
 - Geofabrik republished the file between 1 and 8 November (Sunday builds observed both weeks). Geofabrik still labels the package experimental.
 
 ## Method
 
-`proof/renderer/serve.mjs` (Node 24 built-in `node:sqlite`, no other dependencies) binds 127.0.0.1 only and serves:
+The proof server (originally `proof/renderer/serve.mjs` using Node 24's built-in `node:sqlite`; replaced on 8 November by the Rust `offline-maps-dev serve`, see [stage 3](validation.md)) binds 127.0.0.1 only and serves:
 
 - `/tiles/{z}/{x}/{y}.pbf` from the MBTiles file, converting XYZ to the TMS row order MBTiles uses and passing gzip bodies through with `Content-Encoding: gzip`. Missing tiles return 204.
 - MapLibre's `dist/`, the VersaTiles styles, sprites and glyph ranges.
@@ -40,13 +40,12 @@ Full hashes are pinned in `proof/renderer/fetch-assets.mjs`, which refuses misma
 Rerun:
 
 ```powershell
-cd proof/renderer
-npm ci
-node fetch-assets.mjs
-node --disable-warning=ExperimentalWarning serve.mjs --mbtiles ../../data/sources/illinois-shortbread-1.0.mbtiles
+cd proof/renderer; npm ci; node fetch-assets.mjs; cd ../..
+node tools/build-styles.mjs
+cargo run --release -p offline-maps-dev -- serve data/sources/illinois-shortbread-1.0.mbtiles
 ```
 
-Then open http://127.0.0.1:8765/ (append `?style=colorful-dark` for the dark theme).
+Then open http://127.0.0.1:8765/ (append `?theme=dark` for the dark style). The page now uses the derived Offline Maps styles rather than the stock VersaTiles style tested here.
 
 ## Results
 

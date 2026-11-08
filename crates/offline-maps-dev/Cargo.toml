@@ -1,0 +1,11 @@
+[package]
+name = "offline-maps-dev"
+description = "Development tools: package verification and a loopback renderer server. Not shipped."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+offline-maps-core = { path = "../offline-maps-core" }
+serde_json = "1.0.154"

@@ -1,4 +1,7 @@
 //! Offline map package foundations. No network, credentials, or UI dependencies.
+pub mod mbtiles;
+pub mod package;
+
 use std::io::{self, Read, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 

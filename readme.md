@@ -2,7 +2,7 @@
 
 Jupiter project for downloading road maps before an emergency and using them without internet access. Working application name: **Offline Maps**. First region: **Illinois**.
 
-Status: project started on 27 October 2026. Product brief, source assessment and a tested Rust package-transfer foundation exist. On 8 November 2026 a [renderer proof](docs/renderer-proof.md) rendered Geofabrik's Illinois vector tiles entirely from local files with MapLibre; MapLibre in WebView2 is the selected map surface. There is no app map viewer, HTTP downloader, search, routing engine or installed application yet.
+Status: project started on 27 October 2026. Product brief, source assessment and a tested Rust package-transfer foundation exist. On 8 November 2026 a [renderer proof](docs/renderer-proof.md) rendered Geofabrik's Illinois vector tiles entirely from local files with MapLibre; MapLibre in WebView2 is the selected map surface. The Rust core now reads and verifies MBTiles packages, and derived light/dark styles show interstate, US and Illinois route shields. There is no app map viewer, HTTP downloader, search, routing engine or installed application yet.
 
 - [Project brief](docs/project-brief.md)
 - [Sources and technical decisions](docs/sources-and-architecture.md)
@@ -20,6 +20,15 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo fmt --all -- --check
 ```
 
-The renderer proof (Node 24) is in `proof/renderer`; see [renderer proof](docs/renderer-proof.md) for how to rerun it. Downloaded map data and assets go under `data/`, which is not committed.
+Map page and development server (Node 24 for asset fetching and style builds):
+
+```powershell
+cd proof/renderer; npm ci; node fetch-assets.mjs; cd ../..
+node tools/build-styles.mjs
+cargo run --release -p offline-maps-dev -- inspect data/sources/illinois-shortbread-1.0.mbtiles
+cargo run --release -p offline-maps-dev -- serve data/sources/illinois-shortbread-1.0.mbtiles
+```
+
+The map page is at http://127.0.0.1:8765/ (`?theme=dark` for dark). Downloaded map data and assets go under `data/`, which is not committed.
 
 The future WinUI 3/C# application must import Jupiter.UI and follow Jupiter style standard 1.1. Normal release builds must produce an installer with bundled prerequisites, a Start Menu entry, registered uninstall and upgrades preserving settings and downloaded maps. No GUI is delivered by this initial core milestone.
