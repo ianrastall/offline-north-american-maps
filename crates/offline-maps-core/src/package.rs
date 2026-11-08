@@ -29,6 +29,9 @@ pub struct Region {
     pub name: &'static str,
     pub source_page: &'static str,
     pub package_url: &'static str,
+    /// Raw OpenStreetMap extract, read for what the package lacks (fuel and
+    /// charging stations). Only the extracted stations are kept.
+    pub extras_url: &'static str,
     /// Package bounds must lie inside this box.
     pub outer: Bounds,
     /// Package bounds must cover each of these (longitude, latitude) points.
@@ -40,6 +43,7 @@ pub const ILLINOIS: Region = Region {
     name: "Illinois",
     source_page: crate::ILLINOIS_SOURCE_PAGE,
     package_url: "https://download.geofabrik.de/north-america/us/illinois-shortbread-1.0.mbtiles",
+    extras_url: crate::ILLINOIS_OSM_PBF,
     outer: Bounds {
         west: -92.5,
         south: 36.0,

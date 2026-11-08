@@ -1,7 +1,8 @@
 //! Minimal loopback HTTP/1.1 server for the renderer page. One request per
 //! connection; no keep-alive, no TLS. Development use only.
 //!
-//! `/source/package.mbtiles` also serves the package file itself with HEAD,
+//! `/source/package.mbtiles` (and `/source/extract.osm.pbf` with
+//! `--source-pbf`) serve the package and raw extract files with HEAD,
 //! ETag and single-range (`bytes=N-`) support, so the downloader can be
 //! exercised end to end without the internet.
 use std::io::{BufRead, BufReader, Read, Write};
@@ -29,7 +30,11 @@ struct Stats {
 struct State {
     package: Mutex<TilePackage>,
     package_path: PathBuf,
+    /// Raw OpenStreetMap extract served at `/source/extract.osm.pbf`.
+    source_pbf: Option<PathBuf>,
     metadata_json: String,
+    /// Fuel and charging stations as GeoJSON (empty without extras).
+    stations_json: String,
     mounts: Vec<(&'static str, PathBuf)>,
     stats: Mutex<Stats>,
 }
@@ -55,7 +60,18 @@ impl Response {
     }
 }
 
-pub fn run(package_path: &Path, root: &Path, port: u16) -> Result<(), String> {
+pub fn run(
+    package_path: &Path,
+    extras: Option<&Path>,
+    source_pbf: Option<&Path>,
+    root: &Path,
+    port: u16,
+) -> Result<(), String> {
+    let stations_json = match extras {
+        Some(path) => offline_maps_core::extras::stations_geojson(path)
+            .map_err(|e| format!("{}: {e}", path.display()))?,
+        None => r#"{"type":"FeatureCollection","features":[]}"#.to_owned(),
+    };
     let package = TilePackage::open(package_path).map_err(|e| e.to_string())?;
     let metadata_json = format!(
         "{{\"metadata\":{},\"tiles\":\"/tiles/{{z}}/{{x}}/{{y}}.pbf\"}}",
@@ -64,7 +80,9 @@ pub fn run(package_path: &Path, root: &Path, port: u16) -> Result<(), String> {
     let state = Arc::new(State {
         package: Mutex::new(package),
         package_path: package_path.to_owned(),
+        source_pbf: source_pbf.map(Path::to_owned),
         metadata_json,
+        stations_json,
         mounts: vec![
             (
                 "/maplibre/",
@@ -128,8 +146,15 @@ fn handle(stream: TcpStream, state: &State) -> std::io::Result<()> {
     let path = target.split(['?', '#']).next().unwrap_or("/");
     state.stats.lock().unwrap().requests += 1;
 
-    if path == "/source/package.mbtiles" && (method == "GET" || method == "HEAD") {
-        return serve_source(stream, state, method == "HEAD", range, if_range);
+    let source = match path {
+        "/source/package.mbtiles" => Some(state.package_path.as_path()),
+        "/source/extract.osm.pbf" => state.source_pbf.as_deref(),
+        _ => None,
+    };
+    if let Some(file) = source
+        && (method == "GET" || method == "HEAD")
+    {
+        return serve_source(stream, file, method == "HEAD", range, if_range);
     }
     let response = if method == "POST" && path == "/csp-report" {
         let mut body = vec![0; content_length.min(64 * 1024)];
@@ -154,6 +179,13 @@ fn route(path: &str, state: &State) -> Response {
         return glyphs(rest, state);
     }
     match path {
+        "/extras/stations.geojson" => {
+            return Response::new(
+                "200 OK",
+                "application/geo+json",
+                state.stations_json.clone(),
+            );
+        }
         "/proof/metadata" => {
             return Response::new("200 OK", "application/json", state.metadata_json.clone());
         }
@@ -308,13 +340,13 @@ fn write(mut stream: TcpStream, response: &Response) -> std::io::Result<()> {
 /// time; a `Range: bytes=N-` request is honoured only with a matching If-Range.
 fn serve_source(
     mut stream: TcpStream,
-    state: &State,
+    path: &Path,
     head: bool,
     range: Option<String>,
     if_range: Option<String>,
 ) -> std::io::Result<()> {
     use std::io::{Seek, SeekFrom};
-    let mut file = std::fs::File::open(&state.package_path)?;
+    let mut file = std::fs::File::open(path)?;
     let meta = file.metadata()?;
     let length = meta.len();
     let modified = meta

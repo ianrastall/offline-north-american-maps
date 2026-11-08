@@ -291,7 +291,7 @@ impl std::fmt::Display for UpdateError {
 
 impl std::error::Error for UpdateError {}
 
-fn network(error: io::Error) -> UpdateError {
+pub(crate) fn network(error: io::Error) -> UpdateError {
     if error.kind() == io::ErrorKind::Interrupted {
         UpdateError::Cancelled
     } else {
@@ -344,12 +344,115 @@ pub fn update_region(
     let remote = transport.probe(url).map_err(network)?;
     if let Some(active) = active.as_ref().filter(|a| {
         is_same_file(&a.record, url, &remote)
-            || is_older(remote.last_modified.as_deref(), &a.record)
+            || is_older(
+                remote.last_modified.as_deref(),
+                a.record.source.last_modified.as_deref(),
+            )
     }) {
         return Ok(UpdateOutcome::UpToDate(active.clone()));
     }
     check_size(remote.length, options)?;
 
+    let source = download_to_staging(
+        store, id, url, &remote, transport, options, progress, cancelled,
+    )?;
+    let part = store.staging_file(id);
+
+    if cancelled.load(Ordering::Relaxed) {
+        return Err(UpdateError::Cancelled);
+    }
+    progress(Progress::Verifying);
+    let downloaded_at = (options.clock)();
+    let record = match verify_package(
+        &part,
+        region,
+        source,
+        &downloaded_at,
+        &downloaded_at,
+        cancelled,
+    ) {
+        Ok(record) => record,
+        Err(PackageError::Io(e)) if e.kind() == io::ErrorKind::Interrupted => {
+            return Err(UpdateError::Cancelled);
+        }
+        Err(PackageError::Io(e)) => return Err(UpdateError::Storage(e)),
+        Err(e) => {
+            let _ = store.clear_staging(id);
+            return Err(UpdateError::Invalid(e));
+        }
+    };
+    let record = PackageRecord {
+        verified_at: (options.clock)(),
+        ..record
+    };
+
+    // The transfer may have reached a staler cache than the probe did.
+    if let Some(active) = active.as_ref().filter(|a| {
+        is_older(
+            record.source.last_modified.as_deref(),
+            a.record.source.last_modified.as_deref(),
+        )
+    }) {
+        let _ = store.clear_staging(id);
+        return Ok(UpdateOutcome::UpToDate(active.clone()));
+    }
+
+    // Search is part of a ready package: build it before activation.
+    let index = store.staging_dir(id).join(SEARCH_FILE);
+    let indexed = TilePackage::open(&part).and_then(|package| {
+        build_index(
+            &package,
+            &record.sha256,
+            &index,
+            cancelled,
+            &mut |done, total| progress(Progress::Indexing { done, total }),
+        )
+    });
+    match indexed {
+        Ok(_) => {}
+        Err(PackageError::Io(e)) if e.kind() == io::ErrorKind::Interrupted => {
+            return Err(UpdateError::Cancelled);
+        }
+        Err(PackageError::Io(e)) => return Err(UpdateError::Storage(e)),
+        Err(e) => {
+            let _ = store.clear_staging(id);
+            return Err(UpdateError::Invalid(e));
+        }
+    }
+
+    progress(Progress::Activating);
+    let version = version_name(&record);
+    store
+        .install_version(id, &version, &part, Some(&index), &record)
+        .map_err(UpdateError::Storage)?;
+    store.activate(id, &version).map_err(UpdateError::Storage)?;
+    let _ = store.clear_staging(id);
+    let package = store
+        .active(id)
+        .map_err(|e| UpdateError::Storage(io::Error::other(e.to_string())))?
+        .ok_or_else(|| UpdateError::Storage(io::Error::other("Activated package is missing")))?;
+    let prune_pending = store.prune(id).len();
+    Ok(UpdateOutcome::Activated {
+        package,
+        replaced: active.map(|a| a.version),
+        prune_pending,
+    })
+}
+
+/// Downloads `url` into the staging file of `id` (a region, or a region's
+/// extras), resuming a previous partial copy only when the server still
+/// reports the same file. Returns what the server said about the stored file.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn download_to_staging(
+    store: &PackageStore,
+    id: &str,
+    url: &str,
+    remote: &RemoteInfo,
+    transport: &dyn Transport,
+    options: &UpdateOptions,
+    progress: &mut dyn FnMut(Progress),
+    cancelled: &AtomicBool,
+) -> Result<SourceInfo, UpdateError> {
     // Decide whether the staging file can be resumed.
     let part = store.staging_file(id);
     let mut resume_from = 0;
@@ -375,7 +478,7 @@ pub fn update_region(
     if total != Some(resume_from) || resume_from == 0 {
         check_space(store, id, total.map(|t| t - resume_from), options)?;
         store
-            .write_staging(id, &staging_state(url, &remote))
+            .write_staging(id, &staging_state(url, remote))
             .map_err(UpdateError::Storage)?;
         let etag = remote
             .strong_etag()
@@ -399,7 +502,7 @@ pub fn update_region(
             // The server sent the whole file: it ignored the range or the
             // file changed since the probe. Start over with what it sent.
             Fetched::Full { info, body } => {
-                if (start_over(&info, &remote)) || resume_from > 0 {
+                if start_over(&info, remote) || resume_from > 0 {
                     check_size(info.length, options)?;
                     check_space(store, id, info.length, options)?;
                     store
@@ -454,84 +557,7 @@ pub fn update_region(
         flushed.map_err(UpdateError::Storage)?;
         synced.map_err(UpdateError::Storage)?;
     }
-
-    if cancelled.load(Ordering::Relaxed) {
-        return Err(UpdateError::Cancelled);
-    }
-    progress(Progress::Verifying);
-    let downloaded_at = (options.clock)();
-    let record = match verify_package(
-        &part,
-        region,
-        source,
-        &downloaded_at,
-        &downloaded_at,
-        cancelled,
-    ) {
-        Ok(record) => record,
-        Err(PackageError::Io(e)) if e.kind() == io::ErrorKind::Interrupted => {
-            return Err(UpdateError::Cancelled);
-        }
-        Err(PackageError::Io(e)) => return Err(UpdateError::Storage(e)),
-        Err(e) => {
-            let _ = store.clear_staging(id);
-            return Err(UpdateError::Invalid(e));
-        }
-    };
-    let record = PackageRecord {
-        verified_at: (options.clock)(),
-        ..record
-    };
-
-    // The transfer may have reached a staler cache than the probe did.
-    if let Some(active) = active
-        .as_ref()
-        .filter(|a| is_older(record.source.last_modified.as_deref(), &a.record))
-    {
-        let _ = store.clear_staging(id);
-        return Ok(UpdateOutcome::UpToDate(active.clone()));
-    }
-
-    // Search is part of a ready package: build it before activation.
-    let index = store.staging_dir(id).join(SEARCH_FILE);
-    let indexed = TilePackage::open(&part).and_then(|package| {
-        build_index(
-            &package,
-            &record.sha256,
-            &index,
-            cancelled,
-            &mut |done, total| progress(Progress::Indexing { done, total }),
-        )
-    });
-    match indexed {
-        Ok(_) => {}
-        Err(PackageError::Io(e)) if e.kind() == io::ErrorKind::Interrupted => {
-            return Err(UpdateError::Cancelled);
-        }
-        Err(PackageError::Io(e)) => return Err(UpdateError::Storage(e)),
-        Err(e) => {
-            let _ = store.clear_staging(id);
-            return Err(UpdateError::Invalid(e));
-        }
-    }
-
-    progress(Progress::Activating);
-    let version = version_name(&record);
-    store
-        .install_version(id, &version, &part, Some(&index), &record)
-        .map_err(UpdateError::Storage)?;
-    store.activate(id, &version).map_err(UpdateError::Storage)?;
-    let _ = store.clear_staging(id);
-    let package = store
-        .active(id)
-        .map_err(|e| UpdateError::Storage(io::Error::other(e.to_string())))?
-        .ok_or_else(|| UpdateError::Storage(io::Error::other("Activated package is missing")))?;
-    let prune_pending = store.prune(id).len();
-    Ok(UpdateOutcome::Activated {
-        package,
-        replaced: active.map(|a| a.version),
-        prune_pending,
-    })
+    Ok(source)
 }
 
 /// Disk errors (from the writer) and network errors (from the body reader)
@@ -559,12 +585,12 @@ fn staging_state(url: &str, info: &RemoteInfo) -> StagingState {
     }
 }
 
-/// True when `last_modified` is strictly older than the active package's.
+/// True when `last_modified` is strictly older than `current`.
 /// Unparseable or missing dates never count as older.
-fn is_older(last_modified: Option<&str>, active: &PackageRecord) -> bool {
+pub(crate) fn is_older(last_modified: Option<&str>, current: Option<&str>) -> bool {
     let parse = |v: Option<&str>| v.and_then(crate::time::parse_http_date);
     matches!(
-        (parse(last_modified), parse(active.source.last_modified.as_deref())),
+        (parse(last_modified), parse(current)),
         (Some(remote), Some(current)) if remote < current
     )
 }
@@ -581,7 +607,7 @@ fn is_same_file(record: &PackageRecord, url: &str, remote: &RemoteInfo) -> bool 
         }
 }
 
-fn check_size(length: Option<u64>, options: &UpdateOptions) -> Result<(), UpdateError> {
+pub(crate) fn check_size(length: Option<u64>, options: &UpdateOptions) -> Result<(), UpdateError> {
     match length {
         Some(size) if size > options.max_bytes => Err(UpdateError::TooLarge {
             size,
@@ -623,4 +649,4 @@ fn version_name(record: &PackageRecord) -> String {
 
 #[cfg(test)]
 #[path = "download_tests.rs"]
-mod tests;
+pub(crate) mod tests;

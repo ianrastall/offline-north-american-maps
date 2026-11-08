@@ -20,7 +20,7 @@ use crate::Coordinates;
 use crate::mbtiles::{PackageError, TilePackage};
 use crate::mvt::{Feature, decode_tile, tile_point_to_lon_lat};
 
-pub const SEARCH_SCHEMA: u32 = 1;
+pub const SEARCH_SCHEMA: u32 = 2;
 pub const SEARCH_FILE: &str = "search.sqlite";
 const LAYERS: [&str; 6] = [
     "place_labels",
@@ -77,6 +77,8 @@ pub struct SearchResult {
     pub reference: Option<String>,
     /// Distance from the `near` point given to the search, if any.
     pub distance_km: Option<f64>,
+    /// Extra facts for stations: brand, hours, fuels, address.
+    pub detail: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -96,16 +98,17 @@ impl IndexStats {
 }
 
 /// One searchable thing before context is assigned.
-struct Entry {
-    name: String,
-    alt_name: Option<String>,
-    reference: Option<String>,
-    kind: EntryKind,
-    category: String,
-    lon: f64,
-    lat: f64,
-    tier: u8,
-    population: u64,
+pub(crate) struct Entry {
+    pub(crate) name: String,
+    pub(crate) alt_name: Option<String>,
+    pub(crate) reference: Option<String>,
+    pub(crate) kind: EntryKind,
+    pub(crate) category: String,
+    pub(crate) lon: f64,
+    pub(crate) lat: f64,
+    pub(crate) tier: u8,
+    pub(crate) population: u64,
+    pub(crate) detail: Option<String>,
 }
 
 /// A piece of a line feature (street, river) or a park label. Pieces with the
@@ -147,7 +150,7 @@ fn street_tier(kind: &str) -> u8 {
     }
 }
 
-const EMERGENCY: [&str; 9] = [
+pub(crate) const EMERGENCY: [&str; 10] = [
     "hospital",
     "clinic",
     "doctors",
@@ -157,7 +160,17 @@ const EMERGENCY: [&str; 9] = [
     "shelter",
     "fuel",
     "ambulance_station",
+    "charging_station",
 ];
+
+/// Words a category is found by: its own words plus common synonyms.
+fn category_words(category: &str) -> String {
+    match category {
+        "fuel" => "fuel gas station petrol".into(),
+        "charging_station" => "charging station ev charger electric vehicle".into(),
+        other => other.replace('_', " "),
+    }
+}
 
 fn poi_category(feature: &Feature) -> Option<String> {
     [
@@ -248,6 +261,7 @@ pub fn build_index(
                             lat,
                             tier,
                             population,
+                            detail: None,
                         });
                     }
                 };
@@ -340,6 +354,7 @@ pub fn build_index(
                 lat: centre.lat,
                 tier: main.tier,
                 population: 0,
+                detail: None,
             });
         }
     }
@@ -351,7 +366,7 @@ pub fn build_index(
 type TownPoint = (f64, f64, usize);
 
 /// Nearest city/town/village/hamlet lookup over a coarse grid.
-struct TownGrid {
+pub(crate) struct TownGrid {
     cells: HashMap<(i32, i32), Vec<TownPoint>>,
     names: Vec<String>,
 }
@@ -360,25 +375,32 @@ const TOWN_CELLS_PER_DEGREE: f64 = 4.0;
 
 impl TownGrid {
     fn new(entries: &[Entry]) -> Self {
+        Self::from_points(
+            entries
+                .iter()
+                .filter(|e| e.kind == EntryKind::Place && e.tier <= 3)
+                .map(|e| (e.name.clone(), e.lon, e.lat)),
+        )
+    }
+
+    /// From (name, longitude, latitude) of cities, towns, villages and hamlets.
+    pub(crate) fn from_points(points: impl Iterator<Item = (String, f64, f64)>) -> Self {
         let mut grid = Self {
             cells: HashMap::new(),
             names: Vec::new(),
         };
-        for e in entries
-            .iter()
-            .filter(|e| e.kind == EntryKind::Place && e.tier <= 3)
-        {
-            grid.names.push(e.name.clone());
+        for (name, lon, lat) in points {
+            grid.names.push(name);
             grid.cells
-                .entry(cell(e.lon, e.lat, TOWN_CELLS_PER_DEGREE))
+                .entry(cell(lon, lat, TOWN_CELLS_PER_DEGREE))
                 .or_default()
-                .push((e.lon, e.lat, grid.names.len() - 1));
+                .push((lon, lat, grid.names.len() - 1));
         }
         grid
     }
 
     /// Nearest town within ~40 km.
-    fn nearest(&self, lon: f64, lat: f64) -> Option<&str> {
+    pub(crate) fn nearest(&self, lon: f64, lat: f64) -> Option<&str> {
         self.nearest_index(lon, lat).map(|i| self.names[i].as_str())
     }
 
@@ -407,12 +429,84 @@ pub fn distance_km(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
     6371.0 * (dx * dx + dy * dy).sqrt()
 }
 
-fn write_index(
+/// Tables shared by the package index and the extras index.
+pub(crate) const ENTRY_TABLES: &str = "
+    CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    CREATE TABLE entries (
+        id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL,
+        category TEXT NOT NULL, near TEXT, lon REAL NOT NULL, lat REAL NOT NULL,
+        tier INTEGER NOT NULL, population INTEGER NOT NULL, reference TEXT,
+        match_name TEXT NOT NULL, match_ref TEXT NOT NULL, detail TEXT);
+    CREATE INDEX entries_location ON entries (kind, lat, lon);
+    CREATE VIRTUAL TABLE entries_fts USING fts5(
+        terms, content = '', prefix = '2 3',
+        tokenize = 'unicode61 remove_diacritics 2');";
+
+/// Writes `entries` with their nearest town and search terms, counting them
+/// in `stats`.
+pub(crate) fn insert_entries(
+    tx: &rusqlite::Transaction<'_>,
     entries: &[Entry],
     towns: &TownGrid,
-    package_sha256: &str,
-    out: &Path,
     stats: &mut IndexStats,
+) -> rusqlite::Result<()> {
+    let mut insert = tx.prepare(
+        "INSERT INTO entries (id, name, kind, category, near, lon, lat, tier, population,
+                              reference, match_name, match_ref, detail)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+    )?;
+    let mut insert_terms = tx.prepare("INSERT INTO entries_fts (rowid, terms) VALUES (?1, ?2)")?;
+    for (id, e) in entries.iter().enumerate() {
+        let near = match e.kind {
+            EntryKind::Place => None,
+            _ => towns.nearest(e.lon, e.lat).filter(|t| *t != e.name),
+        };
+        let mut terms = expand(&e.name);
+        let category = category_words(&e.category);
+        for extra in [
+            e.alt_name.as_deref(),
+            e.reference.as_deref(),
+            near,
+            Some(category.as_str()),
+        ]
+        .into_iter()
+        .flatten()
+        {
+            terms.push(' ');
+            terms.push_str(&expand(extra));
+        }
+        insert.execute(params![
+            id as i64,
+            e.name,
+            e.kind.code(),
+            e.category,
+            near,
+            e.lon,
+            e.lat,
+            e.tier,
+            e.population as i64,
+            e.reference,
+            canonical(&e.name),
+            e.reference.as_deref().map(canonical).unwrap_or_default(),
+            e.detail,
+        ])?;
+        insert_terms.execute(params![id as i64, terms])?;
+        *match e.kind {
+            EntryKind::Place => &mut stats.places,
+            EntryKind::Street => &mut stats.streets,
+            EntryKind::Poi => &mut stats.pois,
+            EntryKind::Transit => &mut stats.transit,
+            EntryKind::Water => &mut stats.water,
+        } += 1;
+    }
+    Ok(())
+}
+
+/// Creates an index database at `out` through a temporary file and a
+/// rename, so `out` is either absent, the previous file, or complete.
+pub(crate) fn write_database(
+    out: &Path,
+    fill: impl FnOnce(&rusqlite::Transaction<'_>) -> rusqlite::Result<()>,
 ) -> Result<(), PackageError> {
     let mut temporary = out.as_os_str().to_owned();
     temporary.push(".tmp");
@@ -420,84 +514,36 @@ fn write_index(
     let _ = std::fs::remove_file(&temporary);
     {
         let mut db = Connection::open(&temporary)?;
-        db.execute_batch(
-            "PRAGMA journal_mode = OFF;
-             PRAGMA synchronous = OFF;
-             CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-             CREATE TABLE entries (
-                 id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL,
-                 category TEXT NOT NULL, near TEXT, lon REAL NOT NULL, lat REAL NOT NULL,
-                 tier INTEGER NOT NULL, population INTEGER NOT NULL, reference TEXT,
-                 match_name TEXT NOT NULL, match_ref TEXT NOT NULL);
-             CREATE INDEX entries_location ON entries (kind, lat, lon);
-             CREATE VIRTUAL TABLE entries_fts USING fts5(
-                 terms, content = '', prefix = '2 3',
-                 tokenize = 'unicode61 remove_diacritics 2');",
-        )?;
+        db.execute_batch("PRAGMA journal_mode = OFF; PRAGMA synchronous = OFF;")?;
+        db.execute_batch(ENTRY_TABLES)?;
         let tx = db.transaction()?;
-        {
-            let mut insert = tx.prepare(
-                "INSERT INTO entries (id, name, kind, category, near, lon, lat, tier, population,
-                                      reference, match_name, match_ref)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
-            )?;
-            let mut insert_terms =
-                tx.prepare("INSERT INTO entries_fts (rowid, terms) VALUES (?1, ?2)")?;
-            for (id, e) in entries.iter().enumerate() {
-                let near = match e.kind {
-                    EntryKind::Place => None,
-                    _ => towns.nearest(e.lon, e.lat).filter(|t| *t != e.name),
-                };
-                let mut terms = expand(&e.name);
-                for extra in [
-                    e.alt_name.as_deref(),
-                    e.reference.as_deref(),
-                    near,
-                    Some(e.category.as_str()),
-                ]
-                .into_iter()
-                .flatten()
-                {
-                    terms.push(' ');
-                    terms.push_str(&expand(&extra.replace('_', " ")));
-                }
-                insert.execute(params![
-                    id as i64,
-                    e.name,
-                    e.kind.code(),
-                    e.category,
-                    near,
-                    e.lon,
-                    e.lat,
-                    e.tier,
-                    e.population as i64,
-                    e.reference,
-                    canonical(&e.name),
-                    e.reference.as_deref().map(canonical).unwrap_or_default(),
-                ])?;
-                insert_terms.execute(params![id as i64, terms])?;
-                *match e.kind {
-                    EntryKind::Place => &mut stats.places,
-                    EntryKind::Street => &mut stats.streets,
-                    EntryKind::Poi => &mut stats.pois,
-                    EntryKind::Transit => &mut stats.transit,
-                    EntryKind::Water => &mut stats.water,
-                } += 1;
-            }
-            let mut meta = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
-            meta.execute(params!["schema", SEARCH_SCHEMA.to_string()])?;
-            meta.execute(params!["package_sha256", package_sha256])?;
-            meta.execute(params!["built_at", crate::time::utc_now()])?;
-            meta.execute(params![
-                "stats",
-                serde_json::to_string(&*stats).expect("stats serialize")
-            ])?;
-        }
+        fill(&tx)?;
         tx.commit()?;
         db.execute_batch("INSERT INTO entries_fts (entries_fts) VALUES ('optimize');")?;
     }
     std::fs::rename(&temporary, out)?;
     Ok(())
+}
+
+fn write_index(
+    entries: &[Entry],
+    towns: &TownGrid,
+    package_sha256: &str,
+    out: &Path,
+    stats: &mut IndexStats,
+) -> Result<(), PackageError> {
+    write_database(out, |tx| {
+        insert_entries(tx, entries, towns, stats)?;
+        let mut meta = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
+        meta.execute(params!["schema", SEARCH_SCHEMA.to_string()])?;
+        meta.execute(params!["package_sha256", package_sha256])?;
+        meta.execute(params!["built_at", crate::time::utc_now()])?;
+        meta.execute(params![
+            "stats",
+            serde_json::to_string(&*stats).expect("stats serialize")
+        ])?;
+        Ok(())
+    })
 }
 
 /// Word pairs treated as equivalent in names and queries (full, short).
@@ -598,7 +644,13 @@ fn without_compass_words(canonical_name: &str) -> &str {
 
 pub struct SearchIndex {
     db: Connection,
+    /// Stations from the raw OpenStreetMap extract, when installed.
+    extras: Option<Connection>,
 }
+
+/// Sort key: match class, not a settlement, tier, not exact, then distance or
+/// negative population.
+type Order = (u8, bool, u8, u8, f64);
 
 /// Opens the active package's search index, building it first when it is
 /// missing or belongs to a different package (for example, a package
@@ -638,7 +690,7 @@ impl SearchIndex {
                 "search index belongs to another package".into(),
             ));
         }
-        Ok(Self { db })
+        Ok(Self { db, extras: None })
     }
 
     pub fn stats(&self) -> Result<IndexStats, PackageError> {
@@ -648,6 +700,12 @@ impl SearchIndex {
                     r.get(0)
                 })?;
         serde_json::from_str(&text).map_err(|e| PackageError::Invalid(e.to_string()))
+    }
+
+    /// Adds an extras index (see `extras`) so its stations are searched too.
+    pub fn attach_extras(&mut self, path: &Path) -> Result<(), PackageError> {
+        self.extras = Some(crate::extras::open_entries(path)?);
+        Ok(())
     }
 
     /// Finds up to `limit` matches for `query`. Every query word must match a
@@ -690,88 +748,34 @@ impl SearchIndex {
             })
             .collect::<Vec<_>>()
             .join(" AND ");
-        let (lat0, lon0) = near.map_or((0.0, 0.0), |c| (c.latitude(), c.longitude()));
-        let scale = lat0.to_radians().cos().powi(2);
-        let mut statement = self.db.prepare_cached(
-            "SELECT e.name, e.kind, e.category, e.near, e.lat, e.lon, e.tier, e.population,
-                    e.reference, e.match_name, e.match_ref
-             FROM entries_fts f JOIN entries e ON e.id = f.rowid
-             WHERE entries_fts MATCH ?1
-             ORDER BY CASE WHEN ?2 THEN (e.lat - ?3) * (e.lat - ?3) + (e.lon - ?4) * (e.lon - ?4) * ?5
-                           ELSE e.tier * 1e12 - e.population END
-             LIMIT 5000",
-        )?;
         let query_canonical = canonical(query);
-        let query_words: Vec<&str> = query_canonical.split(' ').collect();
-        let words_in = |text: &str| {
-            let text_words: Vec<&str> = text.split(' ').collect();
-            query_words.iter().enumerate().all(|(i, q)| {
-                text_words
-                    .iter()
-                    .any(|w| w == q || (i == query_words.len() - 1 && w.starts_with(q)))
-            })
-        };
         let mut candidates = Vec::new();
-        let mut rows = statement.query(params![expression, near.is_some(), lat0, lon0, scale])?;
-        while let Some(row) = rows.next()? {
-            let kind = EntryKind::from_code(&row.get::<_, String>(1)?).unwrap_or(EntryKind::Poi);
-            let category: String = row.get(2)?;
-            let (lat, lon): (f64, f64) = (row.get(4)?, row.get(5)?);
-            let tier: u8 = row.get(6)?;
-            let population: i64 = row.get(7)?;
-            let (match_name, match_ref): (String, String) = (row.get(9)?, row.get(10)?);
-            // "West Main Street" is a strong match for "main street".
-            let core_name = without_compass_words(&match_name);
-            let exact = match_name == query_canonical || core_name == query_canonical;
-            let category_words = canonical(&category.replace('_', " "));
-            let strong = exact
-                || match_name.starts_with(&query_canonical)
-                || core_name.starts_with(&query_canonical)
-                || (!match_ref.is_empty() && match_ref.starts_with(&query_canonical))
-                || (!category_words.is_empty() && category_words.starts_with(&query_canonical));
-            let class = if strong {
-                0
-            } else if words_in(&format!("{match_name} {match_ref} {category_words}")) {
-                1
-            } else {
-                2
-            };
-            let settlement = kind == EntryKind::Place && tier <= 2;
-            let distance = near.map(|c| distance_km(c.latitude(), c.longitude(), lat, lon));
-            let order = match distance {
-                Some(d) => (class, !settlement, 0, 0, d),
-                None => (
-                    class,
-                    !settlement,
-                    tier,
-                    u8::from(!exact),
-                    -population as f64,
-                ),
-            };
-            candidates.push((
-                order,
-                SearchResult {
-                    name: row.get(0)?,
-                    kind,
-                    category,
-                    near: row.get(3)?,
-                    latitude: lat,
-                    longitude: lon,
-                    reference: row.get(8)?,
-                    distance_km: distance,
-                },
-            ));
+        for db in std::iter::once(&self.db).chain(self.extras.as_ref()) {
+            collect_candidates(db, &expression, &query_canonical, near, &mut candidates)?;
         }
         candidates.sort_by(|(a, _), (b, _)| {
             (a.0, a.1, a.2, a.3)
                 .cmp(&(b.0, b.1, b.2, b.3))
                 .then(a.4.total_cmp(&b.4))
         });
+        // Streets are already one entry per name and town; points of interest
+        // and stops with the same name are kept apart unless they are within
+        // a few hundred metres (the same place mapped twice).
         let mut seen = std::collections::HashSet::new();
         Ok(candidates
             .into_iter()
             .map(|(_, r)| r)
-            .filter(|r| seen.insert((r.name.clone(), r.kind, r.near.clone(), r.category.clone())))
+            .filter(|r| {
+                let spot = matches!(r.kind, EntryKind::Poi | EntryKind::Transit)
+                    .then(|| cell(r.longitude, r.latitude, 200.0));
+                seen.insert((
+                    r.name.clone(),
+                    r.kind,
+                    r.near.clone(),
+                    r.category.clone(),
+                    spot,
+                ))
+            })
             .take(limit)
             .collect())
     }
@@ -803,6 +807,7 @@ impl SearchIndex {
                     longitude: plon,
                     reference: None,
                     distance_km: Some(d),
+                    detail: None,
                 });
             }
         }
@@ -810,6 +815,90 @@ impl SearchIndex {
     }
 }
 
+/// Runs the full-text match on one database and ranks each row.
+fn collect_candidates(
+    db: &Connection,
+    expression: &str,
+    query_canonical: &str,
+    near: Option<Coordinates>,
+    out: &mut Vec<(Order, SearchResult)>,
+) -> Result<(), PackageError> {
+    let (lat0, lon0) = near.map_or((0.0, 0.0), |c| (c.latitude(), c.longitude()));
+    let scale = lat0.to_radians().cos().powi(2);
+    let mut statement = db.prepare_cached(
+        "SELECT e.name, e.kind, e.category, e.near, e.lat, e.lon, e.tier, e.population,
+                e.reference, e.match_name, e.match_ref, e.detail
+         FROM entries_fts f JOIN entries e ON e.id = f.rowid
+         WHERE entries_fts MATCH ?1
+         ORDER BY CASE WHEN ?2 THEN (e.lat - ?3) * (e.lat - ?3) + (e.lon - ?4) * (e.lon - ?4) * ?5
+                       ELSE e.tier * 1e12 - e.population END
+         LIMIT 5000",
+    )?;
+    let query_words: Vec<&str> = query_canonical.split(' ').collect();
+    let words_in = |text: &str| {
+        let text_words: Vec<&str> = text.split(' ').collect();
+        query_words.iter().enumerate().all(|(i, q)| {
+            text_words
+                .iter()
+                .any(|w| w == q || (i == query_words.len() - 1 && w.starts_with(q)))
+        })
+    };
+    let mut rows = statement.query(params![expression, near.is_some(), lat0, lon0, scale])?;
+    while let Some(row) = rows.next()? {
+        let kind = EntryKind::from_code(&row.get::<_, String>(1)?).unwrap_or(EntryKind::Poi);
+        let category: String = row.get(2)?;
+        let (lat, lon): (f64, f64) = (row.get(4)?, row.get(5)?);
+        let tier: u8 = row.get(6)?;
+        let population: i64 = row.get(7)?;
+        let (match_name, match_ref): (String, String) = (row.get(9)?, row.get(10)?);
+        // "West Main Street" is a strong match for "main street".
+        let core_name = without_compass_words(&match_name);
+        let exact = match_name == query_canonical || core_name == query_canonical;
+        // "gas station" is a strong match for the category "fuel".
+        let category_words = canonical(&category_words(&category));
+        let strong = exact
+            || match_name.starts_with(query_canonical)
+            || core_name.starts_with(query_canonical)
+            || (!match_ref.is_empty() && match_ref.starts_with(query_canonical))
+            || (!category_words.is_empty()
+                && format!(" {category_words}").contains(&format!(" {query_canonical}")));
+        let class = if strong {
+            0
+        } else if words_in(&format!("{match_name} {match_ref} {category_words}")) {
+            1
+        } else {
+            2
+        };
+        let settlement = kind == EntryKind::Place && tier <= 2;
+        let distance = near.map(|c| distance_km(c.latitude(), c.longitude(), lat, lon));
+        let order = match distance {
+            Some(d) => (class, !settlement, 0, 0, d),
+            None => (
+                class,
+                !settlement,
+                tier,
+                u8::from(!exact),
+                -population as f64,
+            ),
+        };
+        out.push((
+            order,
+            SearchResult {
+                name: row.get(0)?,
+                kind,
+                category,
+                near: row.get(3)?,
+                latitude: lat,
+                longitude: lon,
+                reference: row.get(8)?,
+                distance_km: distance,
+                detail: row.get(11)?,
+            },
+        ));
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 #[path = "search_tests.rs"]
-mod tests;
+pub(crate) mod tests;

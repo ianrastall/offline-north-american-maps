@@ -232,28 +232,32 @@ pub fn tile_point_to_lon_lat(z: u8, x: u32, y: u32, extent: u32, px: i32, py: i3
     (lon, lat)
 }
 
-fn zigzag(v: u64) -> i64 {
+pub(crate) fn zigzag(v: u64) -> i64 {
     ((v >> 1) as i64) ^ -((v & 1) as i64)
 }
 
-enum FieldValue<'a> {
+pub(crate) enum FieldValue<'a> {
     Varint(u64),
     Fixed64(u64),
     Bytes(&'a [u8]),
     Fixed32(u32),
 }
 
-struct Fields<'a> {
+pub(crate) struct Fields<'a> {
     buf: &'a [u8],
     pos: usize,
 }
 
 impl<'a> Fields<'a> {
-    fn new(buf: &'a [u8]) -> Self {
+    pub(crate) fn new(buf: &'a [u8]) -> Self {
         Self { buf, pos: 0 }
     }
 
-    fn varint(&mut self) -> Result<u64, DecodeError> {
+    pub(crate) fn is_empty(&self) -> bool {
+        self.pos >= self.buf.len()
+    }
+
+    pub(crate) fn varint(&mut self) -> Result<u64, DecodeError> {
         let mut result = 0_u64;
         for shift in (0..64).step_by(7) {
             let byte = *self
@@ -269,7 +273,7 @@ impl<'a> Fields<'a> {
         Err(DecodeError("varint too long"))
     }
 
-    fn take(&mut self, n: usize) -> Result<&'a [u8], DecodeError> {
+    pub(crate) fn take(&mut self, n: usize) -> Result<&'a [u8], DecodeError> {
         let end = self.pos.checked_add(n).filter(|e| *e <= self.buf.len());
         let end = end.ok_or(DecodeError("truncated field"))?;
         let slice = &self.buf[self.pos..end];
@@ -307,7 +311,7 @@ impl<'a> Iterator for Fields<'a> {
     }
 }
 
-fn packed(buf: &[u8]) -> Result<Vec<u64>, DecodeError> {
+pub(crate) fn packed(buf: &[u8]) -> Result<Vec<u64>, DecodeError> {
     let mut fields = Fields::new(buf);
     let mut out = Vec::with_capacity(buf.len());
     while fields.pos < buf.len() {

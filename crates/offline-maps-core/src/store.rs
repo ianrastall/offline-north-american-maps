@@ -230,6 +230,8 @@ impl PackageStore {
             "download.json",
             "search.sqlite",
             "search.sqlite.tmp",
+            "extras.sqlite",
+            "extras.sqlite.tmp",
         ] {
             match fs::remove_file(dir.join(name)) {
                 Err(error) if error.kind() != io::ErrorKind::NotFound => return Err(error),
@@ -242,7 +244,7 @@ impl PackageStore {
 
 /// Version names are generated (`YYYYMMDDTHHMMSSZ-<hash prefix>`); anything
 /// else in a pointer is rejected so it cannot address outside the store.
-fn is_version_name(name: &str) -> bool {
+pub(crate) fn is_version_name(name: &str) -> bool {
     !name.is_empty()
         && name.len() <= 64
         && name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')

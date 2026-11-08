@@ -2,12 +2,16 @@
 //!
 //!   offline-maps-dev inspect <package.mbtiles> [--source-url U] [--etag E]
 //!       [--last-modified L] [--downloaded-at T] [--record out.json]
-//!   offline-maps-dev serve <package.mbtiles> [--port 8765]
+//!   offline-maps-dev serve <package.mbtiles> [--port 8765] [--extras extras.sqlite]
+//!       [--source-pbf file.osm.pbf]
 //!   offline-maps-dev download <store-dir> [--url U] [--stop-after BYTES]
+//!   offline-maps-dev download-extras <store-dir> [--url U] [--stop-after BYTES]
 //!   offline-maps-dev probe [url]      (HEAD request only; downloads nothing)
 //!   offline-maps-dev index <package.mbtiles> <search.sqlite>
 //!   offline-maps-dev search <store-dir> <query> [--near LAT,LON] [--limit N]
-//!       (builds the active package's search index first if it is missing)
+//!       [--extras FILE]   (builds the active package's search index first if
+//!       it is missing; uses the store's active extras unless --extras is given)
+//!   offline-maps-dev extract <file.osm.pbf> <extras.sqlite>
 //!
 //! `serve` binds 127.0.0.1 only and stands in for the WebView2 request
 //! interception the app will use: tiles come from the Rust core, every
@@ -69,11 +73,54 @@ fn index(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
+/// Reads fuel and charging stations from a raw extract into an extras file.
+fn extract(args: &[String]) -> Result<(), String> {
+    let [pbf, out] = args else {
+        return Err("usage: extract <file.osm.pbf> <extras.sqlite>".into());
+    };
+    let started = std::time::Instant::now();
+    let cancelled = AtomicBool::new(false);
+    let mut last = (0, 0);
+    let extract =
+        offline_maps_core::extras::extract(pbf.as_ref(), &cancelled, &mut |step, read, total| {
+            let percent = read * 100 / total.max(1);
+            if (step, percent / 25) != last {
+                last = (step, percent / 25);
+                println!(
+                    "  pass {step}: {percent}% ({:.1} s)",
+                    started.elapsed().as_secs_f64()
+                );
+            }
+        })
+        .map_err(|e| e.to_string())?;
+    println!(
+        "{:?}
+header {:?}
+read in {:.1} s",
+        extract.stats,
+        extract.header,
+        started.elapsed().as_secs_f64()
+    );
+    let sha = package_sha(pbf.as_ref())?;
+    offline_maps_core::extras::write_extras(&extract, &sha, out.as_ref())
+        .map_err(|e| e.to_string())?;
+    let size = std::fs::metadata(out).map_err(|e| e.to_string())?.len();
+    println!(
+        "{} stations, {:.2} MB, {:.1} s in total",
+        extract.stations.len(),
+        size as f64 / 1e6,
+        started.elapsed().as_secs_f64()
+    );
+    Ok(())
+}
+
 fn search(args: &[String]) -> Result<(), String> {
     use offline_maps_core::Coordinates;
     use offline_maps_core::store::PackageStore;
     let [store_dir, query, rest @ ..] = args else {
-        return Err("usage: search <store-dir> <query> [--near LAT,LON] [--limit N]".into());
+        return Err(
+            "usage: search <store-dir> <query> [--near LAT,LON] [--limit N] [--extras FILE]".into(),
+        );
     };
     let (_, options) = parse(
         &[String::new()]
@@ -103,9 +150,20 @@ fn search(args: &[String]) -> Result<(), String> {
         .ok_or("the store has no active Illinois package")?;
     let opening = std::time::Instant::now();
     let built = !active.search_index_path().exists();
-    let index =
+    let mut index =
         offline_maps_core::search::open_or_build(&active, &AtomicBool::new(false), &mut |_, _| {})
             .map_err(|e| e.to_string())?;
+    let extras = match options.get("extras") {
+        Some(path) => Some(PathBuf::from(path)),
+        None => {
+            offline_maps_core::extras::active_extras(&PackageStore::new(store_dir), ILLINOIS.id)
+                .map_err(|e| e.to_string())?
+                .map(|a| a.path)
+        }
+    };
+    if let Some(path) = &extras {
+        index.attach_extras(path).map_err(|e| e.to_string())?;
+    }
     if built {
         println!(
             "Built search index for {} in {:.1} s",
@@ -138,6 +196,9 @@ fn search(args: &[String]) -> Result<(), String> {
                 .map(|d| format!("  {d:.1} km"))
                 .unwrap_or_default()
         );
+        if let Some(detail) = r.detail {
+            println!("      {detail}");
+        }
     }
     Ok(())
 }
@@ -147,10 +208,12 @@ fn main() -> ExitCode {
     let result = match args.first().map(String::as_str) {
         Some("inspect") => inspect(&args[1..]),
         Some("serve") => serve(&args[1..]),
-        Some("download") => download(&args[1..]),
+        Some("download") => download(&args[1..], false),
+        Some("download-extras") => download(&args[1..], true),
         Some("probe") => probe(args.get(1).map_or(ILLINOIS.package_url, String::as_str)),
         Some("index") => index(&args[1..]),
         Some("search") => search(&args[1..]),
+        Some("extract") => extract(&args[1..]),
         _ => Err("usage: offline-maps-dev inspect|serve <package.mbtiles> | download <store-dir> [options]".into()),
     };
     match result {
@@ -220,7 +283,9 @@ fn serve(args: &[String]) -> Result<(), String> {
         .map_or(Ok(8765), |p| p.parse())
         .map_err(|_| "invalid port")?;
     let root = project_root()?;
-    server::run(&path, &root, port)
+    let extras = options.get("extras").map(PathBuf::from);
+    let source_pbf = options.get("source-pbf").map(PathBuf::from);
+    server::run(&path, extras.as_deref(), source_pbf.as_deref(), &root, port)
 }
 
 /// The workspace root, found from the executable's build location or the
@@ -238,9 +303,10 @@ fn project_root() -> Result<PathBuf, String> {
         .ok_or_else(|| "run from the offline-maps project directory".into())
 }
 
-/// Updates the Illinois package in `store-dir`. `--stop-after` cancels once
-/// that many bytes have arrived, to exercise resume.
-fn download(args: &[String]) -> Result<(), String> {
+/// Updates the Illinois package (or, with `extras`, its fuel and charging
+/// stations) in `store-dir`. `--stop-after` cancels once that many bytes have
+/// arrived, to exercise resume.
+fn download(args: &[String], extras: bool) -> Result<(), String> {
     use offline_maps_core::download::{
         HttpTransport, Progress, UpdateOptions, UpdateOutcome, update_region,
     };
@@ -250,11 +316,12 @@ fn download(args: &[String]) -> Result<(), String> {
     use std::time::Instant;
 
     let (store_dir, options) = parse(args)?;
+    let url: Option<&'static str> = options
+        .get("url")
+        .map(|url| &*Box::leak(url.clone().into_boxed_str()));
     let region = Region {
-        package_url: match options.get("url") {
-            Some(url) => Box::leak(url.clone().into_boxed_str()),
-            None => ILLINOIS.package_url,
-        },
+        package_url: url.filter(|_| !extras).unwrap_or(ILLINOIS.package_url),
+        extras_url: url.filter(|_| extras).unwrap_or(ILLINOIS.extras_url),
         ..ILLINOIS
     };
     let stop_after: Option<u64> = options
@@ -266,6 +333,7 @@ fn download(args: &[String]) -> Result<(), String> {
     let started = Instant::now();
     let mut last_percent = None;
     let mut first_received = None;
+    let mut last_indexing = None;
     let mut progress = |p: Progress| match p {
         Progress::Downloading { received, total } => {
             first_received.get_or_insert(received);
@@ -283,15 +351,50 @@ fn download(args: &[String]) -> Result<(), String> {
             }
         }
         Progress::Indexing { done, total } => {
-            if done == total {
+            if done == total || (extras && done % 1000 == 0 && last_indexing != Some(done)) {
+                last_indexing = Some(done);
                 println!(
-                    "Indexed {total} tiles ({:.1} s)",
+                    "Indexing {done}/{total} ({:.1} s)",
                     started.elapsed().as_secs_f64()
                 );
             }
         }
         other => println!("{other:?} ({:.1} s)", started.elapsed().as_secs_f64()),
     };
+    if extras {
+        use offline_maps_core::extras::{ExtrasOutcome, update_extras};
+        let result = update_extras(
+            &store,
+            &region,
+            &HttpTransport::new(),
+            &UpdateOptions::default(),
+            &mut progress,
+            &cancelled,
+        );
+        if let Some(start) = first_received {
+            println!("First progress at byte {start}");
+        }
+        let elapsed = started.elapsed().as_secs_f64();
+        match result.map_err(|e| e.to_string())? {
+            ExtrasOutcome::UpToDate(active) => {
+                println!("Up to date: {} ({elapsed:.1} s)", active.version)
+            }
+            ExtrasOutcome::Activated {
+                extras,
+                replaced,
+                prune_pending,
+            } => println!(
+                "Activated extras {} ({:?}; source {} bytes, sha256 {}, data {:?}); replaced {:?}; prune pending {prune_pending} ({elapsed:.1} s)",
+                extras.version,
+                extras.record.stats,
+                extras.record.byte_length,
+                extras.record.sha256,
+                extras.record.data_timestamp,
+                replaced
+            ),
+        }
+        return Ok(());
+    }
     let result = update_region(
         &store,
         &region,

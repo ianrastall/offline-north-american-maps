@@ -124,7 +124,7 @@ fn test_package() -> (TempFile, TilePackage) {
     (file, package)
 }
 
-fn built() -> (TempFile, SearchIndex, IndexStats) {
+pub(crate) fn built() -> (TempFile, SearchIndex, IndexStats) {
     let (_package_file, package) = test_package();
     let out = TempFile::new("sqlite");
     let mut calls = 0;

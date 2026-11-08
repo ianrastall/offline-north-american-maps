@@ -9,7 +9,11 @@
 // - the zoom-14 motorway ref text is replaced by route shields: interstates
 //   from zoom 10, US/Illinois routes on trunk/primary roads from zoom 12 and
 //   secondary roads from zoom 13 (the zooms at which the Shortbread tiles
-//   carry refs). Shield images are drawn by the map page on demand.
+//   carry refs). Shield images are drawn by the map page on demand;
+// - fuel and charging stations, which the tiles lack, come from a GeoJSON
+//   source (`/extras/stations.geojson`, served from the region's extras) and
+//   are shown from zoom 11 with priority over street names and shields. The charging
+//   icon is drawn by the map page.
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -74,7 +78,52 @@ function shieldLayer(id, kinds, minzoom) {
   };
 }
 
-function build(sourceName, outName, title) {
+const STATIONS = 'stations';
+
+function stationLayers(dark) {
+  const text = {
+    'text-field': ['step', ['zoom'], '', 14, ['get', 'name']],
+    'text-font': ['noto_sans_regular'],
+    'text-size': 11,
+    'text-anchor': 'top',
+    'text-offset': [0, 1.1],
+    'text-optional': true,
+    'text-max-width': 8,
+  };
+  const textPaint = {
+    'text-color': dark ? '#d6d3d1' : '#44403c',
+    'text-halo-color': dark ? '#000000' : '#ffffff',
+    'text-halo-width': 1,
+  };
+  const size = ['interpolate', ['linear'], ['zoom'], 11, 0.5, 15, 0.7, 19, 0.9];
+  return [
+    {
+      id: 'station-charging',
+      type: 'symbol',
+      source: STATIONS,
+      minzoom: 12,
+      filter: ['==', ['get', 'category'], 'charging_station'],
+      layout: { 'icon-image': 'station-charging', 'icon-size': size, ...text },
+      paint: textPaint,
+    },
+    {
+      id: 'station-fuel',
+      type: 'symbol',
+      source: STATIONS,
+      minzoom: 11,
+      filter: ['==', ['get', 'category'], 'fuel'],
+      layout: { 'icon-image': 'base:icon-fuel_pump', 'icon-size': size, ...text },
+      paint: {
+        ...textPaint,
+        'icon-color': dark ? '#fbbf24' : '#b45309',
+        'icon-halo-color': dark ? '#000000' : '#ffffff',
+        'icon-halo-width': 2,
+      },
+    },
+  ];
+}
+
+function build(sourceName, outName, title, dark) {
   const sourcePath = join(sourceDir, sourceName, 'en.json');
   const raw = readFileSync(sourcePath);
   const style = JSON.parse(raw);
@@ -97,14 +146,20 @@ function build(sourceName, outName, title) {
       maxzoom: 14,
       attribution: ATTRIBUTION,
     },
+    [STATIONS]: {
+      type: 'geojson',
+      data: '/extras/stations.geojson',
+    },
   };
   style.layers = style.layers
     .filter((layer) => layer.id !== 'label-motorway-shield')
     .map((layer) => (layer.source === oldSource ? { ...layer, source: SOURCE } : layer));
+  // Stations are last so street names and shields give way to them.
   style.layers.push(
     shieldLayer('route-shield-secondary', ['secondary'], 13),
     shieldLayer('route-shield-major', ['trunk', 'primary'], 12),
     shieldLayer('route-shield-motorway', ['motorway'], 10),
+    ...stationLayers(dark),
   );
 
   const text = JSON.stringify(style);
@@ -119,5 +174,5 @@ function build(sourceName, outName, title) {
   console.log(`${outName}.json: ${style.layers.length} layers, fonts ${[...fonts].join(', ')}`);
 }
 
-build('colorful', 'offline-maps-light', 'Offline Maps light');
-build('colorful-dark', 'offline-maps-dark', 'Offline Maps dark');
+build('colorful', 'offline-maps-light', 'Offline Maps light', false);
+build('colorful-dark', 'offline-maps-dark', 'Offline Maps dark', true);

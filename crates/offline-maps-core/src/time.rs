@@ -3,9 +3,15 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Current UTC time as RFC 3339 (seconds precision).
 pub fn utc_now() -> String {
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |d| d.as_secs()) as i64;
+    format_unix(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs()) as i64,
+    )
+}
+
+/// Seconds since 1970 as RFC 3339 UTC.
+pub fn format_unix(secs: i64) -> String {
     let (days, rem) = (secs.div_euclid(86_400), secs.rem_euclid(86_400));
     // Civil-from-days (Howard Hinnant's algorithm).
     let z = days + 719_468;

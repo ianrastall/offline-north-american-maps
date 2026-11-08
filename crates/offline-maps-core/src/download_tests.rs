@@ -19,7 +19,7 @@ struct Fake {
 }
 
 /// In-memory server. The flag is leaked so a response body can raise it.
-struct FakeTransport(RefCell<Fake>, &'static AtomicBool);
+pub(crate) struct FakeTransport(RefCell<Fake>, &'static AtomicBool);
 
 /// Body that can end early (a dropped connection) or raise the cancel flag
 /// once a number of bytes have been read.
@@ -44,7 +44,7 @@ impl Read for Body {
 }
 
 impl FakeTransport {
-    fn new(file: Vec<u8>, etag: &str) -> Self {
+    pub(crate) fn new(file: Vec<u8>, etag: &str) -> Self {
         Self(
             RefCell::new(Fake {
                 file,
@@ -69,7 +69,7 @@ impl FakeTransport {
         }
     }
 
-    fn serve(&self, file: Vec<u8>, etag: &str) {
+    pub(crate) fn serve(&self, file: Vec<u8>, etag: &str) {
         let mut f = self.0.borrow_mut();
         f.file = file;
         f.etag = Some(etag.into());
@@ -110,7 +110,7 @@ impl Transport for FakeTransport {
     }
 }
 
-fn options() -> UpdateOptions {
+pub(crate) fn options() -> UpdateOptions {
     UpdateOptions {
         available_space: |_| Ok(u64::MAX),
         ..UpdateOptions::default()

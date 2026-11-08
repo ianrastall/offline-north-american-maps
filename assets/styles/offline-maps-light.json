@@ -21,6 +21,10 @@
    "minzoom": 0,
    "maxzoom": 14,
    "attribution": "© OpenStreetMap contributors (ODbL) · Geofabrik"
+  },
+  "stations": {
+   "type": "geojson",
+   "data": "/extras/stations.geojson"
   }
  },
  "layers": [
@@ -19243,6 +19247,129 @@
       ]
      ]
     ]
+   }
+  },
+  {
+   "id": "station-charging",
+   "type": "symbol",
+   "source": "stations",
+   "minzoom": 12,
+   "filter": [
+    "==",
+    [
+     "get",
+     "category"
+    ],
+    "charging_station"
+   ],
+   "layout": {
+    "icon-image": "station-charging",
+    "icon-size": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     11,
+     0.5,
+     15,
+     0.7,
+     19,
+     0.9
+    ],
+    "text-field": [
+     "step",
+     [
+      "zoom"
+     ],
+     "",
+     14,
+     [
+      "get",
+      "name"
+     ]
+    ],
+    "text-font": [
+     "noto_sans_regular"
+    ],
+    "text-size": 11,
+    "text-anchor": "top",
+    "text-offset": [
+     0,
+     1.1
+    ],
+    "text-optional": true,
+    "text-max-width": 8
+   },
+   "paint": {
+    "text-color": "#44403c",
+    "text-halo-color": "#ffffff",
+    "text-halo-width": 1
+   }
+  },
+  {
+   "id": "station-fuel",
+   "type": "symbol",
+   "source": "stations",
+   "minzoom": 11,
+   "filter": [
+    "==",
+    [
+     "get",
+     "category"
+    ],
+    "fuel"
+   ],
+   "layout": {
+    "icon-image": "base:icon-fuel_pump",
+    "icon-size": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     11,
+     0.5,
+     15,
+     0.7,
+     19,
+     0.9
+    ],
+    "text-field": [
+     "step",
+     [
+      "zoom"
+     ],
+     "",
+     14,
+     [
+      "get",
+      "name"
+     ]
+    ],
+    "text-font": [
+     "noto_sans_regular"
+    ],
+    "text-size": 11,
+    "text-anchor": "top",
+    "text-offset": [
+     0,
+     1.1
+    ],
+    "text-optional": true,
+    "text-max-width": 8
+   },
+   "paint": {
+    "text-color": "#44403c",
+    "text-halo-color": "#ffffff",
+    "text-halo-width": 1,
+    "icon-color": "#b45309",
+    "icon-halo-color": "#ffffff",
+    "icon-halo-width": 2
    }
   }
  ],

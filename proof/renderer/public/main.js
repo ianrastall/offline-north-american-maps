@@ -1,5 +1,5 @@
 // Offline Maps renderer page. Loads a bundled Offline Maps style and resolves
-// its same-origin paths; draws route shield images on demand.
+// its same-origin paths; draws route shield and charging-station images.
 import * as maplibregl from '/maplibre/maplibre-gl.mjs';
 
 const origin = location.origin;
@@ -18,13 +18,18 @@ const b = metadata.bounds;
 style.glyphs = absolute(style.glyphs);
 style.sprite = style.sprite.map((s) => ({ ...s, url: absolute(s.url) }));
 for (const source of Object.values(style.sources)) {
+  if (source.type === 'geojson') source.data = absolute(source.data);
   if (source.type !== 'vector') continue;
   source.tiles = source.tiles.map(absolute);
   source.minzoom = metadata.min_zoom;
   source.maxzoom = metadata.max_zoom;
   source.bounds = [b.west, b.south, b.east, b.north];
 }
-const loadable = [style.glyphs, ...style.sprite.map((s) => s.url), ...Object.values(style.sources).flatMap((s) => s.tiles ?? [])];
+const loadable = [
+  style.glyphs,
+  ...style.sprite.map((s) => s.url),
+  ...Object.values(style.sources).flatMap((s) => s.tiles ?? (typeof s.data === 'string' ? [s.data] : [])),
+];
 const remote = loadable.filter((url) => new URL(url.replace(/[{}]/g, '')).origin !== origin);
 
 const pad = 0.5;
@@ -51,8 +56,33 @@ const SHIELDS = {
 };
 // Registered as soon as the style is parsed, before any tile is laid out, so
 // no shield is placed as bare text; the missing-image event is a fallback.
-map.on('style.load', () => Object.keys(SHIELDS).forEach(addShield));
-map.on('styleimagemissing', ({ id }) => addShield(id));
+map.on('style.load', () => {
+  Object.keys(SHIELDS).forEach(addShield);
+  addChargingIcon();
+});
+map.on('styleimagemissing', ({ id }) => (id === 'station-charging' ? addChargingIcon() : addShield(id)));
+
+// Charging stations: green disc with a white lightning bolt.
+function addChargingIcon() {
+  if (map.hasImage('station-charging')) return;
+  const ratio = 2, size = 32 * ratio;
+  const ctx = new OffscreenCanvas(size, size).getContext('2d');
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 2 * ratio, 0, Math.PI * 2);
+  ctx.fillStyle = '#15803d';
+  ctx.fill();
+  ctx.lineWidth = 2 * ratio;
+  ctx.strokeStyle = '#ffffff';
+  ctx.stroke();
+  const p = (x, y) => [x * ratio, y * ratio];
+  ctx.beginPath();
+  ctx.moveTo(...p(18, 6));
+  [p(9, 18), p(15, 18), p(13, 26), p(23, 13), p(17, 13), p(19, 6)].forEach((pt) => ctx.lineTo(...pt));
+  ctx.closePath();
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  map.addImage('station-charging', ctx.getImageData(0, 0, size, size), { pixelRatio: ratio });
+}
 
 function addShield(id) {
   const spec = SHIELDS[id];

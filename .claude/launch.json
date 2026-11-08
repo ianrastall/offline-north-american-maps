@@ -4,7 +4,7 @@
     {
       "name": "renderer-proof",
       "runtimeExecutable": "cargo",
-      "runtimeArgs": ["run", "-q", "--release", "-p", "offline-maps-dev", "--", "serve", "data/sources/illinois-shortbread-1.0.mbtiles", "--port", "8765"],
+      "runtimeArgs": ["run", "-q", "--release", "-p", "offline-maps-dev", "--", "serve", "data/sources/illinois-shortbread-1.0.mbtiles", "--port", "8765", "--extras", "data/illinois-extras.sqlite", "--source-pbf", "data/sources/illinois-latest.osm.pbf"],
       "port": 8765
     }
   ]

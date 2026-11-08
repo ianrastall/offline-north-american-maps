@@ -62,15 +62,64 @@ Real Illinois package (8 November build):
 
 Limits of this package, found while testing:
 
-- **No fuel stations.** Geofabrik's Shortbread tiles contain no `amenity=fuel` in points of interest, buildings or sites. For emergency use this is a real gap; the raw `.osm.pbf` contains them.
+- **No fuel stations.** Geofabrik's Shortbread tiles contain no `amenity=fuel` in points of interest, buildings or sites. For emergency use this is a real gap; the raw `.osm.pbf` contains them (added in stage 6).
 - **No address search.** House numbers carry no street names in this schema.
 - **No county search.** Boundary labels at every zoom are state names only, and land areas are unnamed (named parks still appear as points of interest).
 - **State line.** The extract includes border towns in neighbouring states without state attribution, so `clinton` without a position ranks Clinton, Iowa (a city) above Clinton, Illinois (a town). With the map position supplied, Clinton, Illinois comes first when viewing central Illinois. The app must always pass the map position.
 - Recently renamed roads match their current OSM name only (`lake shore dr` finds bike-share docks before DuSable Lake Shore Drive).
 
+## Stage 6: fuel and charging stations from the raw extract
+
+Completed 8 November 2026.
+
+- **PBF reader.** `osm_pbf` reads OpenStreetMap PBF files with no new dependency. It handles blob framing with the specification's size limits, zlib and uncompressed blobs, and the header (bounding box, required features, data timestamp). Files needing anything beyond `OsmSchema-V0.6` and `DenseNodes` are refused. It reads nodes, dense nodes, ways and relations with tags. Blocks are decompressed and decoded on up to 8 worker threads.
+- **Extraction.** `extras::extract` reads `amenity=fuel` and `amenity=charging_station` mapped as points, areas or multipolygons.
+  - Areas are placed at the mean of their nodes. This needs a second pass for node positions and, for multipolygons, a third.
+  - `access=private` or `no` is excluded.
+  - Each station keeps name (else brand, else operator), brand, operator, opening hours, notable fuels and address. The fuels listed are diesel, truck diesel, biodiesel, E85, LPG, CNG and DEF; octane grades are left out.
+  - An area and a point inside it count as one station when they are within 150 m and their names or brands agree. The more complete copy is kept and filled from the other.
+  - Cities, towns, villages, hamlets and suburbs are read for nearest-town context.
+- **Extras store.** Stations live in a per-region extras database (`<root>/<region>/extras/versions/<v>/extras.sqlite`, with `record.json` and an atomic `active.json`), independent of the map package.
+  - It holds the stations, towns and search entries in the package index's format. When the search format changes, entries are rebuilt from the stored stations without the raw file.
+  - `update_extras` follows the package update rules: probe, `no-cache`, ETag-checked resume through the same staging code, size and space checks, older-data guard and lock.
+  - It hashes the download, extracts, and checks that the extract's bounding box covers the region and that it has towns. It then installs, activates and prunes, and deletes the raw file.
+  - The record keeps the source URL, ETag, Last-Modified, size, SHA-256, OSM data time and counts.
+  - A failed or cancelled extras update never touches the map package or the previous extras.
+- **Search.** `SearchIndex::attach_extras` adds the stations to every search.
+  - `gas`, `gas station`, `petrol` and `fuel` find fuel stations; `ev`, `charger` and `charging station` find charging stations. Brands and names work as before.
+  - Results carry a detail line (brand, hours, fuels, address).
+  - The search format moved to version 2 (detail column), so earlier package indexes are rebuilt on first open.
+  - Search results with the same name are now kept apart unless they are within a few hundred metres. Previously, two same-brand stations in one town were collapsed into one.
+- **Map.** The styles add a GeoJSON source (`/extras/stations.geojson`) with fuel and charging layers. Fuel uses the sprite fuel pump in amber; charging uses a green bolt drawn by the page. Fuel shows from zoom 11, charging from zoom 12, names from zoom 14. Both are placed above street names and route shields, so they win label collisions. Without extras the source is an empty collection.
+- **Tests.** 52 unit tests and 2 integration tests pass; Clippy and rustfmt are clean. New tests cover:
+  - the PBF reader: all element types, the header, unsupported features, truncation and corruption;
+  - extraction: point, area, multipolygon, private exclusion, duplicate merging and detail text;
+  - search with extras, entry rebuild after a format change, and GeoJSON;
+  - the update flow: install, up to date, and replacement with pruning. An extract without towns and a damaged file are both rejected, and the active extras are kept.
+
+Real Illinois extract: `illinois-latest.osm.pbf`, which redirects to `illinois-261107.osm.pbf`. It is 363,155,297 bytes, with Last-Modified 8 Nov 2026 03:22:32, ETag `"15a54f61-65fbb5b2457e2"` and SHA-256 `1da2b14a…4680d`; its OSM data time is 7 Nov 2026 21:21:36 UTC.
+
+- **Counts:** 3,415 fuel stations and 464 charging stations, with 393 duplicate copies merged and none unlocated; 3,697 towns. Three reading passes take 2.5 s, and the extras file is 1.9 MB.
+- **Update run:** `download-extras` through the local dev server was cancelled at 150 MB, then resumed, verified, extracted and activated in 6.5 s. The next run reported up to date with no GET. The raw file was removed from staging.
+- **Search examples:**
+  - Near Springfield, `gas` → Marathon 0.8 km (hours, address), then Amoco 1.0 km (open 24/7).
+  - Near Clinton, `gas station` → Mach1, Phillips 66, Circle K, Casey's (0.5–1.0 km).
+  - Near the Loop, `ev charger` → ChargePoint 0.3 km, EVIUM, Tesla Supercharger (open 24/7, address).
+- **Map, in the desktop browser pane:**
+  - Clinton at zoom 15 shows Casey's, Circle K and Mach1 with names. Phillips 66, 40 m from Mach1, gives way.
+  - The Loop at zoom 15.5, dark, shows BP and ChargePoint.
+  - 42 fuel stations are drawn around Springfield at zoom 11.5.
+  - 0 map errors, 0 CSP violations, and no missing requests apart from the browser's favicon.
+
+Limits:
+
+- Coverage is whatever OSM mappers have entered; for example, there are only four fuel stations near Carbondale.
+- About 10% of fuel stations are unnamed and unbranded, and are shown as "Fuel station".
+- Each extras update needs a raw extract download of about 363 MB, in addition to the 363 MB package. The app should therefore offer extras updates separately from map updates.
+
 ## Next stages
 
 1. Integrate Rust through the canonical ABI into the Jupiter WinUI workspace. Validate keyboard, resizing, accessibility, light/dark and accent settings.
 2. Produce the installer through the normal release command. Install and launch from Start Menu. Test an upgrade and uninstall while preserving user data.
-3. Launch with networking disabled and verify map rendering, labels, search and saved places from a clean process. This is the decisive first-workflow acceptance test.
-4. Decide whether to derive fuel stations (and possibly addresses) from the raw `.osm.pbf` as an additional search source.
+3. Launch with networking disabled and verify map rendering, labels, search and saved places from a clean process. This is the decisive first-workflow acceptance test, including fuel and charging stations.
+4. Consider address search from the same raw extract (`addr:*` on buildings and points), as a further extras category.
