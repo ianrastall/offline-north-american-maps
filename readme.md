@@ -2,7 +2,7 @@
 
 Jupiter desktop app for downloading road maps before an emergency and using them without internet access. First region: **Illinois**. Follows Jupiter style standard 1.1.
 
-Status (8 November 2026): version 0.1.0 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
+Status (8 November 2026): version 0.1.1 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
 
 - **Map:** downloads Geofabrik's Illinois map package with resume, verification and atomic activation, and shows it with MapLibre in WebView2 entirely from local files. Light and dark map styles show interstate, US and Illinois route shields.
 - **Search:** finds places, streets, landmarks, transit and water offline. An optional second download adds fuel stations, charging stations and house-number addresses, read from Geofabrik's raw extract.

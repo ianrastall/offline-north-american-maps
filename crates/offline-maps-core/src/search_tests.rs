@@ -80,15 +80,26 @@ fn test_package() -> (TempFile, TilePackage) {
     let chicago = concat(&[
         encode_layer(
             "place_labels",
-            &[(
-                &[
-                    ("name", "Chicago"),
-                    ("kind", "city"),
-                    ("population", "#2700000"),
-                ],
-                1,
-                &[(1000, 1000)],
-            )],
+            &[
+                (
+                    &[
+                        ("name", "Chicago"),
+                        ("kind", "city"),
+                        ("population", "#2700000"),
+                    ],
+                    1,
+                    &[(1000, 1000)],
+                ),
+                (
+                    &[
+                        ("name", "Springvale"),
+                        ("kind", "village"),
+                        ("population", "#900"),
+                    ],
+                    1,
+                    &[(100, 3900)],
+                ),
+            ],
         ),
         encode_layer(
             "street_labels",
@@ -150,7 +161,7 @@ fn indexes_and_deduplicates() {
     let (_file, index, stats) = built();
     assert_eq!(
         (stats.places, stats.streets, stats.pois),
-        (3, 4, 1),
+        (4, 4, 1),
         "{stats:?}"
     );
     assert_eq!(index.stats().unwrap(), stats);
@@ -166,6 +177,17 @@ fn finds_places_by_name_and_prefix() {
     assert_eq!(
         names(&index.search("spring", None, 5).unwrap())[0],
         "Springfield"
+    );
+    // Near Chicago, the city ~220 km away comes before the village next door
+    // while the name is still being typed; the village's full name finds it first.
+    let chicago = Coordinates::new(41.88, -87.63).unwrap();
+    assert_eq!(
+        names(&index.search("spring", Some(chicago), 5).unwrap())[..2],
+        ["Springfield", "Springvale"]
+    );
+    assert_eq!(
+        names(&index.search("springvale", Some(chicago), 5).unwrap())[0],
+        "Springvale"
     );
     assert!(index.search("", None, 5).unwrap().is_empty());
     assert!(index.search("\" OR *", None, 5).unwrap().is_empty());

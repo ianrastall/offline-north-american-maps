@@ -182,7 +182,8 @@ const handlers = {
     element.className = 'marker-selected';
     element.title = message.label ?? '';
     selection = new maplibregl.Marker({ element }).setLngLat([message.longitude, message.latitude]).addTo(map);
-    move({ center: [message.longitude, message.latitude], zoom: Math.max(map.getZoom(), message.zoom ?? 15) });
+    // The item's own zoom: a town is shown whole, an address at street level.
+    move({ center: [message.longitude, message.latitude], zoom: message.zoom ?? 15 });
   },
   clearSelection() {
     selection?.remove();

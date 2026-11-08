@@ -724,8 +724,8 @@ impl SearchIndex {
     /// Strong matches (name equal to or starting with the query, a route
     /// number, or a category such as "hospital") come before matches on other
     /// words, which come before matches through the nearest town. Within each,
-    /// cities, towns and villages come first; then, with `near`, by distance,
-    /// otherwise by place size and population.
+    /// cities, towns and villages come first, by exact name and then size; the
+    /// rest, with `near`, by distance, otherwise by place size and population.
     pub fn search(
         &self,
         query: &str,
@@ -892,8 +892,11 @@ fn collect_candidates(
         };
         let settlement = kind == EntryKind::Place && tier <= 2;
         let distance = near.map(|c| distance_km(c.latitude(), c.longitude(), lat, lon));
+        // Settlements: an exact name, then cities before towns before
+        // villages, so "carb" puts Carbondale above nearer Carbon Hill.
         let order = match distance {
-            Some(d) => (class, !settlement, 0, 0, d),
+            Some(d) if settlement => (class, false, u8::from(!exact), tier, d),
+            Some(d) => (class, true, 0, 0, d),
             None => (
                 class,
                 !settlement,

@@ -213,7 +213,6 @@ Not covered:
 - A launch with networking disabled.
 - A full Geofabrik download through the installed app (one started from the installed app was stopped at 173 MB when the window was closed; it resumes from there).
 - A clean machine without development tools.
-- An upgrade from a different version number.
 - Screen reader, high contrast and text scaling review.
 - The light theme of the app shell.
 - Code signing.
@@ -224,10 +223,20 @@ Known limits:
 - Saved places are shown on the map but are not separately selectable when a search marker covers them.
 - The app's own license is not yet chosen (About says so).
 
+## 0.1.1: search results and ranking
+
+Completed 8 November 2026. Reported by Ian on 0.1.0: search did not seem connected to the map, and suggestions only appeared once the whole name was typed.
+
+- **Clicking a result did nothing.** The empty-list message shares the results list's grid cell and was drawn over it, taking every mouse click. Enter worked because it selects the first row in code, so search appeared to need the full name. The message no longer takes clicks.
+- **Partial names ranked nearby villages first.** Near the map centre, settlements were ordered by distance alone, so `carb` near Evanston listed Carbon Hill and Carbon Cliff before Carbondale. Settlements now come by exact name, then size (city, town, village), then distance. Streets, points of interest and stations are still ordered by distance. New test: `spring` near Chicago puts Springfield before a nearer village; the village's full name puts it first.
+- **Zoom on selection.** A selected result is shown at its own zoom (a city at 11, a village at 13, an address at 18). Before, the map never zoomed out, so a town picked while at street level stayed at street level.
+
+Verified in the installed app (upgraded silently from 0.1.0; Start Menu entry, uninstall entry at 0.1.1, map store and settings kept): launched from the Start Menu, `carb` listed Carbondale first, and a mouse click on Carbon Hill selected it and moved the map there at zoom 13.
+
 ## Next stages
 
 1. Download the Illinois map and the stations and addresses from Geofabrik in the installed app, then launch with networking disabled and verify map rendering, labels, search, stations, addresses and saved places from a clean process. This is the decisive first-workflow acceptance test.
 2. Accessibility and appearance review: keyboard order, screen reader names, high contrast, text scaling, the light theme and mixed-DPI monitors.
 3. Choose the app's license and add it to the installer and About.
-4. Install on a clean Windows 11 machine; test an upgrade from 0.1.0 to a later version.
+4. Install on a clean Windows 11 machine.
 5. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.

@@ -200,9 +200,11 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
+                <!--  Shares the list's cell; must not take its clicks.  -->
                 <TextBlock
                     x:Name="ListEmpty"
                     Grid.Row="3"
+                    IsHitTestVisible="False"
                     Style="{StaticResource JupiterCaptionTextStyle}"
                     TextWrapping="Wrap" />
                 <Button
