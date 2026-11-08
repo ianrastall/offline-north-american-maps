@@ -28,10 +28,24 @@ Verified in the desktop browser pane: interstate shields at zoom 10 (I-74, I-72)
 
 Not covered: WebView2 hosting, a network-adapter-off launch, a scan of the package during download verification (glyph coverage is currently checked by the separate Python scan), and keyboard/accessibility of the map surface.
 
+## Stage 4: download, staged storage and activation
+
+Completed 8 November 2026.
+
+- **Transport.** `HttpTransport` uses ureq 3.5.1 with native-tls (SChannel) and the Windows certificate store; no CA bundle is shipped. Finite timeouts: 20 s resolve and connect, 60 s to first response, 60 s per read, so a stalled connection fails instead of hanging. Every request sends `Cache-Control: no-cache` (see the Geofabrik finding below). Resumes use `Range: bytes=N-` with `If-Range: <strong ETag>`, and 206 responses must carry a consistent `Content-Range`.
+- **Store.** `PackageStore` keeps `<root>/<region>/active.json`, `versions/<v>/{package.mbtiles,record.json}` and `staging/{package.part,download.json,lock}`. A version is complete before `active.json` names it, and `active.json` is replaced through a flushed temporary file and a single rename, so a crash leaves the old or the new package active, never a partial one. An OS file lock prevents concurrent updates. Version names are validated so a corrupted pointer cannot address outside the store.
+- **Update flow.** `update_region` probes the server; reports up to date when the ETag and size match the active package or the server's copy is older; enforces a size cap (2 GiB default) and free space (download plus 256 MiB); resumes the staging file only when the URL, strong ETag and total size all still match, otherwise restarts; streams with progress and cancellation; verifies with `verify_package`; refuses to activate a download older than the active package; installs, activates and prunes old versions (best effort, so a version still open in the renderer is removed later). Failed verification discards the download; cancellation and network failures keep it for resume; the active package is untouched in every failure path.
+- **Tests.** 32 unit tests, including ten update-flow tests with a fake server: first download, up-to-date detection, resume after a dropped transfer, restart when the file changes, restart when the server ignores ranges, cancellation, invalid download, replacement and pruning, size/disk/lock refusals, and never replacing with older data. Two integration tests drive the real transport over loopback HTTP, including a dropped connection followed by a ranged resume.
+- **End to end (local).** `offline-maps-dev download` against the dev server's `/source/package.mbtiles` route with the real 362.6 MB package: cancelled at 150 MB (staging kept, 150,003,712 bytes); the next run resumed at that offset, verified and activated in 5.1 s with SHA-256 `17c12c95…227cb9` matching the original download; a third run reported up to date with no GET.
+- **Live Geofabrik check (HEAD only, nothing downloaded).** TLS through SChannel works; 404 and an expired certificate fail with clear errors.
+
+**Geofabrik caching finding.** Geofabrik's download proxy (`download-proxy11`, squid, `Cache-Control: max-age=604800`) answered plain HEAD requests from a 6.4-day-old cache entry reporting the 1 November build, and a differently-headed HEAD got a 6 November build, while a GET returned the 8 November build. With `Cache-Control: no-cache` every response reported the current build (8 November, 362,586,112 bytes, ETag `"159ca000-65fbc0e0a1d71"`), matching the package downloaded this morning. The transport therefore always sends `no-cache`, and the older-data guard protects against any proxy that still serves stale content.
+
+Not covered: a full live download through the new transport (the earlier 8 November download used curl), the app's choice of store location (`%LOCALAPPDATA%` is the expected root, decided at integration), and a progress/cancel UI.
+
 ## Next stages
 
-1. Implement real download transport with finite timeouts, cancellation, size checks, ETag-checked resume and SHA-256 verification into staged storage outside the install directory; verify with `verify_package`, write the `PackageRecord` and activate atomically, keeping the previous package through any failure.
-2. Build offline place search and saved places. Verify Illinois boundary behavior and show package coverage instead of silently requesting remote data.
-3. Integrate Rust through the canonical ABI into the Jupiter WinUI workspace. Validate keyboard, resizing, accessibility, light/dark and accent settings.
-4. Produce the installer through the normal release command. Install and launch from Start Menu. Test an upgrade and uninstall while preserving user data.
-5. Launch with networking disabled and verify map rendering, labels, search and saved places from a clean process. This is the decisive first-workflow acceptance test.
+1. Build offline place search and saved places. Verify Illinois boundary behavior and show package coverage instead of silently requesting remote data.
+2. Integrate Rust through the canonical ABI into the Jupiter WinUI workspace. Validate keyboard, resizing, accessibility, light/dark and accent settings.
+3. Produce the installer through the normal release command. Install and launch from Start Menu. Test an upgrade and uninstall while preserving user data.
+4. Launch with networking disabled and verify map rendering, labels, search and saved places from a clean process. This is the decisive first-workflow acceptance test.

@@ -1,5 +1,9 @@
 //! Minimal loopback HTTP/1.1 server for the renderer page. One request per
 //! connection; no keep-alive, no TLS. Development use only.
+//!
+//! `/source/package.mbtiles` also serves the package file itself with HEAD,
+//! ETag and single-range (`bytes=N-`) support, so the downloader can be
+//! exercised end to end without the internet.
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::{Component, Path, PathBuf};
@@ -24,6 +28,7 @@ struct Stats {
 
 struct State {
     package: Mutex<TilePackage>,
+    package_path: PathBuf,
     metadata_json: String,
     mounts: Vec<(&'static str, PathBuf)>,
     stats: Mutex<Stats>,
@@ -58,6 +63,7 @@ pub fn run(package_path: &Path, root: &Path, port: u16) -> Result<(), String> {
     );
     let state = Arc::new(State {
         package: Mutex::new(package),
+        package_path: package_path.to_owned(),
         metadata_json,
         mounts: vec![
             (
@@ -97,6 +103,8 @@ fn handle(stream: TcpStream, state: &State) -> std::io::Result<()> {
     let mut request_line = String::new();
     reader.read_line(&mut request_line)?;
     let mut content_length = 0_usize;
+    let mut range = None;
+    let mut if_range = None;
     let mut header_bytes = 0;
     loop {
         let mut line = String::new();
@@ -105,10 +113,14 @@ fn handle(stream: TcpStream, state: &State) -> std::io::Result<()> {
         if n == 0 || line == "\r\n" || header_bytes > 16 * 1024 {
             break;
         }
-        if let Some((name, value)) = line.split_once(':')
-            && name.eq_ignore_ascii_case("content-length")
-        {
-            content_length = value.trim().parse().unwrap_or(0);
+        if let Some((name, value)) = line.split_once(':') {
+            let value = value.trim();
+            match name.to_ascii_lowercase().as_str() {
+                "content-length" => content_length = value.parse().unwrap_or(0),
+                "range" => range = Some(value.to_owned()),
+                "if-range" => if_range = Some(value.to_owned()),
+                _ => {}
+            }
         }
     }
     let mut parts = request_line.split_whitespace();
@@ -116,6 +128,9 @@ fn handle(stream: TcpStream, state: &State) -> std::io::Result<()> {
     let path = target.split(['?', '#']).next().unwrap_or("/");
     state.stats.lock().unwrap().requests += 1;
 
+    if path == "/source/package.mbtiles" && (method == "GET" || method == "HEAD") {
+        return serve_source(stream, state, method == "HEAD", range, if_range);
+    }
     let response = if method == "POST" && path == "/csp-report" {
         let mut body = vec![0; content_length.min(64 * 1024)];
         reader.read_exact(&mut body)?;
@@ -286,5 +301,48 @@ fn write(mut stream: TcpStream, response: &Response) -> std::io::Result<()> {
         response.body.len()
     )?;
     stream.write_all(&response.body)?;
+    stream.flush()
+}
+
+/// Streams the package file. The ETag is derived from size and modification
+/// time; a `Range: bytes=N-` request is honoured only with a matching If-Range.
+fn serve_source(
+    mut stream: TcpStream,
+    state: &State,
+    head: bool,
+    range: Option<String>,
+    if_range: Option<String>,
+) -> std::io::Result<()> {
+    use std::io::{Seek, SeekFrom};
+    let mut file = std::fs::File::open(&state.package_path)?;
+    let meta = file.metadata()?;
+    let length = meta.len();
+    let modified = meta
+        .modified()?
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs());
+    let etag = format!("\"{length:x}-{modified:x}\"");
+    let start = range
+        .as_deref()
+        .and_then(|r| r.strip_prefix("bytes="))
+        .and_then(|r| r.strip_suffix('-'))
+        .and_then(|r| r.parse::<u64>().ok())
+        .filter(|s| *s < length && if_range.as_deref() == Some(etag.as_str()));
+    let mut headers = match start {
+        Some(s) => format!(
+            "HTTP/1.1 206 Partial Content\r\nContent-Range: bytes {s}-{}/{length}\r\nContent-Length: {}\r\n",
+            length - 1,
+            length - s
+        ),
+        None => format!("HTTP/1.1 200 OK\r\nContent-Length: {length}\r\n"),
+    };
+    headers += &format!(
+        "Content-Type: application/octet-stream\r\nETag: {etag}\r\nAccept-Ranges: bytes\r\nConnection: close\r\n\r\n"
+    );
+    stream.write_all(headers.as_bytes())?;
+    if !head {
+        file.seek(SeekFrom::Start(start.unwrap_or(0)))?;
+        std::io::copy(&mut file, &mut stream)?;
+    }
     stream.flush()
 }

@@ -35,8 +35,10 @@ Do not implement a bulk downloader against tile.openstreetmap.org. Its public ti
 - MapLibre GL JS: BSD-3-Clause. VersaTiles Style: MIT. VersaTiles sprites: CC0. Noto Sans: OFL 1.1. Ship their license texts with the app.
 - Geofabrik labels the Shortbread package experimental. Its file is rebuilt about weekly; record ETag and Last-Modified per download.
 
-## Package storage contract to implement
+## Package storage contract
 
 Keep mutable settings and packages outside the installation directory. Persist versioned metadata including region ID, source URL, license, source date, downloaded date, format, byte length and SHA-256. Download to staging storage with explicit size/disk limits. Verify source version when resuming: never append to a changed latest file. Validate format and renderer readability before atomically activating a version. Keep the last known working map until replacement passes checks. Never treat transfer completion as map readiness.
 
-The core implements bounded streaming, cancellation checks, coordinate validation, a package readiness model, read-only MBTiles access, SHA-256 verification, region coverage and Shortbread layer checks, and a versioned package record (stage 3 in [validation](validation.md)). HTTP transport with timeouts and ETag-checked resume, durable staged storage with atomic activation, and catalog retrieval remain to implement.
+Implemented in the core: bounded streaming with cancellation, read-only MBTiles access, SHA-256 and structural verification, region coverage and Shortbread layer checks, the versioned package record (stage 3), and the HTTPS transport, staged store, ETag-checked resume, older-data guard and atomic activation (stage 4 in [validation](validation.md)). Catalog retrieval for more regions remains.
+
+Geofabrik's download proxies cache responses for up to a week; requests must send `Cache-Control: no-cache` or they may report and serve an older build. See stage 4 in [validation](validation.md).

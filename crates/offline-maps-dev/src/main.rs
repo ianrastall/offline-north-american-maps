@@ -3,6 +3,8 @@
 //!   offline-maps-dev inspect <package.mbtiles> [--source-url U] [--etag E]
 //!       [--last-modified L] [--downloaded-at T] [--record out.json]
 //!   offline-maps-dev serve <package.mbtiles> [--port 8765]
+//!   offline-maps-dev download <store-dir> [--url U] [--stop-after BYTES]
+//!   offline-maps-dev probe [url]      (HEAD request only; downloads nothing)
 //!
 //! `serve` binds 127.0.0.1 only and stands in for the WebView2 request
 //! interception the app will use: tiles come from the Rust core, every
@@ -11,18 +13,28 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::atomic::AtomicBool;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 mod server;
 
 use offline_maps_core::package::{ILLINOIS, SourceInfo, verify_package};
+
+fn probe(url: &str) -> Result<(), String> {
+    use offline_maps_core::download::{HttpTransport, Transport};
+    let info = HttpTransport::new()
+        .probe(url)
+        .map_err(|e| format!("{url}: {e}"))?;
+    println!("{url}\n{info:#?}\nstrong ETag: {:?}", info.strong_etag());
+    Ok(())
+}
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
         Some("inspect") => inspect(&args[1..]),
         Some("serve") => serve(&args[1..]),
-        _ => Err("usage: offline-maps-dev inspect|serve <package.mbtiles> [options]".into()),
+        Some("download") => download(&args[1..]),
+        Some("probe") => probe(args.get(1).map_or(ILLINOIS.package_url, String::as_str)),
+        _ => Err("usage: offline-maps-dev inspect|serve <package.mbtiles> | download <store-dir> [options]".into()),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
@@ -51,7 +63,7 @@ fn parse(args: &[String]) -> Result<Options, String> {
 
 fn inspect(args: &[String]) -> Result<(), String> {
     let (path, options) = parse(args)?;
-    let now = utc_now();
+    let now = offline_maps_core::time::utc_now();
     let source = SourceInfo {
         url: options
             .get("source-url")
@@ -109,26 +121,76 @@ fn project_root() -> Result<PathBuf, String> {
         .ok_or_else(|| "run from the offline-maps project directory".into())
 }
 
-/// Current UTC time as RFC 3339 (seconds precision).
-pub fn utc_now() -> String {
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |d| d.as_secs()) as i64;
-    let (days, rem) = (secs.div_euclid(86_400), secs.rem_euclid(86_400));
-    // Civil-from-days (Howard Hinnant's algorithm).
-    let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z - era * 146_097;
-    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let day = doy - (153 * mp + 2) / 5 + 1;
-    let month = if mp < 10 { mp + 3 } else { mp - 9 };
-    let year = yoe + era * 400 + i64::from(month <= 2);
-    format!(
-        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
-        rem / 3600,
-        rem % 3600 / 60,
-        rem % 60
-    )
+/// Updates the Illinois package in `store-dir`. `--stop-after` cancels once
+/// that many bytes have arrived, to exercise resume.
+fn download(args: &[String]) -> Result<(), String> {
+    use offline_maps_core::download::{
+        HttpTransport, Progress, UpdateOptions, UpdateOutcome, update_region,
+    };
+    use offline_maps_core::package::Region;
+    use offline_maps_core::store::PackageStore;
+    use std::sync::atomic::Ordering;
+    use std::time::Instant;
+
+    let (store_dir, options) = parse(args)?;
+    let region = Region {
+        package_url: match options.get("url") {
+            Some(url) => Box::leak(url.clone().into_boxed_str()),
+            None => ILLINOIS.package_url,
+        },
+        ..ILLINOIS
+    };
+    let stop_after: Option<u64> = options
+        .get("stop-after")
+        .map(|v| v.parse().map_err(|_| "invalid --stop-after"))
+        .transpose()?;
+    let store = PackageStore::new(store_dir);
+    let cancelled = AtomicBool::new(false);
+    let started = Instant::now();
+    let mut last_percent = None;
+    let mut first_received = None;
+    let mut progress = |p: Progress| match p {
+        Progress::Downloading { received, total } => {
+            first_received.get_or_insert(received);
+            if stop_after.is_some_and(|limit| received >= limit) {
+                cancelled.store(true, Ordering::Relaxed);
+            }
+            let percent = total.map(|t| received * 100 / t.max(1));
+            if percent.is_some_and(|p| p % 10 == 0) && percent != last_percent {
+                last_percent = percent;
+                println!(
+                    "  {} / {} MB",
+                    received / 1_000_000,
+                    total.map_or("?".into(), |t| (t / 1_000_000).to_string())
+                );
+            }
+        }
+        other => println!("{other:?} ({:.1} s)", started.elapsed().as_secs_f64()),
+    };
+    let result = update_region(
+        &store,
+        &region,
+        &HttpTransport::new(),
+        &UpdateOptions::default(),
+        &mut progress,
+        &cancelled,
+    );
+    if let Some(start) = first_received {
+        println!("First progress at byte {start}");
+    }
+    let elapsed = started.elapsed().as_secs_f64();
+    match result.map_err(|e| e.to_string())? {
+        UpdateOutcome::UpToDate(active) => {
+            println!("Up to date: {} ({elapsed:.1} s)", active.version)
+        }
+        UpdateOutcome::Activated {
+            package,
+            replaced,
+            prune_pending,
+        } => println!(
+            "Activated {} ({} bytes, sha256 {}); replaced {:?}; prune pending {prune_pending} ({elapsed:.1} s)",
+            package.version, package.record.byte_length, package.record.sha256, replaced
+        ),
+    }
+    Ok(())
 }

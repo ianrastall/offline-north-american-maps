@@ -190,9 +190,18 @@ fn check_coverage(metadata: &TileMetadata, region: &Region) -> Result<(), Packag
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use crate::mbtiles::tests::{TempFile, build_package, valid_metadata};
+
+    /// Bytes of a minimal valid Illinois Shortbread package; `marker` varies the content.
+    pub(crate) fn shortbread_package_bytes(marker: &[u8]) -> Vec<u8> {
+        let file = build_package(
+            &metadata_with("json", SHORTBREAD_LAYERS),
+            &[(0, 0, 0, marker), (1, 0, 1, b"b")],
+        );
+        std::fs::read(&file.0).unwrap()
+    }
 
     const SHORTBREAD_LAYERS: &str = r#"{"vector_layers":[{"id":"streets"},{"id":"street_labels"},{"id":"place_labels"},{"id":"water_polygons"},{"id":"land"},{"id":"boundaries"}]}"#;
 
