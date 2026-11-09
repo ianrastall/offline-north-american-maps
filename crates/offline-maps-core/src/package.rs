@@ -12,7 +12,7 @@ use crate::{OSM_ATTRIBUTION, OSM_LICENSE};
 
 pub const RECORD_SCHEMA: u32 = 1;
 
-/// Vector layers the Offline Maps style depends on.
+/// Vector layers the Offline US Maps style depends on.
 pub const REQUIRED_LAYERS: [&str; 6] = [
     "streets",
     "street_labels",

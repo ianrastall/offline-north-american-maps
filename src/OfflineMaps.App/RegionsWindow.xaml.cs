@@ -40,7 +40,7 @@ public sealed class RegionItem : INotifyPropertyChanged
 }
 
 /// <summary>
-/// Regions - Offline Maps: one per app, non-modal. Lists every region that can be downloaded;
+/// Regions - Offline US Maps: one per app, non-modal. Lists every region that can be downloaded;
 /// downloads are queued in the map window, which shows their progress.
 /// </summary>
 public sealed partial class RegionsWindow : Window
@@ -186,7 +186,7 @@ public sealed partial class RegionsWindow : Window
         {
             DetailHeading.Text = "Region";
             DetailText.Text = _all.Count == 0
-                ? "The region list could not be read. Restart Offline Maps to try again."
+                ? "The region list could not be read. Restart Offline US Maps to try again."
                 : "Choose a region to download, update or remove it.";
             Commands.Visibility = Visibility.Collapsed;
             SourceText.Text = "";

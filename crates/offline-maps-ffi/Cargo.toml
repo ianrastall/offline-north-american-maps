@@ -1,10 +1,11 @@
 [package]
 name = "offline-maps-ffi"
-description = "C ABI facade over the Offline Maps core for the WinUI shell."
+description = "C ABI facade over the Offline US Maps core for the WinUI shell."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+license.workspace = true
 
 [lib]
 name = "offline_maps_ffi"

@@ -1,4 +1,4 @@
-// Map surface hosted by the Offline Maps shell (WebView2). Everything is local:
+// Map surface hosted by the Offline US Maps shell (WebView2). Everything is local:
 // the page, MapLibre, styles, sprites and glyphs come from the app folder at
 // https://map.local/, tiles and stations from the Rust core through the shell.
 //

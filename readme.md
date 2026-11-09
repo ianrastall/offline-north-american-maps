@@ -1,17 +1,34 @@
-# Offline Maps
+# Offline US Maps
 
-Jupiter desktop app for downloading road maps before an emergency and using them without internet access. Regions: the US states except Alaska, the District of Columbia, Puerto Rico and the US Virgin Islands, in any combination. Follows Jupiter style standard 1.1.
+A Windows app for downloading road maps of US states before an emergency and using them without internet access. Regions: the US states except Alaska, the District of Columbia, Puerto Rico and the US Virgin Islands, in any combination. Everything runs on your computer; there is no account, server or tracking.
 
-Status (9 November 2026): version 0.5.1 is installed on Ian's machine. It is a WinUI 3/C# app over a Rust core, with a Windows installer, a Start Menu entry and an uninstaller.
+## Install
 
-- **Map:** downloads Geofabrik's map package for each chosen region (Map > Regions) with resume, verification and atomic activation, and shows the installed regions as one map with MapLibre in WebView2, entirely from local files. Tiles on a border between installed regions are merged. Light and dark map styles show interstate, US and state route shields.
+Download `OfflineUSMaps-<version>-win-x64-setup.exe` from [Releases](https://github.com/ianrastall/offline-us-maps/releases) and run it. It installs for the current user without administrator rights, adds Offline US Maps to the Start Menu and registers an uninstaller. Requires Windows 11 24H2 or later, x64. Maps, saved places and settings (in `%LOCALAPPDATA%\Jupiter\OfflineMaps`) are kept through upgrades and uninstalling.
+
+Then open Map > Regions, choose regions and download them while you have a connection.
+
+## Features
+
+- **Map:** downloads Geofabrik's map package for each chosen region with resume, verification and atomic activation, and shows the installed regions as one map with MapLibre in WebView2, entirely from local files. Tiles on a border between installed regions are merged. Light and dark map styles show interstate, US and state route shields.
 - **Terrain:** an optional download per region of Mapterhorn elevation tiles (USGS 3DEP and Copernicus GLO-30, to zoom 12, about 15 m per pixel), drawn as hillshading and contour lines in feet or metres. View > Terrain shading and View > Contour lines turn them on and off.
-- **Flood zones and public lands:** an optional download per region of FEMA flood hazard zones and USGS PAD-US public lands (coloured by public access), prebuilt by `tools/layers/build_overlays.py` and published with the GitHub releases. View > Flood zones and View > Public lands turn them on and off.
+- **Flood zones and public lands:** an optional download per region of FEMA flood hazard zones and USGS PAD-US public lands (coloured by public access), prebuilt by `tools/layers/build_overlays.py` and published in this repository's [`overlays` release](https://github.com/ianrastall/offline-us-maps/releases/tag/overlays). View > Flood zones and View > Public lands turn them on and off.
 - **Downloads:** queued and run one at a time; Map > Update all regions checks every installed region.
 - **Search:** finds places, streets, landmarks, transit and water offline, across all installed regions. An optional second download adds fuel stations, charging stations, house-number addresses and outdoor places (shelters, drinking water, campgrounds, public toilets), read from Geofabrik's raw extract; outdoor places are also drawn on the map (View > Outdoor places).
 - **Saved places:** kept apart from map packages, so they survive map updates, app upgrades and uninstalling.
-- **Not included:** routing.
-- **Not yet verified:** a launch with networking disabled.
+- **Not included:** routing, and current conditions such as road closures or active flooding. Flood zones are FEMA's mapped hazard areas, not forecasts.
+
+## Data and licences
+
+The app's own code is in the public domain under [The Unlicense](LICENSE). Bundled components keep their own licences (MapLibre GL JS and maplibre-contour BSD-3-Clause, VersaTiles style MIT, sprites CC0, Noto Sans OFL, Rust crates MIT/Apache-2.0); see [THIRD-PARTY-NOTICES.txt](assets/notices/THIRD-PARTY-NOTICES.txt).
+
+Map data is not part of the program. You download it yourself, under its own terms:
+
+- Maps, stations and addresses: Geofabrik, © OpenStreetMap contributors, [ODbL 1.0](https://www.openstreetmap.org/copyright).
+- Terrain: [Mapterhorn](https://mapterhorn.com/attribution) (USGS 3DEP, public domain; Copernicus GLO-30).
+- Flood zones: FEMA National Flood Hazard Layer; public lands: USGS PAD-US. Both are US Government works in the public domain. The flood data's effective date is shown in Map > Regions.
+
+Status (9 November 2026): version 0.6.0. A WinUI 3/C# app over a Rust core. Not yet verified: a launch with networking disabled.
 
 - [Project brief](docs/project-brief.md)
 - [Sources and technical decisions](docs/sources-and-architecture.md)
@@ -36,7 +53,13 @@ Status (9 November 2026): version 0.5.1 is installed on Ian's machine. It is a W
 
 ## Build and release
 
-Windows 11 x64; Rust 1.99.1, .NET SDK 10.0.114 and Inno Setup 6. Jupiter.UI must be at `../jupiter-ui`.
+Windows 11 x64; Rust 1.99.1, .NET SDK 10.0.114 and Inno Setup 6. The shared style library [Jupiter.UI](https://github.com/ianrastall/jupiter-ui) must be cloned beside this repository:
+
+```powershell
+git clone https://github.com/ianrastall/offline-us-maps
+git clone https://github.com/ianrastall/jupiter-ui
+cd offline-us-maps
+```
 
 One-time prerequisites:
 
@@ -68,6 +91,7 @@ For testing, these command-line options and environment variables change where d
 
 - `--store DIR` and `--settings DIR` use other folders.
 - `OFFLINE_MAPS_PACKAGE_URL` and `OFFLINE_MAPS_EXTRAS_URL` download from another server, such as the dev server below.
+- `OFFLINE_MAPS_OVERLAYS_URL` downloads flood zones and public lands from another address (the folder holding `<region>-overlays.mbtiles`).
 
 ## Development tools
 

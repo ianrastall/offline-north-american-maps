@@ -1,4 +1,4 @@
-// Offline Maps renderer page. Loads a bundled Offline Maps style and resolves
+// Offline US Maps renderer page. Loads a bundled Offline US Maps style and resolves
 // its same-origin paths; draws route shield and charging-station images.
 import * as maplibregl from '/maplibre/maplibre-gl.mjs';
 

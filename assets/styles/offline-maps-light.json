@@ -1,6 +1,6 @@
 {
  "version": 8,
- "name": "Offline Maps light",
+ "name": "Offline US Maps light",
  "metadata": {
   "offline-maps:derived-from": "VersaTiles Style 7.0.1 colorful/en.json (MIT)",
   "offline-maps:source-sha256": "e858614f44c1425bc1c64a1fc9633edfca096a0e617d6fccb34b7766b691c785"

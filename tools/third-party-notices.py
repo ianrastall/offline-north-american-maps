@@ -118,14 +118,18 @@ def main() -> None:
     versatiles = (ROOT / "assets/styles/NOTICE.md").read_text(encoding="utf-8")
     versatiles = versatiles.replace("```text\n", "").replace("```", "")
     sections = [
-        "Offline Maps third-party notices\n\n"
-        "Offline Maps contains the components below. Map data is not part of the program: it is "
+        "Offline US Maps third-party notices\n\n"
+        "Offline US Maps' own code is released into the public domain under The Unlicense "
+        "(https://unlicense.org). It contains the components below, which keep their own licenses. "
+        "Map data is not part of the program: it is "
         "downloaded by the person using it from Geofabrik and is (c) OpenStreetMap contributors, "
         "available under the Open Database License (ODbL) 1.0, https://www.openstreetmap.org/copyright. "
         "Terrain, when downloaded, comes from Mapterhorn (https://mapterhorn.com/attribution): in the "
         "United States from the USGS 3D Elevation Program (public domain) and Copernicus GLO-30 "
         "((c) DLR e.V. 2010-2014 and (c) Airbus Defence and Space GmbH 2014-2018, provided under "
-        "COPERNICUS by the European Union and ESA; all rights reserved).",
+        "COPERNICUS by the European Union and ESA; all rights reserved). Flood zones and public lands, "
+        "when downloaded, are prepared from FEMA's National Flood Hazard Layer and the USGS Protected "
+        "Areas Database of the United States (PAD-US), US Government works in the public domain.",
         "MapLibre GL JS 6.16.0 (map renderer)\n\n" + maplibre.strip(),
         "maplibre-contour 0.1.1 (contour lines from terrain)\n\n" + contour.strip(),
         versatiles.strip().lstrip("# "),

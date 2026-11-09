@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Checks, tests and publishes Offline Maps as a win-x64 installer.
+    Checks, tests and publishes Offline US Maps as a win-x64 installer.
 
 .DESCRIPTION
     The normal release command. It fails if a check, a test or a packaging prerequisite
@@ -84,7 +84,7 @@ try {
         if ([BitConverter]::ToUInt16($bytes, $pe + 4) -ne 0x8664) { throw "$native is not an x64 binary." }
     }
     Invoke-Step 'build installer' { & $InnoCompiler /Qp "/DAppVersion=$version" (Join-Path $PSScriptRoot 'installer.iss') }
-    $setup = Join-Path $dist "OfflineMaps-$version-win-x64-setup.exe"
+    $setup = Join-Path $dist "OfflineUSMaps-$version-win-x64-setup.exe"
     Get-Item $setup | ForEach-Object { '{0}  {1:n1} MB' -f $_.FullName, ($_.Length / 1MB) }
 }
 finally {

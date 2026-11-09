@@ -309,11 +309,20 @@ Completed 9 November 2026. Ian asked for all regions to be built.
 
 Verified: 69 core, 2 HTTP and 6 ABI tests (Rust) and 9 interop tests (C#) pass; the 0.5.1 installer installed over 0.5.0, the uninstaller entry reads 0.5.1, and the app started from the Start Menu entry. Read through UI Automation, the Regions window showed "About 51 MB" for Indiana, 166 MB for Louisiana and 1 MB for the US Virgin Islands, with the download button enabled.
 
+## 0.6.0: Offline US Maps, public domain
+
+Completed 9 November 2026, for publication on GitHub as Ian decided on 8 November ([project brief](project-brief.md#publication-decided-8-november-2026)).
+
+- **Name.** Offline US Maps in windows, dialogs, the installer, Start and Settings > Apps. The installer keeps the AppId, so it upgrades the earlier install in place (same folder, `%LOCALAPPDATA%\Programs\Offline Maps`), and removes the old "Offline Maps" Start and desktop shortcuts. The data folder (`%LOCALAPPDATA%\Jupiter\OfflineMaps`), the AppUserModelID and the mutex are unchanged. The setup file is now `OfflineUSMaps-<version>-win-x64-setup.exe`.
+- **Licence.** The Unlicense in `LICENSE`, installed as `LICENSE.txt`; About and the third-party notices say so, and the notices now name FEMA and USGS as the overlay sources. Cargo crates declare `Unlicense`. Jupiter.UI is released under the same licence (commit ea649e7 there).
+- **Readme.** Rewritten for people installing from GitHub: install, features, data terms, and cloning Jupiter.UI beside the repository to build.
+
+Verified: build script (fmt, clippy, 69 core, 2 HTTP and 6 ABI tests, 9 interop tests); 0.6.0 installed over 0.5.1; Settings > Apps lists Offline US Maps 0.6.0 under the same AppId; Start has "Offline US Maps" and no longer "Offline Maps"; installed maps (Illinois, Indiana) were kept; the app started from the new Start entry with the window titled Offline US Maps.
+
 ## Next stages
 
 1. Download the Illinois map and the stations and addresses from Geofabrik in the installed app, then launch with networking disabled and verify map rendering, labels, search, stations, addresses and saved places from a clean process. This is the decisive first-workflow acceptance test.
 2. Accessibility and appearance review: keyboard order, screen reader names, high contrast, text scaling, the light theme and mixed-DPI monitors.
-3. Choose the app's license and add it to the installer and About.
-4. Install on a clean Windows 11 machine.
-5. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
-6. Publish as Offline US Maps under The Unlicense, with Jupiter.UI (see the [project brief](project-brief.md#publication-decided-8-november-2026)).
+3. Install on a clean Windows 11 machine.
+4. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
+5. Publish as Offline US Maps under The Unlicense, with Jupiter.UI (see the [project brief](project-brief.md#publication-decided-8-november-2026)).

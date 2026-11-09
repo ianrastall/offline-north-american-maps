@@ -1,4 +1,4 @@
-# Offline Maps project brief
+# Offline US Maps project brief
 
 27 October 2026
 

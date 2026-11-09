@@ -1,4 +1,4 @@
-"""Draws the Offline Maps application icon: a folded road map with a location pin.
+"""Draws the Offline US Maps application icon: a folded road map with a location pin.
 
 Usage: python tools/make-icon.py  (writes src/OfflineMaps.App/Assets/AppIcon.ico)
 """

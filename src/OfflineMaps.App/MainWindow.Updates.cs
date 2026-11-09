@@ -77,7 +77,7 @@ public sealed partial class MainWindow
         var answer = await ShowDialogAsync(new ContentDialog
         {
             Title = "Update all regions?",
-            Content = Text($"Offline Maps checks Geofabrik (download.geofabrik.de) for newer maps of {names}"
+            Content = Text($"Offline US Maps checks Geofabrik (download.geofabrik.de) for newer maps of {names}"
                 + (extras > 0 ? ", newer stations and addresses where they are installed" : "")
                 + (terrain > 0 ? ", newer terrain where it is installed" : "")
                 + (overlays > 0 ? ", newer flood zones and public lands where they are installed" : "")
@@ -286,7 +286,7 @@ public sealed partial class MainWindow
             core.PrepareSearch();
             return "Search is ready";
         }));
-        await FinishAsync(message ?? "Cancelled. Search is prepared next time Offline Maps starts.");
+        await FinishAsync(message ?? "Cancelled. Search is prepared next time Offline US Maps starts.");
     }
 
     /// <summary>Runs one job with the progress bar shown. Returns the result message, or null when cancelled or failed.</summary>

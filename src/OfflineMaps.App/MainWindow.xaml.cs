@@ -34,7 +34,7 @@ public sealed partial class MainWindow : Window
         App.Current.Themes.Attach(this);
         App.Current.Accent.Attach(Root);
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
-        Title = "Offline Maps";
+        Title = "Offline US Maps";
 
         _searchTimer = DispatcherQueue.CreateTimer();
         _searchTimer.Interval = TimeSpan.FromMilliseconds(200);
@@ -89,7 +89,7 @@ public sealed partial class MainWindow : Window
         catch (MapCoreException ex)
         {
             AppLog.Write($"The map core could not start: {ex.Message}");
-            MapMessage.Text = $"Offline Maps could not open its map folder ({AppPaths.StoreDir}). {ex.Message}";
+            MapMessage.Text = $"Offline US Maps could not open its map folder ({AppPaths.StoreDir}). {ex.Message}";
             StatusText.Text = "Not started";
             return;
         }
@@ -483,10 +483,10 @@ public sealed partial class MainWindow : Window
         panel.Children.Add(Text("Part of Jupiter"));
         panel.Children.Add(Text($"Version {version}"));
         panel.Children.Add(Text($"Map core ABI {MapCore.ExpectedAbiVersion} · Windows App SDK, .NET {Environment.Version}", "JupiterCaptionTextStyle"));
-        panel.Children.Add(Text("License: not yet chosen. Map data © OpenStreetMap contributors (ODbL). Third-party components are listed in THIRD-PARTY-NOTICES.txt in the program folder.", "JupiterCaptionTextStyle"));
+        panel.Children.Add(Text("Public domain (The Unlicense). Map data © OpenStreetMap contributors (ODbL); flood zones from FEMA and public lands from USGS. Third-party components keep their own licenses, listed in THIRD-PARTY-NOTICES.txt in the program folder.", "JupiterCaptionTextStyle"));
         var dialog = new ContentDialog
         {
-            Title = "Offline Maps",
+            Title = "Offline US Maps",
             Content = panel,
             PrimaryButtonText = "Third-party notices",
             CloseButtonText = "Close",

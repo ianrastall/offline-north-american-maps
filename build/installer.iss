@@ -1,7 +1,7 @@
-; Inno Setup script for Offline Maps. Compile through build/build.ps1 so the version and the
+; Inno Setup script for Offline US Maps. Compile through build/build.ps1 so the version and the
 ; verified publish folder are supplied together.
 ;
-; Per-user install: no administrator rights, files under %LOCALAPPDATA%\Programs\Offline Maps,
+; Per-user install: no administrator rights, files under %LOCALAPPDATA%\Programs\Offline US Maps,
 ; a Start entry under the app's name and an uninstaller in Settings > Apps. A later version
 ; installs over this one (same AppId). Maps, stations and addresses, saved places and settings
 ; (%LOCALAPPDATA%\Jupiter\OfflineMaps) are never touched by install, upgrade or uninstall.
@@ -10,7 +10,7 @@
 ; runtime installer is bundled and run only if it is missing, so setup works without a
 ; connection.
 
-#define AppName "Offline Maps"
+#define AppName "Offline US Maps"
 #define AppExe "OfflineMaps.exe"
 #define AppUserModelId "Jupiter.OfflineMaps"
 #ifndef AppVersion
@@ -44,7 +44,7 @@ SolidCompression=yes
 ; Tell Explorer and Start to refresh icons after install and uninstall.
 ChangesAssociations=yes
 OutputDir=..\dist
-OutputBaseFilename=OfflineMaps-{#AppVersion}-win-x64-setup
+OutputBaseFilename=OfflineUSMaps-{#AppVersion}-win-x64-setup
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -56,11 +56,16 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; A Jupiter folder in Start is never used; Start lists the app by name.
 Type: files; Name: "{autoprograms}\Jupiter\{#AppName}.lnk"
 Type: dirifempty; Name: "{autoprograms}\Jupiter"
+; Shortcuts from before the rename to Offline US Maps (0.6.0). An upgrade keeps the install
+; folder, the AppId and the user data; only the name changes.
+Type: files; Name: "{autoprograms}\Offline Maps.lnk"
+Type: files; Name: "{autodesktop}\Offline Maps.lnk"
 ; Map page files of an earlier version that no longer ship.
 Type: filesandordirs; Name: "{app}\Web"
 
 [Files]
 Source: "..\dist\OfflineMaps\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
+Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\third_party\webview2\MicrosoftEdgeWebView2RuntimeInstallerX64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: NeedsWebView2
 
 [Icons]

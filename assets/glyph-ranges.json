@@ -1,5 +1,5 @@
 {
- "description": "Noto Sans glyph ranges bundled with Offline Maps: every range used by string values in the Illinois Shortbread package (tools/scan_tiles.py) plus a Latin, Greek, Cyrillic and punctuation baseline. Ranges not bundled are served as empty glyph sets. Ranges listed in not_in_font occur in the package (emoji, enclosed alphanumerics) but Noto Sans has no glyphs for them.",
+ "description": "Noto Sans glyph ranges bundled with Offline US Maps: every range used by string values in the Illinois Shortbread package (tools/scan_tiles.py) plus a Latin, Greek, Cyrillic and punctuation baseline. Ranges not bundled are served as empty glyph sets. Ranges listed in not_in_font occur in the package (emoji, enclosed alphanumerics) but Noto Sans has no glyphs for them.",
  "source_package_sha256": "17c12c9500b5b1c7175a88d605c30dc4f25430b72be69e77403d7261ba227cb9",
  "fonts": [
   "noto_sans_regular",

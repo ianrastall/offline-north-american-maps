@@ -1,4 +1,4 @@
-/* Map surface for the Offline Maps shell. Colors come from the shell's Jupiter.UI theme
+/* Map surface for the Offline US Maps shell. Colors come from the shell's Jupiter.UI theme
    (set as custom properties at runtime); map colors are the map style's content palette. */
 :root {
   --window: #1C1B19;
