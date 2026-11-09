@@ -232,7 +232,9 @@ public sealed partial class RegionsWindow : Window
         }
         else
         {
-            lines.Add("Flood zones and public lands: not installed. FEMA flood hazard zones and USGS public lands, prepared for Offline US Maps and published with its releases.");
+            lines.Add(r.OverlayBytes > 0
+                ? $"Flood zones and public lands: not installed. About {Format.Megabytes(r.OverlayBytes)}: FEMA flood hazard zones and USGS public lands, prepared for Offline US Maps and published with its releases."
+                : "Flood zones and public lands: not available for this region yet.");
         }
         if (installed?.Terrain is { } terrain)
         {
@@ -257,7 +259,7 @@ public sealed partial class RegionsWindow : Window
         Label(ExtrasButton, hasExtras ? "Update stations and addresses" : "Download stations and addresses");
         ExtrasButton.IsEnabled = (hasMap || mapQueued) && !extrasQueued;
         Label(OverlaysButton, hasOverlays ? "Update flood zones and public lands" : "Download flood zones and public lands");
-        OverlaysButton.IsEnabled = !overlaysQueued;
+        OverlaysButton.IsEnabled = !overlaysQueued && (hasOverlays || r.OverlayBytes > 0);
         Label(TerrainButton, hasTerrain ? "Update terrain" : "Download terrain");
         TerrainButton.IsEnabled = (hasMap || mapQueued) && !terrainQueued && !overlaysQueued;
         Label(RemoveButton, $"Remove {r.Name}…");

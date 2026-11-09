@@ -222,6 +222,8 @@ message CatalogRegion {
   uint64 extras_bytes = 4;
   string source_page = 5;
   uint64 terrain_bytes = 6;
+  // 0 when no flood zones and public lands file is published for the region.
+  uint64 overlay_bytes = 7;
 }
 
 message Catalog {

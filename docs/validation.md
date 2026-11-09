@@ -295,7 +295,19 @@ Completed 8 November 2026. Ian chose prebuilt overlay files published on GitHub 
 
 Verified in the installed app, downloading from a local server holding the Illinois file: Regions showed the download's progress and then "Flood zones and public lands: 70 MB; flood data effective 07/21/2026, USGS PAD-US 4.1". At Havana the Illinois River floodplain was shaded as flood zones, Emiquon National Wildlife Refuge and the Illinois River Floodplain Complex showed as public land with labels, and the map credited FEMA and USGS. Fixed after this check (the build data confirms the labels; the map was not looked at again because Ian was using the computer): labels without PAD-US's "Fee" suffix and none for easements, lighter flood shading, a shorter credit, wrapping command names in the Regions pane, and a terrain decoding message that filled the log where no region's terrain covers a tile.
 
-Not yet done: overlay files for the other 51 regions, and the `overlays` release on GitHub, which the app's default address points to (`https://github.com/ianrastall/offline-us-maps/releases/download/overlays/<region>-overlays.mbtiles`). Until it exists, the download fails with a network error.
+Not yet done: the `overlays` release on GitHub, which the app's default address points to (`https://github.com/ianrastall/offline-us-maps/releases/download/overlays/<region>-overlays.mbtiles`). Until it exists, the download fails with a network error.
+
+## 0.5.1: overlay files for every region
+
+Completed 9 November 2026. Ian asked for all regions to be built.
+
+- **Build.** `build_overlays.py --all` built all 52 regions in about 4.8 hours of build time, 4.78 GB together: from 0.8 MB (US Virgin Islands) to 322 MB (Iowa, 839,273 flood areas); Florida and Texas 259 MB each. 4,975,627 flood areas and 459,346 public land areas in all. FEMA downloads and intermediate files were deleted after each region; the files and `summary.json` are in `data/layer-build/out` (not in git).
+- **No FEMA state file.** FEMA's search listed none for Alabama, Idaho, Louisiana, Washington and the US Virgin Islands; these were read from FEMA's NFHL map service (see [sources](sources-and-architecture.md#flood-zones-and-public-lands-050)). Fetching each cell's shapes failed with HTTP 500, as did single very large areas, so the build lists IDs per cell and reads areas by ID with coordinates to six decimals, simplifying an area to 0.5 m only if it still fails (one in Alabama).
+- **Older flood data.** Most state files are effective 2024–2026; Connecticut is 2023, Delaware 2020, Vermont 2015, DC 2010 and Puerto Rico 2009, as FEMA publishes them.
+- **Catalog.** Regions carry the overlay file's size (`overlay_bytes`, from `summary.json` through `make-regions.py`); the Regions window shows it, and says "not available for this region yet" with the button disabled when it is 0.
+- **Build environment.** The user `DOTNET_ROOT` points to `D:\lang\dotnet\sdk`, which lacks the pinned SDK 10.0.114; the installer was built with `DOTNET_ROOT` cleared for that process so the SDK in `C:\Program Files\dotnet` was used.
+
+Verified: 69 core, 2 HTTP and 6 ABI tests (Rust) and 9 interop tests (C#) pass; the 0.5.1 installer installed over 0.5.0, the uninstaller entry reads 0.5.1, and the app started from the Start Menu entry. Read through UI Automation, the Regions window showed "About 51 MB" for Indiana, 166 MB for Louisiana and 1 MB for the US Virgin Islands, with the download button enabled.
 
 ## Next stages
 
@@ -304,5 +316,4 @@ Not yet done: overlay files for the other 51 regions, and the `overlays` release
 3. Choose the app's license and add it to the installer and About.
 4. Install on a clean Windows 11 machine.
 5. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
-6. Build the overlay files for all regions (FEMA state files from tens of MB to over 1 GB each).
-7. Publish as Offline US Maps under The Unlicense, with Jupiter.UI (see the [project brief](project-brief.md#publication-decided-8-november-2026)).
+6. Publish as Offline US Maps under The Unlicense, with Jupiter.UI (see the [project brief](project-brief.md#publication-decided-8-november-2026)).

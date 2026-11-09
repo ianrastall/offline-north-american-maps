@@ -5,11 +5,13 @@ Inputs (downloaded separately; nothing here touches the network):
   sizes.txt       "<slug> <bytes>" per line: HEAD Content-Length of <slug>-shortbread-1.0.mbtiles
   pbf-sizes.txt   "<slug> <bytes>" per line: HEAD Content-Length of <slug>-latest.osm.pbf
                   (offline-maps-dev probe <url> reports both)
+  overlays-summary.json (optional) data/layer-build/out/summary.json from
+                  tools/layers/build_overlays.py; regions without a built overlay file get 0
   terrain-sizes.txt "<slug> <bytes>" per line: bytes of Mapterhorn's planet.pmtiles tiles,
                   zoom 0-12, touching the region's outline box (read from the archive's
                   index only; see docs/validation.md, 0.3.0)
 
-Usage: python -I tools/make-regions.py index-v1.json sizes.txt pbf-sizes.txt terrain-sizes.txt <date YYYY-MM-DD>
+Usage: python -I tools/make-regions.py index-v1.json sizes.txt pbf-sizes.txt terrain-sizes.txt <date YYYY-MM-DD> [overlays-summary.json]
        then cargo fmt
 
 Each region's coverage check is its outline's bounding box (Geofabrik's package
@@ -60,6 +62,10 @@ def sizes(path):
 
 def main():
     index_path, shortbread_path, pbf_path, terrain_path, date = sys.argv[1:6]
+    overlays = {}
+    if len(sys.argv) > 6:
+        summary = json.loads(Path(sys.argv[6]).read_text(encoding="utf-8"))
+        overlays = {k: v.get("bytes", 0) for k, v in summary.items()}
     index = json.loads(Path(index_path).read_text(encoding="utf-8"))
     shortbread, pbf, terrain = sizes(shortbread_path), sizes(pbf_path), sizes(terrain_path)
     regions = []
@@ -113,6 +119,7 @@ def main():
             f"    package_bytes: {shortbread[slug]},",
             f"    extras_bytes: {pbf[slug]},",
             f"    terrain_bytes: {terrain[slug]},",
+            f"    overlay_bytes: {overlays.get(code, 0)},",
             "};",
             "",
         ]
@@ -131,7 +138,7 @@ def main():
     out.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(f"{len(names)} regions -> {out}")
     il = HANDWRITTEN["illinois"]
-    print(f"illinois sizes for {il}: package_bytes {shortbread['illinois']}, extras_bytes {pbf['illinois']}, terrain_bytes {terrain['illinois']}")
+    print(f"illinois sizes for {il}: package_bytes {shortbread['illinois']}, extras_bytes {pbf['illinois']}, terrain_bytes {terrain['illinois']}, overlay_bytes {overlays.get('us-il', 0)}")
 
 
 main()

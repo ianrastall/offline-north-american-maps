@@ -42,6 +42,9 @@ pub struct Region {
     pub extras_bytes: u64,
     /// Terrain tiles for the region's map area (see `terrain`).
     pub terrain_bytes: u64,
+    /// The prebuilt flood zones and public lands file (see `overlays`); 0 when
+    /// none is published for the region.
+    pub overlay_bytes: u64,
 }
 
 pub const ILLINOIS: Region = Region {
@@ -67,6 +70,7 @@ pub const ILLINOIS: Region = Region {
     package_bytes: 362_586_112,
     extras_bytes: 363_155_297,
     terrain_bytes: 365_559_838,
+    overlay_bytes: 69_693_440,
 };
 
 /// What the server said about the file when it was downloaded.

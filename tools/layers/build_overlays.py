@@ -4,7 +4,10 @@ Run on the maintainer's machine; the results are published with the GitHub relea
 (release tag `overlays`) and downloaded by the app. Both sources are public domain:
 
   Flood zones   FEMA National Flood Hazard Layer, the state file from FEMA's Map
-                Service Center (msc.fema.gov), layer S_FLD_HAZ_AR.
+                Service Center (msc.fema.gov), layer S_FLD_HAZ_AR. Where FEMA lists no
+                state file (Alabama, Idaho, Louisiana, Washington and the US Virgin
+                Islands, November 2026), the same layer from FEMA's public NFHL map
+                service, listed in half-degree cells and read by ID.
   Public lands  USGS PAD-US (Protected Areas Database of the United States), the
                 "PAD-US Public Access" feature service published by USGS.
 
@@ -24,6 +27,12 @@ Setup (once; nothing here is committed):
 
 Usage:
   data/layer-build/venv/Scripts/python tools/layers/build_overlays.py us-il [us-in ...]
+  data/layer-build/venv/Scripts/python tools/layers/build_overlays.py --all
+
+Regions whose overlay file already exists are skipped (delete it, or pass --force, to
+rebuild). A region that fails is reported and the rest continue; out/summary.json lists
+every result. FEMA's download and the intermediate GeoPackages are deleted once a region
+is built (--keep keeps them), since all states' FEMA files together run to tens of GB.
 """
 from __future__ import annotations
 
@@ -53,6 +62,10 @@ USER_AGENT = "OfflineUSMapsLayerBuild/1 (offline map data preparation)"
 MSC_SEARCH = "https://msc.fema.gov/portal/advanceSearch"
 MSC_DOWNLOAD = ("https://msc.fema.gov/portal/downloadProduct"
                 "?productTypeID=NFHL&productSubTypeID=NFHL_STATE_DATA&productID={name}")
+NFHL_SERVICE = "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query"
+# What the overlay keeps of S_FLD_HAZ_AR (see classify).
+FLOOD_WHERE = ("SFHA_TF = 'T' OR ZONE_SUBTY LIKE '0.2 PCT%' OR ZONE_SUBTY LIKE '1 PCT DEPTH%' "
+               "OR ZONE_SUBTY LIKE '%LEVEE%'")
 PADUS = ("https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/"
          "PADUS_Public_Access/FeatureServer/0/query")
 
@@ -119,6 +132,91 @@ def flood_zones(zip_path: Path, name: str, out: Path) -> int:
     src = f"/vsizip/{zip_path.as_posix()}/{name}.gdb"
     df = pyogrio.read_dataframe(src, layer="S_FLD_HAZ_AR",
                                 columns=["FLD_ZONE", "ZONE_SUBTY", "SFHA_TF"])
+    return classify(df, out)
+
+
+def flood_zones_from_service(s: requests.Session, bbox: list[float], out: Path) -> int:
+    """The flood layer from FEMA's map service. The IDs of matching areas are listed in
+    half-degree cells (a whole state in one query times out); the areas are then read
+    by ID, 100 at a time, since queries that return geometry for a whole cell fail on
+    the server (HTTP 500, November 2026). A batch that fails is split in half."""
+    west, south, east, north = bbox
+    step = 0.5
+    cells = []
+    x = west
+    while x < east:
+        y = south
+        while y < north:
+            cells.append((x, y, min(x + step, east), min(y + step, north)))
+            y += step
+        x += step
+    def request(method: str, what: str, **params) -> dict:
+        for attempt in range(5):
+            try:
+                if method == "post":
+                    r = s.post(NFHL_SERVICE, data=params, timeout=300)
+                else:
+                    r = s.get(NFHL_SERVICE, params=params, timeout=300)
+                if r.ok:
+                    reply = r.json()
+                    if "error" not in reply:
+                        return reply
+            except (requests.RequestException, ValueError):
+                pass
+            time.sleep(5 * (attempt + 1))
+        raise RuntimeError(f"FEMA map service failed for {what}")
+
+    ids: set[int] = set()
+    for number, cell in enumerate(cells, 1):
+        where = {"where": FLOOD_WHERE, "geometry": ",".join(f"{v:.5f}" for v in cell),
+                 "geometryType": "esriGeometryEnvelope", "inSR": 4326,
+                 "spatialRel": "esriSpatialRelIntersects", "f": "json"}
+        listed = request("get", f"cell {cell}", returnIdsOnly="true", **where).get("objectIds") or []
+        count = request("get", f"cell {cell}", returnCountOnly="true", **where)["count"]
+        if len(listed) != count:
+            raise RuntimeError(f"FEMA map service listed {len(listed)} of {count} areas in cell {cell}")
+        ids.update(listed)
+        if number % 20 == 0:
+            print(f"  map service: {number}/{len(cells)} cells, {len(ids)} areas", flush=True)
+    if not ids:
+        raise RuntimeError("FEMA's map service returned no flood areas")
+
+    frames = []
+
+    def fetch(batch: list[int], simplify: bool = False) -> None:
+        # Coordinates to six decimals (about 10 cm). A single area too large for the
+        # service even so (Alabama has one) is read simplified to 0.5 m, still well
+        # below what a zoom 14 tile can show.
+        extra = {"maxAllowableOffset": 0.000005} if simplify else {}
+        try:
+            reply = request("post", f"{len(batch)} areas from {batch[0]}",
+                            objectIds=",".join(map(str, batch)), outSR=4326, f="geojson",
+                            geometryPrecision=6, outFields="OBJECTID,FLD_ZONE,ZONE_SUBTY,SFHA_TF",
+                            **extra)
+        except RuntimeError:
+            if len(batch) == 1:
+                if simplify:
+                    raise
+                print(f"  map service: area {batch[0]} read simplified", flush=True)
+                fetch(batch, simplify=True)
+                return
+            half = len(batch) // 2
+            fetch(batch[:half])
+            fetch(batch[half:])
+            return
+        if reply["features"]:
+            frames.append(gpd.GeoDataFrame.from_features(reply["features"], crs=4326))
+
+    ordered = sorted(ids)
+    for start in range(0, len(ordered), 100):
+        fetch(ordered[start:start + 100])
+        if (start // 100) % 50 == 49:
+            print(f"  map service: {start + 100}/{len(ordered)} areas read", flush=True)
+    return classify(gpd.pd.concat(frames, ignore_index=True), out)
+
+
+def classify(df: gpd.GeoDataFrame, out: Path) -> int:
+    """Keeps floodways, 1% and 0.2% annual-chance zones and levee-reduced areas."""
     subtype = df["ZONE_SUBTY"].fillna("").str.upper()
     kind = (subtype.str.contains("FLOODWAY").map({True: "floodway"})
             .fillna(df["SFHA_TF"].eq("T").map({True: "high"}))
@@ -193,13 +291,13 @@ def tile(region: dict, flood: Path, lands: Path, out: Path) -> None:
     config.write_text(schema, encoding="utf-8")
     w, s, e, n = region["bbox"]
     subprocess.run([
-        "java", "-Xmx4g", "-jar", str(PLANETILER), "generate-custom", f"--schema={config}",
+        "java", "-Xmx16g", "-jar", str(PLANETILER), "generate-custom", f"--schema={config}",
         f"--output={out}", "--force", f"--bounds={w},{s},{e},{n}",
         "--tmpdir=" + str(WORK / "tmp"),
     ], check=True)
 
 
-def build(region_id: str) -> None:
+def build(region_id: str, keep: bool) -> dict:
     region = next((r for r in REGIONS if r["id"] == region_id), None)
     if region is None:
         raise SystemExit(f"unknown region {region_id}")
@@ -209,14 +307,24 @@ def build(region_id: str) -> None:
     work.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
 
-    product = fema_product(s, state)
-    name = product["product_NAME"]
-    print(f"{region['name']}: FEMA {name} ({product.get('product_FILE_SIZE')}), "
-          f"effective {product.get('product_EFFECTIVE_DATE_STRING')}", flush=True)
-    zip_path = download(s, MSC_DOWNLOAD.format(name=name), DOWNLOADS / "fema" / f"{name}.zip")
     flood = work / "flood.gpkg"
     flood.unlink(missing_ok=True)
-    flood_count = flood_zones(zip_path, name, flood)
+    zip_path = None
+    try:
+        product = fema_product(s, state)
+    except RuntimeError as e:
+        # No state file: read the national map service for the region's box.
+        today = dt.date.today()
+        name = "NFHL map service"
+        product = {"product_EFFECTIVE_DATE_STRING": f"{today:%m/%d/%Y} (map service)"}
+        print(f"{region['name']}: {e}; using FEMA's NFHL map service", flush=True)
+        flood_count = flood_zones_from_service(s, region["bbox"], flood)
+    else:
+        name = product["product_NAME"]
+        print(f"{region['name']}: FEMA {name} ({product.get('product_FILE_SIZE')}), "
+              f"effective {product.get('product_EFFECTIVE_DATE_STRING')}", flush=True)
+        zip_path = download(s, MSC_DOWNLOAD.format(name=name), DOWNLOADS / "fema" / f"{name}.zip")
+        flood_count = flood_zones(zip_path, name, flood)
     print(f"  flood zones: {flood_count}", flush=True)
 
     lands = work / "lands.gpkg"
@@ -249,10 +357,40 @@ def build(region_id: str) -> None:
     }
     out.with_suffix(".json").write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
     print(f"  {out.name}: {manifest['bytes'] / 1e6:.1f} MB", flush=True)
+    if not keep:
+        if zip_path is not None:
+            zip_path.unlink(missing_ok=True)
+        for f in work.glob("*"):
+            f.unlink(missing_ok=True)
+    return manifest
+
+
+def main(args: list[str]) -> None:
+    flags = {a for a in args if a.startswith("--")}
+    ids = [r["id"] for r in REGIONS] if "--all" in flags else [a for a in args if not a.startswith("--")]
+    if not ids:
+        raise SystemExit(__doc__)
+    OUT.mkdir(parents=True, exist_ok=True)
+    summary_path = OUT / "summary.json"
+    summary = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.exists() else {}
+    for rid in ids:
+        out = OUT / f"{rid}-overlays.mbtiles"
+        if out.exists() and out.with_suffix(".json").exists() and "--force" not in flags:
+            print(f"{rid}: already built, skipped", flush=True)
+            summary[rid] = json.loads(out.with_suffix(".json").read_text(encoding="utf-8"))
+            continue
+        started = time.monotonic()
+        try:
+            summary[rid] = build(rid, keep="--keep" in flags)
+            summary[rid]["seconds"] = round(time.monotonic() - started)
+        except Exception as e:  # report it and go on with the next region
+            print(f"{rid}: FAILED: {type(e).__name__}: {e}", flush=True)
+            summary[rid] = {"region": rid, "error": f"{type(e).__name__}: {e}"}
+        summary_path.write_text(json.dumps(summary, indent=1) + "\n", encoding="utf-8")
+    failed = [r for r, v in summary.items() if "error" in v]
+    total = sum(v.get("bytes", 0) for v in summary.values())
+    print(f"done: {len(summary) - len(failed)} built, {len(failed)} failed {failed}; {total / 1e9:.2f} GB", flush=True)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        raise SystemExit(__doc__)
-    for rid in sys.argv[1:]:
-        build(rid)
+    main(sys.argv[1:])

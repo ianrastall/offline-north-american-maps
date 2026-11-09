@@ -404,6 +404,7 @@ impl Service {
                     extras_bytes: r.extras_bytes,
                     source_page: r.source_page.to_owned(),
                     terrain_bytes: r.terrain_bytes,
+                    overlay_bytes: r.overlay_bytes,
                 })
                 .collect(),
         }

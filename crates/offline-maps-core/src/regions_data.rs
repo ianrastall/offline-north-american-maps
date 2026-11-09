@@ -25,6 +25,7 @@ pub const US_AL: Region = Region {
     package_bytes: 274968576,
     extras_bytes: 151778170,
     terrain_bytes: 323189766,
+    overlay_bytes: 155090944,
 };
 
 pub const US_AZ: Region = Region {
@@ -49,6 +50,7 @@ pub const US_AZ: Region = Region {
     package_bytes: 259719168,
     extras_bytes: 304871661,
     terrain_bytes: 646813216,
+    overlay_bytes: 61505536,
 };
 
 pub const US_AR: Region = Region {
@@ -73,6 +75,7 @@ pub const US_AR: Region = Region {
     package_bytes: 140529664,
     extras_bytes: 100561996,
     terrain_bytes: 271315746,
+    overlay_bytes: 50286592,
 };
 
 pub const US_CA: Region = Region {
@@ -97,6 +100,7 @@ pub const US_CA: Region = Region {
     package_bytes: 851144704,
     extras_bytes: 1335345531,
     terrain_bytes: 1562407784,
+    overlay_bytes: 139513856,
 };
 
 pub const US_CO: Region = Region {
@@ -121,6 +125,7 @@ pub const US_CO: Region = Region {
     package_bytes: 295383040,
     extras_bytes: 387773162,
     terrain_bytes: 596376462,
+    overlay_bytes: 60755968,
 };
 
 pub const US_CT: Region = Region {
@@ -145,6 +150,7 @@ pub const US_CT: Region = Region {
     package_bytes: 113942528,
     extras_bytes: 217483361,
     terrain_bytes: 44362586,
+    overlay_bytes: 23334912,
 };
 
 pub const US_DE: Region = Region {
@@ -169,6 +175,7 @@ pub const US_DE: Region = Region {
     package_bytes: 33746944,
     extras_bytes: 22265457,
     terrain_bytes: 14613014,
+    overlay_bytes: 13053952,
 };
 
 pub const US_DC: Region = Region {
@@ -193,6 +200,7 @@ pub const US_DC: Region = Region {
     package_bytes: 19664896,
     extras_bytes: 21048738,
     terrain_bytes: 3267116,
+    overlay_bytes: 999424,
 };
 
 pub const US_FL: Region = Region {
@@ -217,6 +225,7 @@ pub const US_FL: Region = Region {
     package_bytes: 667766784,
     extras_bytes: 660539454,
     terrain_bytes: 140865612,
+    overlay_bytes: 259137536,
 };
 
 pub const US_GA: Region = Region {
@@ -241,6 +250,7 @@ pub const US_GA: Region = Region {
     package_bytes: 407420928,
     extras_bytes: 358475269,
     terrain_bytes: 366576296,
+    overlay_bytes: 166105088,
 };
 
 pub const US_HI: Region = Region {
@@ -265,6 +275,7 @@ pub const US_HI: Region = Region {
     package_bytes: 175652864,
     extras_bytes: 27653711,
     terrain_bytes: 33109838,
+    overlay_bytes: 7802880,
 };
 
 pub const US_ID: Region = Region {
@@ -289,6 +300,7 @@ pub const US_ID: Region = Region {
     package_bytes: 215982080,
     extras_bytes: 130388092,
     terrain_bytes: 1094302738,
+    overlay_bytes: 71897088,
 };
 
 pub const US_IN: Region = Region {
@@ -313,6 +325,7 @@ pub const US_IN: Region = Region {
     package_bytes: 247644160,
     extras_bytes: 201764337,
     terrain_bytes: 216767016,
+    overlay_bytes: 50683904,
 };
 
 pub const US_IA: Region = Region {
@@ -337,6 +350,7 @@ pub const US_IA: Region = Region {
     package_bytes: 193286144,
     extras_bytes: 134390380,
     terrain_bytes: 370944722,
+    overlay_bytes: 322338816,
 };
 
 pub const US_KS: Region = Region {
@@ -361,6 +375,7 @@ pub const US_KS: Region = Region {
     package_bytes: 146972672,
     extras_bytes: 117685687,
     terrain_bytes: 334672222,
+    overlay_bytes: 185737216,
 };
 
 pub const US_KY: Region = Region {
@@ -385,6 +400,7 @@ pub const US_KY: Region = Region {
     package_bytes: 243286016,
     extras_bytes: 155161507,
     terrain_bytes: 468510824,
+    overlay_bytes: 106528768,
 };
 
 pub const US_LA: Region = Region {
@@ -409,6 +425,7 @@ pub const US_LA: Region = Region {
     package_bytes: 171409408,
     extras_bytes: 147503641,
     terrain_bytes: 232169154,
+    overlay_bytes: 166420480,
 };
 
 pub const US_ME: Region = Region {
@@ -433,6 +450,7 @@ pub const US_ME: Region = Region {
     package_bytes: 154525696,
     extras_bytes: 91210597,
     terrain_bytes: 291150292,
+    overlay_bytes: 56655872,
 };
 
 pub const US_MD: Region = Region {
@@ -457,6 +475,7 @@ pub const US_MD: Region = Region {
     package_bytes: 278974464,
     extras_bytes: 216731875,
     terrain_bytes: 157892730,
+    overlay_bytes: 59932672,
 };
 
 pub const US_MA: Region = Region {
@@ -481,6 +500,7 @@ pub const US_MA: Region = Region {
     package_bytes: 306667520,
     extras_bytes: 311655527,
     terrain_bytes: 105107906,
+    overlay_bytes: 59772928,
 };
 
 pub const US_MI: Region = Region {
@@ -505,6 +525,7 @@ pub const US_MI: Region = Region {
     package_bytes: 670343168,
     extras_bytes: 317178807,
     terrain_bytes: 654458228,
+    overlay_bytes: 86523904,
 };
 
 pub const US_MN: Region = Region {
@@ -529,6 +550,7 @@ pub const US_MN: Region = Region {
     package_bytes: 438681600,
     extras_bytes: 290347089,
     terrain_bytes: 677824794,
+    overlay_bytes: 118988800,
 };
 
 pub const US_MS: Region = Region {
@@ -553,6 +575,7 @@ pub const US_MS: Region = Region {
     package_bytes: 134594560,
     extras_bytes: 95204938,
     terrain_bytes: 250352766,
+    overlay_bytes: 90148864,
 };
 
 pub const US_MO: Region = Region {
@@ -577,6 +600,7 @@ pub const US_MO: Region = Region {
     package_bytes: 329310208,
     extras_bytes: 200598679,
     terrain_bytes: 570445320,
+    overlay_bytes: 169132032,
 };
 
 pub const US_MT: Region = Region {
@@ -601,6 +625,7 @@ pub const US_MT: Region = Region {
     package_bytes: 188510208,
     extras_bytes: 101440845,
     terrain_bytes: 1358736114,
+    overlay_bytes: 73805824,
 };
 
 pub const US_NE: Region = Region {
@@ -625,6 +650,7 @@ pub const US_NE: Region = Region {
     package_bytes: 132673536,
     extras_bytes: 101566719,
     terrain_bytes: 471221002,
+    overlay_bytes: 94478336,
 };
 
 pub const US_NV: Region = Region {
@@ -649,6 +675,7 @@ pub const US_NV: Region = Region {
     package_bytes: 206848000,
     extras_bytes: 124120525,
     terrain_bytes: 876339742,
+    overlay_bytes: 44707840,
 };
 
 pub const US_NH: Region = Region {
@@ -673,6 +700,7 @@ pub const US_NH: Region = Region {
     package_bytes: 103575552,
     extras_bytes: 72512169,
     terrain_bytes: 133162306,
+    overlay_bytes: 34947072,
 };
 
 pub const US_NJ: Region = Region {
@@ -697,6 +725,7 @@ pub const US_NJ: Region = Region {
     package_bytes: 232636416,
     extras_bytes: 165030124,
     terrain_bytes: 62414610,
+    overlay_bytes: 57745408,
 };
 
 pub const US_NM: Region = Region {
@@ -721,6 +750,7 @@ pub const US_NM: Region = Region {
     package_bytes: 157331456,
     extras_bytes: 136781284,
     terrain_bytes: 602691008,
+    overlay_bytes: 56475648,
 };
 
 pub const US_NY: Region = Region {
@@ -745,6 +775,7 @@ pub const US_NY: Region = Region {
     package_bytes: 845336576,
     extras_bytes: 498649157,
     terrain_bytes: 712152498,
+    overlay_bytes: 151199744,
 };
 
 pub const US_NC: Region = Region {
@@ -769,6 +800,7 @@ pub const US_NC: Region = Region {
     package_bytes: 523292672,
     extras_bytes: 430769842,
     terrain_bytes: 453863586,
+    overlay_bytes: 183013376,
 };
 
 pub const US_ND: Region = Region {
@@ -793,6 +825,7 @@ pub const US_ND: Region = Region {
     package_bytes: 117805056,
     extras_bytes: 128293753,
     terrain_bytes: 364954472,
+    overlay_bytes: 93777920,
 };
 
 pub const US_OH: Region = Region {
@@ -817,6 +850,7 @@ pub const US_OH: Region = Region {
     package_bytes: 378798080,
     extras_bytes: 327070114,
     terrain_bytes: 323075316,
+    overlay_bytes: 78200832,
 };
 
 pub const US_OK: Region = Region {
@@ -841,6 +875,7 @@ pub const US_OK: Region = Region {
     package_bytes: 190402560,
     extras_bytes: 170198431,
     terrain_bytes: 433271974,
+    overlay_bytes: 90591232,
 };
 
 pub const US_OR: Region = Region {
@@ -865,6 +900,7 @@ pub const US_OR: Region = Region {
     package_bytes: 271933440,
     extras_bytes: 255443649,
     terrain_bytes: 780809532,
+    overlay_bytes: 66990080,
 };
 
 pub const US_PA: Region = Region {
@@ -889,6 +925,7 @@ pub const US_PA: Region = Region {
     package_bytes: 359133184,
     extras_bytes: 350034838,
     terrain_bytes: 366234674,
+    overlay_bytes: 143863808,
 };
 
 pub const US_PR: Region = Region {
@@ -913,6 +950,7 @@ pub const US_PR: Region = Region {
     package_bytes: 41226240,
     extras_bytes: 74319185,
     terrain_bytes: 20866594,
+    overlay_bytes: 5345280,
 };
 
 pub const US_RI: Region = Region {
@@ -937,6 +975,7 @@ pub const US_RI: Region = Region {
     package_bytes: 45735936,
     extras_bytes: 52529484,
     terrain_bytes: 12178094,
+    overlay_bytes: 8355840,
 };
 
 pub const US_SC: Region = Region {
@@ -961,6 +1000,7 @@ pub const US_SC: Region = Region {
     package_bytes: 220434432,
     extras_bytes: 165854337,
     terrain_bytes: 207010616,
+    overlay_bytes: 98848768,
 };
 
 pub const US_SD: Region = Region {
@@ -985,6 +1025,7 @@ pub const US_SD: Region = Region {
     package_bytes: 83468288,
     extras_bytes: 50310916,
     terrain_bytes: 477405412,
+    overlay_bytes: 163807232,
 };
 
 pub const US_TN: Region = Region {
@@ -1009,6 +1050,7 @@ pub const US_TN: Region = Region {
     package_bytes: 217096192,
     extras_bytes: 191345119,
     terrain_bytes: 355474684,
+    overlay_bytes: 68620288,
 };
 
 pub const US_TX: Region = Region {
@@ -1033,6 +1075,7 @@ pub const US_TX: Region = Region {
     package_bytes: 856477696,
     extras_bytes: 727366844,
     terrain_bytes: 1891743250,
+    overlay_bytes: 259031040,
 };
 
 pub const US_VI: Region = Region {
@@ -1057,6 +1100,7 @@ pub const US_VI: Region = Region {
     package_bytes: 3489792,
     extras_bytes: 3122322,
     terrain_bytes: 1554548,
+    overlay_bytes: 798720,
 };
 
 pub const US_UT: Region = Region {
@@ -1081,6 +1125,7 @@ pub const US_UT: Region = Region {
     package_bytes: 145420288,
     extras_bytes: 171512584,
     terrain_bytes: 576924656,
+    overlay_bytes: 36081664,
 };
 
 pub const US_VT: Region = Region {
@@ -1105,6 +1150,7 @@ pub const US_VT: Region = Region {
     package_bytes: 77766656,
     extras_bytes: 46245967,
     terrain_bytes: 115986352,
+    overlay_bytes: 20140032,
 };
 
 pub const US_VA: Region = Region {
@@ -1129,6 +1175,7 @@ pub const US_VA: Region = Region {
     package_bytes: 567324672,
     extras_bytes: 429424580,
     terrain_bytes: 584625046,
+    overlay_bytes: 122990592,
 };
 
 pub const US_WA: Region = Region {
@@ -1153,6 +1200,7 @@ pub const US_WA: Region = Region {
     package_bytes: 352022528,
     extras_bytes: 365690740,
     terrain_bytes: 672737584,
+    overlay_bytes: 61579264,
 };
 
 pub const US_WV: Region = Region {
@@ -1177,6 +1225,7 @@ pub const US_WV: Region = Region {
     package_bytes: 318558208,
     extras_bytes: 99295637,
     terrain_bytes: 464267166,
+    overlay_bytes: 47296512,
 };
 
 pub const US_WI: Region = Region {
@@ -1201,6 +1250,7 @@ pub const US_WI: Region = Region {
     package_bytes: 356782080,
     extras_bytes: 295368541,
     terrain_bytes: 453515800,
+    overlay_bytes: 104816640,
 };
 
 pub const US_WY: Region = Region {
@@ -1225,6 +1275,7 @@ pub const US_WY: Region = Region {
     package_bytes: 124829696,
     extras_bytes: 95454553,
     terrain_bytes: 658405504,
+    overlay_bytes: 61960192,
 };
 
 /// Every region that can be downloaded, by name.
