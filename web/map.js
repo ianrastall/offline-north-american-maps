@@ -40,6 +40,10 @@ let demSource = null;
 let styleReady = false;
 const styles = {};
 const TERRAIN_BEFORE = 'water-river';
+// Labels added here go under the base style's labels but over its roads,
+// railways and paths, which would otherwise cut through the text.
+const LABELS_BEFORE = 'label-address-housenumber';
+const labelsBefore = () => (map.getLayer(LABELS_BEFORE) ? LABELS_BEFORE : undefined);
 // Short credit on the map; the full one is in Map information.
 const TERRAIN_CREDIT = 'Terrain: <span title="Mapterhorn: USGS 3DEP, Copernicus GLO-30 © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018 provided under COPERNICUS by the European Union and ESA">Mapterhorn, USGS, Copernicus</span>';
 const TERRAIN_LAYERS = ['terrain-shading', 'contour-lines', 'contour-labels'];
@@ -237,7 +241,7 @@ function applyTerrain() {
       'text-max-angle': 30,
     },
     paint: { 'text-color': colors.label, 'text-halo-color': colors.halo, 'text-halo-width': 1 },
-  }, before);
+  }, labelsBefore());
 }
 
 function setTerrainVisibility() {
@@ -407,7 +411,7 @@ function applyOverlays() {
       'text-halo-color': dark ? '#000000' : '#ffffff',
       'text-halo-width': 1,
     },
-  }, before);
+  }, labelsBefore());
 }
 
 function setOverlayVisibility() {
@@ -464,7 +468,7 @@ function applyOverview() {
     if (layer.id.startsWith('label-boundary-')) map.setLayoutProperty(layer.id, 'visibility', 'none');
   }
   const before = map.getLayer('slot-below-fills') ? 'slot-below-fills' : undefined;
-  const add = (layer) => map.addLayer({ source: 'overview', ...layer }, before);
+  const add = (layer) => map.addLayer({ source: 'overview', ...layer }, ['symbol', 'circle'].includes(layer.type) ? labelsBefore() : before);
   add({
     id: 'overview-water',
     type: 'fill',

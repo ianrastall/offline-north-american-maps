@@ -333,7 +333,13 @@ Verified: Rust tests (70 core including a check-only test, 2 HTTP, 6 ABI includi
 
 Released 9 November 2026 as [v0.7.0](https://github.com/ianrastall/offline-us-maps/releases/tag/v0.7.0), built from 7d11e5b; the installer's SHA-256 (25e77b62…dbb6b) matches GitHub's digest. 0.7.0 installed over 0.6.0 here: Settings > Apps lists Offline US Maps 0.7.0 under the same AppId, `Overview\us-overview.mbtiles` is in the program folder, and the app started from the Start entry with the overview around Illinois and Indiana.
 
-Known, not changed: some place labels near the Chicago lakefront at zoom 11 lose letters ("Maple Park" drawn as "Ma le Par k"). The installed 0.6.0 shows the same at that view, so it predates this release.
+Known at release: some place labels near the Chicago lakefront at zoom 11 lost letters ("Maple Park" drawn as "Ma le Par k"); the installed 0.6.0 showed the same. Fixed in 0.7.1.
+
+## 0.7.1: labels no longer crossed by roads
+
+Completed 9 November 2026. The labels with missing letters were public-land names (green, from the flood zones and public lands download). The page inserted them, like the contour labels, below `water-river`, so roads, railways and paths were drawn over them and cut through letters. Both are now inserted just below the base style's first label layer (`label-address-housenumber`): over every road and line, under the base map's own labels. The overview's names and city dots moved there too, so terrain shading and overlay fills no longer dim them.
+
+Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple Park", "Philbrick Park" and "Lunt Park" draw whole where 0.7.0 cut them.
 
 ## Next stages
 
