@@ -1,0 +1,60 @@
+# Planetiler schema for a region's overlay file (see build_overlays.py, which fills in
+# the two GeoPackage paths). Layers:
+#   flood_zones          kind (floodway, high, moderate, levee), zone (FEMA zone code)
+#   public_lands         name, access (open, restricted, closed, unknown), manager_type,
+#                        manager, designation, category (fee, easement)
+#   public_land_labels   a point inside each named owned area, with name and access
+schema_name: Offline US Maps overlays
+schema_description: Flood hazard zones (FEMA National Flood Hazard Layer) and public lands (USGS PAD-US)
+attribution: Flood zones FEMA NFHL; public lands USGS PAD-US
+args:
+  minzoom: 5
+  maxzoom: 14
+sources:
+  flood:
+    type: geopackage
+    local_path: '@FLOOD@'
+    projection: EPSG:4326
+  lands:
+    type: geopackage
+    local_path: '@LANDS@'
+    projection: EPSG:4326
+layers:
+- id: flood_zones
+  features:
+  - source: flood
+    geometry: polygon
+    min_zoom: 9
+    attributes:
+    - key: kind
+    - key: zone
+  tile_post_process:
+    merge_polygons:
+      min_area: 1
+- id: public_lands
+  features:
+  - source: lands
+    geometry: polygon
+    min_zoom: 5
+    attributes:
+    - key: name
+      min_zoom: 10
+    - key: access
+    - key: manager_type
+      min_zoom: 10
+    - key: manager
+      min_zoom: 10
+    - key: designation
+      min_zoom: 10
+    - key: category
+- id: public_land_labels
+  features:
+  - source: lands
+    geometry: polygon_point_on_surface
+    min_zoom: 10
+    include_when:
+      label: __any__
+    attributes:
+    - key: name
+      tag_value: label
+    - key: access

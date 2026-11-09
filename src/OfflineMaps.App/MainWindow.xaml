@@ -45,6 +45,8 @@
                 </ToggleMenuFlyoutItem>
                 <MenuFlyoutSeparator />
                 <ToggleMenuFlyoutItem x:Name="OutdoorItem" Click="Outdoor_Click" Text="Outdoor places" />
+                <ToggleMenuFlyoutItem x:Name="FloodItem" Click="Overlays_Click" Text="Flood zones" />
+                <ToggleMenuFlyoutItem x:Name="LandsItem" Click="Overlays_Click" Text="Public lands" />
                 <ToggleMenuFlyoutItem x:Name="ShadingItem" Click="Terrain_Click" Text="Terrain shading" />
                 <ToggleMenuFlyoutItem x:Name="ContoursItem" Click="Terrain_Click" Text="Contour lines" />
                 <MenuFlyoutSeparator />

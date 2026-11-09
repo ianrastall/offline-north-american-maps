@@ -120,6 +120,13 @@ def main():
     lines.append(f"pub static ALL: [Region; {len(names)}] = [")
     lines += [f"    {n}," for n in names]
     lines += ["];", ""]
+    # The same list for the overlay build (tools/layers), with outline boxes.
+    listing = [
+        {"id": code, "name": name, "slug": slug, "bbox": [round(v, 5) for v in box]}
+        for name, slug, code, box in regions
+    ]
+    (Path(__file__).resolve().parent / "layers" / "regions.json").write_text(
+        json.dumps(listing, indent=1) + "\n", encoding="utf-8", newline="\n")
     out = Path(__file__).resolve().parent.parent / "crates/offline-maps-core/src/regions_data.rs"
     out.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(f"{len(names)} regions -> {out}")

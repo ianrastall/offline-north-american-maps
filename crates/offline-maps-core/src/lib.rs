@@ -6,6 +6,7 @@ pub mod mbtiles;
 pub mod merge;
 pub mod mvt;
 pub mod osm_pbf;
+pub mod overlays;
 pub mod package;
 pub mod places;
 pub mod pmtiles;

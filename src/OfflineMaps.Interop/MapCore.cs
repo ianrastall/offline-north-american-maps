@@ -43,7 +43,7 @@ public sealed class MapCore : IDisposable
     }
 
     /// <summary>Opens the store in <paramref name="storeDirectory"/> (created if missing).</summary>
-    public static unsafe MapCore Open(string storeDirectory, string? packageUrl = null, string? extrasUrl = null)
+    public static unsafe MapCore Open(string storeDirectory, string? packageUrl = null, string? extrasUrl = null, string? overlaysUrl = null)
     {
         EnsureCompatible();
         byte[] config = new Config
@@ -51,6 +51,7 @@ public sealed class MapCore : IDisposable
             StoreDirectory = storeDirectory,
             PackageUrl = packageUrl ?? "",
             ExtrasUrl = extrasUrl ?? "",
+            OverlaysUrl = overlaysUrl ?? "",
         }.ToByteArray();
         NativeStatus status;
         CoreSafeHandle handle;
@@ -142,6 +143,16 @@ public sealed class MapCore : IDisposable
             return [];
         }
         return Call(new Request { GetTerrainTile = new GetTerrainTile { Z = (uint)z, X = (uint)x, Y = (uint)y } }).TerrainTile.Data.ToByteArray();
+    }
+
+    /// <summary>A decompressed overlay vector tile (flood zones, public lands), or an empty array.</summary>
+    public byte[] OverlayTile(int z, int x, int y)
+    {
+        if (z < 0 || x < 0 || y < 0)
+        {
+            return [];
+        }
+        return Call(new Request { GetOverlayTile = new GetOverlayTile { Z = (uint)z, X = (uint)x, Y = (uint)y } }).OverlayTile.Data.ToByteArray();
     }
 
     /// <summary>The regions that can be downloaded, by name.</summary>

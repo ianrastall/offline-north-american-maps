@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using OfflineMaps.Interop.Messages;
 using Windows.Graphics;
@@ -102,10 +103,11 @@ public sealed partial class RegionsWindow : Window
             {
                 UpdateTarget.Map => $"Map: {_main.ProgressText}",
                 UpdateTarget.Terrain => $"Terrain: {_main.ProgressText}",
+                UpdateTarget.Overlays => $"Flood zones and public lands: {_main.ProgressText}",
                 _ => $"Stations and addresses: {_main.ProgressText}",
             });
         }
-        else if (_main.IsQueued(item.Id, UpdateTarget.Map) || _main.IsQueued(item.Id, UpdateTarget.Extras) || _main.IsQueued(item.Id, UpdateTarget.Terrain))
+        else if (_main.IsQueued(item.Id, UpdateTarget.Map) || _main.IsQueued(item.Id, UpdateTarget.Extras) || _main.IsQueued(item.Id, UpdateTarget.Terrain) || _main.IsQueued(item.Id, UpdateTarget.Overlays))
         {
             parts.Add("Queued");
         }
@@ -117,6 +119,10 @@ public sealed partial class RegionsWindow : Window
             if (installed.Terrain is not null)
             {
                 parts.Add("terrain");
+            }
+            if (installed.Overlays is not null)
+            {
+                parts.Add("flood zones and public lands");
             }
         }
         else if (installed is { Problem.Length: > 0 })
@@ -195,6 +201,8 @@ public sealed partial class RegionsWindow : Window
         bool extrasQueued = _main.IsQueued(item.Id, UpdateTarget.Extras) || _main.CurrentJob == new MainWindow.Job(item.Id, UpdateTarget.Extras);
         bool terrainQueued = _main.IsQueued(item.Id, UpdateTarget.Terrain) || _main.CurrentJob == new MainWindow.Job(item.Id, UpdateTarget.Terrain);
         bool hasTerrain = installed?.Terrain is not null;
+        bool overlaysQueued = _main.IsQueued(item.Id, UpdateTarget.Overlays) || _main.CurrentJob == new MainWindow.Job(item.Id, UpdateTarget.Overlays);
+        bool hasOverlays = installed?.Overlays is not null;
         DetailHeading.Text = r.Name;
         var lines = new List<string>();
         if (installed?.Map is { } map)
@@ -218,6 +226,14 @@ public sealed partial class RegionsWindow : Window
         {
             lines.Add($"Stations and addresses: not installed. Read from a {Format.Megabytes(r.ExtrasBytes)} download; only what is read from it is kept.");
         }
+        if (installed?.Overlays is { } overlays)
+        {
+            lines.Add($"Flood zones and public lands: {Format.Megabytes(overlays.Bytes)}; flood data effective {overlays.FloodEffective}, {overlays.PublicLands}. Shown with View > Flood zones and View > Public lands.");
+        }
+        else
+        {
+            lines.Add("Flood zones and public lands: not installed. FEMA flood hazard zones and USGS public lands, prepared for Offline US Maps and published with its releases.");
+        }
         if (installed?.Terrain is { } terrain)
         {
             lines.Add($"Terrain: downloaded {Format.Date(terrain.DownloadedAt)}, {Format.Megabytes(terrain.Bytes)}. Shown as shading and contour lines (View menu).");
@@ -230,22 +246,36 @@ public sealed partial class RegionsWindow : Window
         {
             lines.Add(installed.Problem);
         }
-        if (item.Caption.StartsWith("Map:", StringComparison.Ordinal) || item.Caption.StartsWith("Stations", StringComparison.Ordinal) || item.Caption.StartsWith("Terrain:", StringComparison.Ordinal) || item.Caption.StartsWith("Queued", StringComparison.Ordinal))
+        if (item.Caption.StartsWith("Map:", StringComparison.Ordinal) || item.Caption.StartsWith("Stations", StringComparison.Ordinal) || item.Caption.StartsWith("Terrain:", StringComparison.Ordinal) || item.Caption.StartsWith("Flood", StringComparison.Ordinal) || item.Caption.StartsWith("Queued", StringComparison.Ordinal))
         {
             lines.Add(item.Caption.Split(" · ")[0] + ".");
         }
         DetailText.Text = string.Join(Environment.NewLine + Environment.NewLine, lines);
         Commands.Visibility = Visibility.Visible;
-        MapButton.Content = hasMap ? "Update map" : "Download map";
+        Label(MapButton, hasMap ? "Update map" : "Download map");
         MapButton.IsEnabled = !mapQueued;
-        ExtrasButton.Content = hasExtras ? "Update stations and addresses" : "Download stations and addresses";
+        Label(ExtrasButton, hasExtras ? "Update stations and addresses" : "Download stations and addresses");
         ExtrasButton.IsEnabled = (hasMap || mapQueued) && !extrasQueued;
-        TerrainButton.Content = hasTerrain ? "Update terrain" : "Download terrain";
-        TerrainButton.IsEnabled = (hasMap || mapQueued) && !terrainQueued;
-        RemoveButton.Content = $"Remove {r.Name}…";
+        Label(OverlaysButton, hasOverlays ? "Update flood zones and public lands" : "Download flood zones and public lands");
+        OverlaysButton.IsEnabled = !overlaysQueued;
+        Label(TerrainButton, hasTerrain ? "Update terrain" : "Download terrain");
+        TerrainButton.IsEnabled = (hasMap || mapQueued) && !terrainQueued && !overlaysQueued;
+        Label(RemoveButton, $"Remove {r.Name}…");
         RemoveButton.Visibility = installed is null ? Visibility.Collapsed : Visibility.Visible;
         RemoveButton.IsEnabled = !busy && !mapQueued && !extrasQueued && !terrainQueued;
         SourceText.Text = $"Map, stations and addresses from Geofabrik ({r.SourcePage}); map data © OpenStreetMap contributors (ODbL). Terrain from Mapterhorn (download.mapterhorn.com): USGS 3DEP and Copernicus GLO-30. Sizes are as of November 2026.";
+    }
+
+    /// <summary>Sets a command's name as text that wraps in the narrow pane instead of being cut off.</summary>
+    private static void Label(Button button, string text)
+    {
+        AutomationProperties.SetName(button, text);
+        if (button.Content is TextBlock { } block)
+        {
+            block.Text = text;
+            return;
+        }
+        button.Content = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
     }
 
     private void MapButton_Click(object sender, RoutedEventArgs e)
@@ -261,6 +291,14 @@ public sealed partial class RegionsWindow : Window
         if (RegionList.SelectedItem is RegionItem item)
         {
             _main.Enqueue(item.Id, UpdateTarget.Extras);
+        }
+    }
+
+    private void OverlaysButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (RegionList.SelectedItem is RegionItem item)
+        {
+            _main.Enqueue(item.Id, UpdateTarget.Overlays);
         }
     }
 

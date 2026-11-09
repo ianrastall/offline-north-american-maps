@@ -101,6 +101,7 @@ public sealed partial class MainWindow
         string path = Uri.UnescapeDataString(new Uri(uri).AbsolutePath);
         bool tile = path.StartsWith("/tiles/", StringComparison.Ordinal);
         bool terrain = path.StartsWith("/terrain/", StringComparison.Ordinal);
+        bool overlay = path.StartsWith("/overlays/", StringComparison.Ordinal);
         bool stations = path == "/extras/stations.geojson";
         var deferral = e.GetDeferral();
         try
@@ -109,7 +110,7 @@ public sealed partial class MainWindow
             byte[] body;
             string type;
             int status = 200;
-            if (!tile && !stations && !terrain)
+            if (!tile && !stations && !terrain && !overlay)
             {
                 (body, type, status) = await Task.Run(() => ReadWebFile(path));
             }
@@ -123,6 +124,14 @@ public sealed partial class MainWindow
                 string[] parts = path["/tiles/".Length..].Replace(".pbf", "", StringComparison.Ordinal).Split('/');
                 body = parts.Length == 3 && int.TryParse(parts[0], out int z) && int.TryParse(parts[1], out int x) && int.TryParse(parts[2], out int y)
                     ? await Task.Run(() => core.Tile(z, x, y))
+                    : [];
+                type = "application/x-protobuf";
+            }
+            else if (overlay)
+            {
+                string[] parts = path["/overlays/".Length..].Replace(".pbf", "", StringComparison.Ordinal).Split('/');
+                body = parts.Length == 3 && int.TryParse(parts[0], out int z) && int.TryParse(parts[1], out int x) && int.TryParse(parts[2], out int y)
+                    ? await Task.Run(() => core.OverlayTile(z, x, y))
                     : [];
                 type = "application/x-protobuf";
             }
@@ -159,7 +168,7 @@ public sealed partial class MainWindow
                     writer.DetachStream();
                 }
                 stream.Seek(0);
-                string cache = tile || stations || terrain ? "no-store" : "no-cache";
+                string cache = tile || stations || terrain || overlay ? "no-store" : "no-cache";
                 e.Response = _environment!.CreateWebResourceResponse(stream, 200, "OK", $"Content-Type: {type}\r\nCache-Control: {cache}");
             }
         }
@@ -299,6 +308,11 @@ public sealed partial class MainWindow
                 ? new JsonObject { ["bounds"] = new JsonObject { ["west"] = t.West, ["south"] = t.South, ["east"] = t.East, ["north"] = t.North } }
                 : null,
             ["outdoor"] = _settings.OutdoorPlaces,
+            ["overlays"] = status.OverlayCoverage is { } o
+                ? new JsonObject { ["bounds"] = new JsonObject { ["west"] = o.West, ["south"] = o.South, ["east"] = o.East, ["north"] = o.North } }
+                : null,
+            ["flood"] = _settings.FloodZones,
+            ["lands"] = _settings.PublicLands,
             ["shading"] = _settings.TerrainShading,
             ["contours"] = _settings.ContourLines,
         };

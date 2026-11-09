@@ -84,7 +84,7 @@ public sealed partial class MainWindow : Window
         _placed = true;
         try
         {
-            _core = await Task.Run(() => MapCore.Open(AppPaths.StoreDir, AppPaths.PackageUrl, AppPaths.ExtrasUrl));
+            _core = await Task.Run(() => MapCore.Open(AppPaths.StoreDir, AppPaths.PackageUrl, AppPaths.ExtrasUrl, AppPaths.OverlaysUrl));
         }
         catch (MapCoreException ex)
         {
@@ -201,6 +201,11 @@ public sealed partial class MainWindow : Window
         OutdoorItem.IsChecked = _settings.OutdoorPlaces;
         UpdateAllItem.IsEnabled = !busy && hasMap;
         MapInfoItem.IsEnabled = hasMap;
+        bool hasOverlays = status.OverlayCoverage is not null;
+        FloodItem.IsEnabled = hasOverlays;
+        LandsItem.IsEnabled = hasOverlays;
+        FloodItem.IsChecked = _settings.FloodZones;
+        LandsItem.IsChecked = _settings.PublicLands;
         bool hasTerrain = status.TerrainCoverage is not null;
         ShadingItem.IsEnabled = hasTerrain;
         ContoursItem.IsEnabled = hasTerrain;
@@ -357,6 +362,19 @@ public sealed partial class MainWindow : Window
         Post(new System.Text.Json.Nodes.JsonObject { ["kind"] = "outdoor", ["visible"] = _settings.OutdoorPlaces });
     }
 
+    private void Overlays_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.FloodZones = FloodItem.IsChecked;
+        _settings.PublicLands = LandsItem.IsChecked;
+        _settings.Save();
+        Post(new System.Text.Json.Nodes.JsonObject
+        {
+            ["kind"] = "overlays",
+            ["flood"] = _settings.FloodZones,
+            ["lands"] = _settings.PublicLands,
+        });
+    }
+
     private void Terrain_Click(object sender, RoutedEventArgs e)
     {
         _settings.TerrainShading = ShadingItem.IsChecked;
@@ -427,6 +445,9 @@ public sealed partial class MainWindow : Window
                 ? $"Stations and addresses: data of {Format.Date(extras.DataDate)}, downloaded {Format.Date(extras.DownloadedAt)}: {extras.Fuel:N0} fuel stations, {extras.Charging:N0} charging stations, {extras.Addresses:N0} addresses"
                     + (extras.Outdoor ? $", {extras.Shelters:N0} shelters, {extras.DrinkingWater:N0} drinking water points, {extras.Campgrounds:N0} campgrounds, {extras.Toilets:N0} toilets" : "; outdoor places not installed (update to add them)")
                 : "Stations and addresses: not installed");
+            lines.Add(region.Overlays is { } overlays
+                ? $"Flood zones and public lands: {Format.Megabytes(overlays.Bytes)}, downloaded {Format.Date(overlays.DownloadedAt)}; flood data {overlays.FloodProduct} (effective {overlays.FloodEffective}); {overlays.PublicLands}"
+                : "Flood zones and public lands: not installed");
             lines.Add(region.Terrain is { } terrain
                 ? $"Terrain: downloaded {Format.Date(terrain.DownloadedAt)}, {Format.Megabytes(terrain.Bytes)}, {terrain.Tiles:N0} tiles to zoom {terrain.MaxZoom}"
                 : "Terrain: not installed");
@@ -438,7 +459,13 @@ public sealed partial class MainWindow : Window
         }
         Row("Map folder", status.StoreDirectory);
         Row("Attribution", "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL). Map package and extracts by Geofabrik."
+            + (status.OverlayCoverage is null ? "" : " Flood zones from the FEMA National Flood Hazard Layer and public lands from the USGS Protected Areas Database (PAD-US), both public domain.")
             + (status.TerrainCoverage is null ? "" : " Terrain from Mapterhorn (mapterhorn.com/attribution): USGS 3D Elevation Program (public domain) and Copernicus GLO-30, © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA."));
+        if (status.OverlayCoverage is not null)
+        {
+            Row("Flood zones", "Dark blue: floodway. Blue: 1% annual chance (the \"100-year\" special flood hazard area). Light blue: 0.2% annual chance, or 1% with depths under a foot. Grey-blue: reduced risk behind a levee.");
+            Row("Public lands", "Green: open to the public. Amber: restricted (permit or season). Grey: closed. Pale: access unknown. Access rules change; check with the manager before relying on them.");
+        }
         panel.Children.Add(Text("Offline maps show roads as mapped on the data date. They do not show current closures, detours, traffic or emergency conditions.", "JupiterCaptionTextStyle"));
         await ShowDialogAsync(new ContentDialog
         {

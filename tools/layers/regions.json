@@ -1,0 +1,574 @@
+[
+ {
+  "id": "us-al",
+  "name": "Alabama",
+  "slug": "alabama",
+  "bbox": [
+   -88.48389,
+   29.95494,
+   -84.88336,
+   35.00872
+  ]
+ },
+ {
+  "id": "us-az",
+  "name": "Arizona",
+  "slug": "arizona",
+  "bbox": [
+   -114.8224,
+   31.32659,
+   -109.0437,
+   37.00596
+  ]
+ },
+ {
+  "id": "us-ar",
+  "name": "Arkansas",
+  "slug": "arkansas",
+  "bbox": [
+   -94.62217,
+   33.0038,
+   -89.63987,
+   36.51585
+  ]
+ },
+ {
+  "id": "us-ca",
+  "name": "California",
+  "slug": "california",
+  "bbox": [
+   -125.8935,
+   32.48171,
+   -114.1291,
+   42.01618
+  ]
+ },
+ {
+  "id": "us-co",
+  "name": "Colorado",
+  "slug": "colorado",
+  "bbox": [
+   -109.0631,
+   36.98943,
+   -102.0355,
+   41.00388
+  ]
+ },
+ {
+  "id": "us-ct",
+  "name": "Connecticut",
+  "slug": "connecticut",
+  "bbox": [
+   -73.72889,
+   40.96401,
+   -71.7853,
+   42.05229
+  ]
+ },
+ {
+  "id": "us-de",
+  "name": "Delaware",
+  "slug": "delaware",
+  "bbox": [
+   -75.78974,
+   38.45043,
+   -74.98401,
+   39.84262
+  ]
+ },
+ {
+  "id": "us-dc",
+  "name": "District of Columbia",
+  "slug": "district-of-columbia",
+  "bbox": [
+   -77.1201,
+   38.79099,
+   -76.90906,
+   38.99603
+  ]
+ },
+ {
+  "id": "us-fl",
+  "name": "Florida",
+  "slug": "florida",
+  "bbox": [
+   -88.46896,
+   24.20031,
+   -79.43702,
+   31.00307
+  ]
+ },
+ {
+  "id": "us-ga",
+  "name": "Georgia",
+  "slug": "georgia",
+  "bbox": [
+   -85.6068,
+   30.35365,
+   -80.74313,
+   35.00356
+  ]
+ },
+ {
+  "id": "us-hi",
+  "name": "Hawaii",
+  "slug": "hawaii",
+  "bbox": [
+   -179.5994,
+   15.92097,
+   -142.6511,
+   29.02109
+  ]
+ },
+ {
+  "id": "us-id",
+  "name": "Idaho",
+  "slug": "idaho",
+  "bbox": [
+   -117.246,
+   41.98306,
+   -111.0431,
+   49.00819
+  ]
+ },
+ {
+  "id": "us-il",
+  "name": "Illinois",
+  "slug": "illinois",
+  "bbox": [
+   -91.51608,
+   36.96731,
+   -87.49264,
+   42.50941
+  ]
+ },
+ {
+  "id": "us-in",
+  "name": "Indiana",
+  "slug": "indiana",
+  "bbox": [
+   -88.10327,
+   37.76911,
+   -84.78042,
+   41.76301
+  ]
+ },
+ {
+  "id": "us-ia",
+  "name": "Iowa",
+  "slug": "iowa",
+  "bbox": [
+   -96.6426,
+   40.37266,
+   -90.13581,
+   43.50182
+  ]
+ },
+ {
+  "id": "us-ks",
+  "name": "Kansas",
+  "slug": "kansas",
+  "bbox": [
+   -102.0535,
+   36.99136,
+   -94.58926,
+   40.00375
+  ]
+ },
+ {
+  "id": "us-ky",
+  "name": "Kentucky",
+  "slug": "kentucky",
+  "bbox": [
+   -89.58125,
+   36.49325,
+   -81.95512,
+   39.14831
+  ]
+ },
+ {
+  "id": "us-la",
+  "name": "Louisiana",
+  "slug": "louisiana",
+  "bbox": [
+   -94.04376,
+   28.14452,
+   -88.66684,
+   33.02025
+  ]
+ },
+ {
+  "id": "us-me",
+  "name": "Maine",
+  "slug": "maine",
+  "bbox": [
+   -71.08891,
+   42.85443,
+   -66.87164,
+   47.46222
+  ]
+ },
+ {
+  "id": "us-md",
+  "name": "Maryland",
+  "slug": "maryland",
+  "bbox": [
+   -79.48857,
+   37.88396,
+   -74.95408,
+   39.72684
+  ]
+ },
+ {
+  "id": "us-ma",
+  "name": "Massachusetts",
+  "slug": "massachusetts",
+  "bbox": [
+   -73.51096,
+   40.88291,
+   -68.73438,
+   42.88768
+  ]
+ },
+ {
+  "id": "us-mi",
+  "name": "Michigan",
+  "slug": "michigan",
+  "bbox": [
+   -90.41981,
+   41.69439,
+   -82.06913,
+   48.35021
+  ]
+ },
+ {
+  "id": "us-mn",
+  "name": "Minnesota",
+  "slug": "minnesota",
+  "bbox": [
+   -97.24987,
+   43.49909,
+   -89.48612,
+   49.40714
+  ]
+ },
+ {
+  "id": "us-ms",
+  "name": "Mississippi",
+  "slug": "mississippi",
+  "bbox": [
+   -91.65857,
+   30.04168,
+   -88.09292,
+   35.00055
+  ]
+ },
+ {
+  "id": "us-mo",
+  "name": "Missouri",
+  "slug": "missouri",
+  "bbox": [
+   -95.77751,
+   35.99466,
+   -89.0891,
+   40.61664
+  ]
+ },
+ {
+  "id": "us-mt",
+  "name": "Montana",
+  "slug": "montana",
+  "bbox": [
+   -116.0518,
+   44.35556,
+   -104.0355,
+   49.00769
+  ]
+ },
+ {
+  "id": "us-ne",
+  "name": "Nebraska",
+  "slug": "nebraska",
+  "bbox": [
+   -104.0575,
+   40.00015,
+   -95.30703,
+   43.00172
+  ]
+ },
+ {
+  "id": "us-nv",
+  "name": "Nevada",
+  "slug": "nevada",
+  "bbox": [
+   -120.0074,
+   35.00053,
+   -114.0379,
+   42.00391
+  ]
+ },
+ {
+  "id": "us-nh",
+  "name": "New Hampshire",
+  "slug": "new-hampshire",
+  "bbox": [
+   -72.5588,
+   42.69669,
+   -70.48692,
+   45.31002
+  ]
+ },
+ {
+  "id": "us-nj",
+  "name": "New Jersey",
+  "slug": "new-jersey",
+  "bbox": [
+   -75.57879,
+   38.75433,
+   -73.67898,
+   41.35807
+  ]
+ },
+ {
+  "id": "us-nm",
+  "name": "New Mexico",
+  "slug": "new-mexico",
+  "bbox": [
+   -109.0504,
+   31.33043,
+   -102.9979,
+   37.00184
+  ]
+ },
+ {
+  "id": "us-ny",
+  "name": "New York",
+  "slug": "new-york",
+  "bbox": [
+   -79.76483,
+   40.43922,
+   -71.6608,
+   45.01766
+  ]
+ },
+ {
+  "id": "us-nc",
+  "name": "North Carolina",
+  "slug": "north-carolina",
+  "bbox": [
+   -84.32219,
+   33.12992,
+   -73.7396,
+   36.58979
+  ]
+ },
+ {
+  "id": "us-nd",
+  "name": "North Dakota",
+  "slug": "north-dakota",
+  "bbox": [
+   -104.053,
+   45.93448,
+   -96.55292,
+   49.01671
+  ]
+ },
+ {
+  "id": "us-oh",
+  "name": "Ohio",
+  "slug": "ohio",
+  "bbox": [
+   -84.8219,
+   38.40076,
+   -80.50521,
+   42.33584
+  ]
+ },
+ {
+  "id": "us-ok",
+  "name": "Oklahoma",
+  "slug": "oklahoma",
+  "bbox": [
+   -103.0078,
+   33.61348,
+   -94.42989,
+   37.00529
+  ]
+ },
+ {
+  "id": "us-or",
+  "name": "Oregon",
+  "slug": "oregon",
+  "bbox": [
+   -126.3879,
+   41.9634,
+   -116.4545,
+   46.30349
+  ]
+ },
+ {
+  "id": "us-pa",
+  "name": "Pennsylvania",
+  "slug": "pennsylvania",
+  "bbox": [
+   -80.52275,
+   39.6644,
+   -74.68761,
+   42.51649
+  ]
+ },
+ {
+  "id": "us-pr",
+  "name": "Puerto Rico",
+  "slug": "puerto-rico",
+  "bbox": [
+   -68.31024,
+   17.51573,
+   -65.09262,
+   18.81272
+  ]
+ },
+ {
+  "id": "us-ri",
+  "name": "Rhode Island",
+  "slug": "rhode-island",
+  "bbox": [
+   -71.91456,
+   40.9992,
+   -71.06369,
+   42.01938
+  ]
+ },
+ {
+  "id": "us-sc",
+  "name": "South Carolina",
+  "slug": "south-carolina",
+  "bbox": [
+   -83.35622,
+   32.02967,
+   -78.51867,
+   35.2184
+  ]
+ },
+ {
+  "id": "us-sd",
+  "name": "South Dakota",
+  "slug": "south-dakota",
+  "bbox": [
+   -104.0588,
+   42.47744,
+   -96.43595,
+   45.94831
+  ]
+ },
+ {
+  "id": "us-tn",
+  "name": "Tennessee",
+  "slug": "tennessee",
+  "bbox": [
+   -90.31329,
+   34.98269,
+   -81.64416,
+   36.68075
+  ]
+ },
+ {
+  "id": "us-tx",
+  "name": "Texas",
+  "slug": "texas",
+  "bbox": [
+   -106.6494,
+   25.69551,
+   -93.01897,
+   36.52145
+  ]
+ },
+ {
+  "id": "us-vi",
+  "name": "US Virgin Islands",
+  "slug": "us-virgin-islands",
+  "bbox": [
+   -65.17502,
+   17.28246,
+   -63.95554,
+   18.48596
+  ]
+ },
+ {
+  "id": "us-ut",
+  "name": "Utah",
+  "slug": "utah",
+  "bbox": [
+   -114.0556,
+   36.9963,
+   -109.0394,
+   42.00323
+  ]
+ },
+ {
+  "id": "us-vt",
+  "name": "Vermont",
+  "slug": "vermont",
+  "bbox": [
+   -73.43943,
+   42.72498,
+   -71.46476,
+   45.02309
+  ]
+ },
+ {
+  "id": "us-va",
+  "name": "Virginia",
+  "slug": "virginia",
+  "bbox": [
+   -83.67841,
+   36.53798,
+   -74.29751,
+   39.46901
+  ]
+ },
+ {
+  "id": "us-wa",
+  "name": "Washington",
+  "slug": "washington",
+  "bbox": [
+   -126.7423,
+   45.53882,
+   -116.9115,
+   49.00708
+  ]
+ },
+ {
+  "id": "us-wv",
+  "name": "West Virginia",
+  "slug": "west-virginia",
+  "bbox": [
+   -82.64965,
+   37.19858,
+   -77.7141,
+   40.64636
+  ]
+ },
+ {
+  "id": "us-wi",
+  "name": "Wisconsin",
+  "slug": "wisconsin",
+  "bbox": [
+   -92.89089,
+   42.48899,
+   -86.20021,
+   47.41451
+  ]
+ },
+ {
+  "id": "us-wy",
+  "name": "Wyoming",
+  "slug": "wyoming",
+  "bbox": [
+   -111.0576,
+   40.98339,
+   -103.9413,
+   45.01216
+  ]
+ }
+]

@@ -21,6 +21,9 @@ message Config {
   string extras_url = 3;
   // Override of the terrain archive's address, for testing; empty uses Mapterhorn.
   string terrain_url = 4;
+  // Override of where overlay files are published (files are
+  // <base>/<region>-overlays.mbtiles), for testing; empty uses the GitHub releases.
+  string overlays_url = 5;
 }
 
 message Position {
@@ -43,6 +46,7 @@ message Request {
     RemoveRegion remove_region = 11;
     GetCatalog get_catalog = 12;
     GetTerrainTile get_terrain_tile = 13;
+    GetOverlayTile get_overlay_tile = 14;
   }
 }
 
@@ -80,6 +84,8 @@ enum UpdateTarget {
   UPDATE_TARGET_EXTRAS = 2;
   // Terrain tiles for the region's map area (needs the map installed).
   UPDATE_TARGET_TERRAIN = 3;
+  // Flood zones and public lands, prebuilt and published with the app's releases.
+  UPDATE_TARGET_OVERLAYS = 4;
 }
 
 // Downloads or updates one region's map or extras. Long-running: progress is
@@ -97,6 +103,14 @@ message RemoveRegion {
 
 // The regions that can be downloaded.
 message GetCatalog {}
+
+// An overlay tile (XYZ numbering): a decompressed vector tile with layers
+// flood_zones, public_lands and public_land_labels, merged across regions.
+message GetOverlayTile {
+  uint32 z = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+}
 
 // A terrain tile (XYZ numbering): Terrarium-encoded elevation as a 512-pixel WebP.
 message GetTerrainTile {
@@ -144,7 +158,13 @@ message Response {
     Stations stations = 7;
     Catalog catalog = 8;
     TerrainTile terrain_tile = 9;
+    OverlayTile overlay_tile = 10;
   }
+}
+
+message OverlayTile {
+  // Empty when no installed overlays have the tile.
+  bytes data = 1;
 }
 
 message TerrainTile {
@@ -223,6 +243,21 @@ message RegionStatus {
   string problem = 6;
   // Absent when its terrain is not installed.
   TerrainInfo terrain = 7;
+  // Absent when its flood zones and public lands are not installed.
+  OverlayInfo overlays = 8;
+}
+
+message OverlayInfo {
+  string version = 1;
+  string downloaded_at = 2;
+  uint64 bytes = 3;
+  // FEMA's flood product (e.g. NFHL_17_20261027) and its effective date.
+  string flood_product = 4;
+  string flood_effective = 5;
+  // e.g. "USGS PAD-US 4.1".
+  string public_lands = 6;
+  // When the file was built (RFC 3339).
+  string built_at = 7;
 }
 
 message TerrainInfo {
@@ -271,6 +306,8 @@ message Status {
   string content_version = 14;
   // The box around all installed terrain; absent when none is installed.
   Bounds terrain_coverage = 15;
+  // The box around all installed overlays; absent when none are installed.
+  Bounds overlay_coverage = 16;
 }
 
 message SearchResult {

@@ -284,6 +284,19 @@ Completed 8 November 2026. The first of three layers Ian approved (outdoor place
 
 Verified in the installed app (upgraded from 0.3.1): the offer named Illinois and Indiana; the update rebuilt both in about 70 seconds (Illinois 3,363 shelters, 951 drinking water, 516 campgrounds, 1,861 toilets; Indiana 1,635, 288, 407, 848). Searching "campground" and "shelter" listed nearby places with their towns; around Lincoln Park Zoo the map showed toilets, drinking water and shelters with labels at zoom 15. Found here and fixed before release: the offer's button said "Download" for regions that only needed an update. Park names are not searchable: Shortbread tiles carry no names for land areas.
 
+## 0.5.0: flood zones and public lands
+
+Completed 8 November 2026. Ian chose prebuilt overlay files published on GitHub over converting government files on each computer.
+
+- **Sources checked.** FEMA's Map Service Center answered a search and served the Illinois state file to a plainly named client (no browser imitation). ScienceBase, the bulk PAD-US host, redirected file downloads to a sign-in page (its download page forces a Keycloak login, and its signed-link API refuses anonymous requests), so PAD-US comes from the public USGS feature service instead.
+- **Build tool.** `tools/layers/build_overlays.py` and `overlays.yml`; see [sources](sources-and-architecture.md#flood-zones-and-public-lands-050). Illinois: 70 MB, 43,361 tiles.
+- **Core and app.** `overlays.rs` downloads (resumably, through the shared staging download), checks the layers and region, records the sources stamped in the file and installs; the service serves and merges overlay tiles; the Regions window has Download or Update flood zones and public lands; View > Flood zones and View > Public lands; Map information has a colour key and the sources. `OFFLINE_MAPS_OVERLAYS_URL` points the app at another server for testing.
+- **Tests.** Overlay install, up-to-date check, replacement and pruning, and refusal of a file without the overlay layers; empty overlay tile through the ABI. 69 core, 2 HTTP and 6 ABI tests (Rust) and 9 interop tests (C#) pass.
+
+Verified in the installed app, downloading from a local server holding the Illinois file: Regions showed the download's progress and then "Flood zones and public lands: 70 MB; flood data effective 07/21/2026, USGS PAD-US 4.1". At Havana the Illinois River floodplain was shaded as flood zones, Emiquon National Wildlife Refuge and the Illinois River Floodplain Complex showed as public land with labels, and the map credited FEMA and USGS. Fixed after this check (the build data confirms the labels; the map was not looked at again because Ian was using the computer): labels without PAD-US's "Fee" suffix and none for easements, lighter flood shading, a shorter credit, wrapping command names in the Regions pane, and a terrain decoding message that filled the log where no region's terrain covers a tile.
+
+Not yet done: overlay files for the other 51 regions, and the `overlays` release on GitHub, which the app's default address points to (`https://github.com/ianrastall/offline-us-maps/releases/download/overlays/<region>-overlays.mbtiles`). Until it exists, the download fails with a network error.
+
 ## Next stages
 
 1. Download the Illinois map and the stations and addresses from Geofabrik in the installed app, then launch with networking disabled and verify map rendering, labels, search, stations, addresses and saved places from a clean process. This is the decisive first-workflow acceptance test.
@@ -291,5 +304,5 @@ Verified in the installed app (upgraded from 0.3.1): the offer named Illinois an
 3. Choose the app's license and add it to the installer and About.
 4. Install on a clean Windows 11 machine.
 5. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
-6. Flood zones (FEMA National Flood Hazard Layer) and public lands (PAD-US): both public domain, both distributed as GIS files (shapefiles; Esri geodatabase or KMZ) that need converting into map tiles.
+6. Build the overlay files for all regions (FEMA state files from tens of MB to over 1 GB each).
 7. Publish as Offline US Maps under The Unlicense, with Jupiter.UI (see the [project brief](project-brief.md#publication-decided-8-november-2026)).

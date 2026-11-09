@@ -155,6 +155,9 @@ fn dispatch(service: &Service, request: pb::Request) -> pb::Response {
         Some(Command::GetTerrainTile(tile)) => {
             service.terrain_tile(&tile).map(|t| Some(R::TerrainTile(t)))
         }
+        Some(Command::GetOverlayTile(tile)) => {
+            service.overlay_tile(&tile).map(|t| Some(R::OverlayTile(t)))
+        }
     };
     match result {
         Ok(result) => pb::Response {

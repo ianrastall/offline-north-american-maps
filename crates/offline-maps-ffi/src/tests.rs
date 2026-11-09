@@ -96,6 +96,19 @@ fn empty_store_reports_no_map_and_refuses_search() {
         Some(pb::response::Result::TerrainTile(t)) => assert!(t.data.is_empty()),
         other => panic!("{other:?}"),
     }
+    let overlay = call(
+        core,
+        15,
+        pb::request::Command::GetOverlayTile(pb::GetOverlayTile {
+            z: 10,
+            x: 262,
+            y: 389,
+        }),
+    );
+    match overlay.result {
+        Some(pb::response::Result::OverlayTile(t)) => assert!(t.data.is_empty()),
+        other => panic!("{other:?}"),
+    }
     let terrain = call(
         core,
         14,

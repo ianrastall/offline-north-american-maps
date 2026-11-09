@@ -19,6 +19,10 @@ use offline_maps_core::extras::{
 use offline_maps_core::mbtiles::{Bounds, TileEncoding, TilePackage};
 use offline_maps_core::merge::merge_tiles;
 use offline_maps_core::mvt::tile_point_to_lon_lat;
+use offline_maps_core::overlays::{
+    ActiveOverlays, OVERLAYS_BASE, OverlaysOutcome, active_overlays, overlays_url, prune_overlays,
+    update_overlays,
+};
 use offline_maps_core::package::{ILLINOIS, Region};
 use offline_maps_core::places::{PlacesError, SavedPlace, SavedPlaces};
 use offline_maps_core::regions;
@@ -64,6 +68,8 @@ struct Slot {
     extras: Option<ActiveExtras>,
     terrain: Option<ActiveTerrain>,
     terrain_tiles: Mutex<Option<TerrainTiles>>,
+    overlays: Option<ActiveOverlays>,
+    overlay_tiles: Mutex<Option<TilePackage>>,
     problem: String,
 }
 
@@ -78,6 +84,7 @@ pub struct Service {
     package_url: Option<&'static str>,
     extras_url: Option<&'static str>,
     terrain_url: String,
+    overlays_base: String,
     /// Installed regions, in catalog order.
     slots: RwLock<Vec<Arc<Slot>>>,
     places: Mutex<Places>,
@@ -184,9 +191,14 @@ fn open_slot(store: &PackageStore, region: Region) -> Option<Slot> {
     let id = region.id;
     let mut problems = Vec::new();
     let dir = store.region_dir(id);
-    let has_files = ["active.json", "extras/active.json", "terrain/active.json"]
-        .iter()
-        .any(|f| dir.join(f).exists());
+    let has_files = [
+        "active.json",
+        "extras/active.json",
+        "terrain/active.json",
+        "overlays/active.json",
+    ]
+    .iter()
+    .any(|f| dir.join(f).exists());
     if !has_files {
         return None;
     }
@@ -239,6 +251,28 @@ fn open_slot(store: &PackageStore, region: Region) -> Option<Slot> {
                 None
             }
         });
+    let overlays = match active_overlays(store, id) {
+        Ok(overlays) => overlays,
+        Err(e) => {
+            problems.push(format!(
+                "The {} flood zones and public lands could not be read: {e}.",
+                region.name
+            ));
+            None
+        }
+    };
+    let overlay_tiles = overlays
+        .as_ref()
+        .and_then(|o| match TilePackage::open(&o.path) {
+            Ok(tiles) => Some(tiles),
+            Err(e) => {
+                problems.push(format!(
+                    "The {} flood zones and public lands could not be opened: {e}.",
+                    region.name
+                ));
+                None
+            }
+        });
     if let (Some(index), Some(extras)) = (search.as_mut(), extras.as_ref())
         && let Err(e) = index.attach_extras(&extras.path)
     {
@@ -255,6 +289,8 @@ fn open_slot(store: &PackageStore, region: Region) -> Option<Slot> {
         extras,
         terrain: terrain_tiles.is_some().then_some(terrain).flatten(),
         terrain_tiles: Mutex::new(terrain_tiles),
+        overlays: overlay_tiles.is_some().then_some(overlays).flatten(),
+        overlay_tiles: Mutex::new(overlay_tiles),
         problem: problems.join(" "),
     })
 }
@@ -290,6 +326,10 @@ impl Service {
             extras_url: leak(&config.extras_url),
             terrain_url: match config.terrain_url.as_str() {
                 "" => TERRAIN_URL.to_owned(),
+                url => url.to_owned(),
+            },
+            overlays_base: match config.overlays_url.as_str() {
+                "" => OVERLAYS_BASE.to_owned(),
                 url => url.to_owned(),
             },
             slots: RwLock::new(Vec::new()),
@@ -374,6 +414,7 @@ impl Service {
         let mut regions = Vec::new();
         let mut coverage: Option<Bounds> = None;
         let mut terrain_coverage: Option<Bounds> = None;
+        let mut overlay_coverage: Option<Bounds> = None;
         let join = |a: Option<Bounds>, b: Bounds| match a {
             None => b,
             Some(c) => Bounds {
@@ -440,12 +481,26 @@ impl Service {
                     attribution: r.attribution.clone(),
                 }
             });
+            let overlays = slot.overlays.as_ref().map(|o| {
+                let r = &o.record;
+                overlay_coverage = Some(join(overlay_coverage, r.bounds));
+                pb::OverlayInfo {
+                    version: o.version.clone(),
+                    downloaded_at: r.downloaded_at.clone(),
+                    bytes: r.byte_length,
+                    flood_product: r.sources.flood_product.clone(),
+                    flood_effective: r.sources.flood_effective.clone(),
+                    public_lands: r.sources.public_lands.clone(),
+                    built_at: r.sources.built_at.clone(),
+                }
+            });
             versions.push(format!(
-                "{}:{}:{}:{}",
+                "{}:{}:{}:{}:{}",
                 slot.region.id,
                 map.as_ref().map_or("", |m| m.version.as_str()),
                 extras.as_ref().map_or("", |x| x.version.as_str()),
-                terrain.as_ref().map_or("", |t| t.version.as_str())
+                terrain.as_ref().map_or("", |t| t.version.as_str()),
+                overlays.as_ref().map_or("", |o| o.version.as_str())
             ));
             regions.push(pb::RegionStatus {
                 id: slot.region.id.to_owned(),
@@ -454,6 +509,7 @@ impl Service {
                 map,
                 extras,
                 terrain,
+                overlays,
                 problem: slot.problem.clone(),
             });
         }
@@ -485,6 +541,7 @@ impl Service {
             max_zoom,
             content_version: versions.join(";"),
             terrain_coverage: terrain_coverage.map(bounds_message),
+            overlay_coverage: overlay_coverage.map(bounds_message),
             regions,
         }
     }
@@ -631,6 +688,64 @@ impl Service {
         Ok(pb::TerrainTile::default())
     }
 
+    /// The overlay tile at z/x/y, decompressed and merged across regions.
+    pub fn overlay_tile(&self, request: &pb::GetOverlayTile) -> Outcome<pb::OverlayTile> {
+        let (x, y) = (request.x, request.y);
+        let Some(z) = u8::try_from(request.z).ok().filter(|z| *z <= 14) else {
+            return Ok(pb::OverlayTile::default());
+        };
+        let n = 1_u64 << z;
+        if u64::from(x) >= n || u64::from(y) >= n {
+            return Ok(pb::OverlayTile::default());
+        }
+        let (west, north) = tile_point_to_lon_lat(z, x, y, 4096, 0, 0);
+        let (east, south) = tile_point_to_lon_lat(z, x, y, 4096, 4096, 4096);
+        let area = Bounds {
+            west,
+            south,
+            east,
+            north,
+        };
+        let mut found = Vec::new();
+        for slot in self.slots() {
+            if !slot
+                .overlays
+                .as_ref()
+                .is_some_and(|o| overlaps(&o.record.bounds, &area))
+            {
+                continue;
+            }
+            let guard = lock(&slot.overlay_tiles);
+            let Some(tiles) = guard.as_ref() else {
+                continue;
+            };
+            let tile = tiles.tile(z, x, y).map_err(|e| {
+                error(
+                    ErrorKind::InvalidData,
+                    format!("Overlay tile {z}/{x}/{y}: {e}"),
+                )
+            })?;
+            drop(guard);
+            if let Some(tile) = tile {
+                found.push(decompress(z, x, y, tile.encoding, tile.data)?);
+            }
+        }
+        let data = match found.len() {
+            0 => Vec::new(),
+            1 => found.pop().unwrap_or_default(),
+            _ => {
+                let parts: Vec<&[u8]> = found.iter().map(Vec::as_slice).collect();
+                merge_tiles(&parts).map_err(|e| {
+                    error(
+                        ErrorKind::InvalidData,
+                        format!("Overlay tile {z}/{x}/{y} could not be merged: {e}"),
+                    )
+                })?
+            }
+        };
+        Ok(pb::OverlayTile { data })
+    }
+
     pub fn stations(&self) -> Outcome<pb::Stations> {
         let slots = self.slots();
         let paths: Vec<&Path> = slots
@@ -773,6 +888,27 @@ impl Service {
                     replaced: replaced.unwrap_or_default(),
                 },
             }),
+            pb::UpdateTarget::Overlays => update_overlays(
+                &self.store,
+                &region,
+                &overlays_url(&self.overlays_base, id),
+                &transport,
+                &options,
+                &mut |p| self.report(p),
+                &self.cancel,
+            )
+            .map(|outcome| match outcome {
+                OverlaysOutcome::UpToDate(active) => pb::UpdateResult {
+                    up_to_date: true,
+                    version: active.version,
+                    replaced: String::new(),
+                },
+                OverlaysOutcome::Activated { overlays, replaced } => pb::UpdateResult {
+                    up_to_date: false,
+                    version: overlays.version,
+                    replaced: replaced.unwrap_or_default(),
+                },
+            }),
             pb::UpdateTarget::Terrain => {
                 let bounds = self
                     .slots()
@@ -842,6 +978,9 @@ impl Service {
                 }
                 pb::UpdateTarget::Terrain => {
                     prune_terrain(&self.store, id);
+                }
+                pb::UpdateTarget::Overlays => {
+                    prune_overlays(&self.store, id);
                 }
                 _ => {
                     prune_extras(&self.store, id);

@@ -326,6 +326,90 @@ function addOutdoorIcon(id) {
 let outdoor = true;
 const OUTDOOR_LAYERS = Object.keys(OUTDOOR_ICONS);
 
+// Flood zones and public lands (overlay files from the core at
+// overlays/{z}/{x}/{y}.pbf). Map content colors, translucent, under water,
+// roads and labels.
+let overlays = null;
+let flood = true;
+let lands = true;
+const FLOOD_LAYERS = ['flood-fill'];
+const LAND_LAYERS = ['lands-fill', 'lands-line', 'lands-label'];
+const OVERLAY_CREDIT = 'Flood: FEMA · Lands: USGS';
+const LAND_COLORS = ['match', ['get', 'access'], 'open', '#2f9e44', 'restricted', '#d9a400', 'closed', '#868e96', '#adb5bd'];
+const FLOOD_COLORS = ['match', ['get', 'kind'], 'floodway', '#1c4fa0', 'high', '#2f7fd8', 'moderate', '#74b4f0', '#9aa8c8'];
+
+function applyOverlays() {
+  if (!map || !styleReady) return;
+  for (const id of [...FLOOD_LAYERS, ...LAND_LAYERS]) if (map.getLayer(id)) map.removeLayer(id);
+  if (map.getSource('overlays')) map.removeSource('overlays');
+  if (!overlays) return;
+  const b = overlays.bounds;
+  map.addSource('overlays', {
+    type: 'vector',
+    tiles: [absolute('overlays/{z}/{x}/{y}.pbf')],
+    minzoom: 5,
+    maxzoom: 14,
+    bounds: [b.west, b.south, b.east, b.north],
+    attribution: OVERLAY_CREDIT,
+  });
+  const before = map.getLayer(TERRAIN_BEFORE) ? TERRAIN_BEFORE : undefined;
+  const dark = theme === 'dark';
+  map.addLayer({
+    id: 'lands-fill',
+    type: 'fill',
+    source: 'overlays',
+    'source-layer': 'public_lands',
+    layout: { visibility: lands ? 'visible' : 'none' },
+    paint: { 'fill-color': LAND_COLORS, 'fill-opacity': dark ? 0.22 : 0.18 },
+  }, before);
+  map.addLayer({
+    id: 'lands-line',
+    type: 'line',
+    source: 'overlays',
+    'source-layer': 'public_lands',
+    minzoom: 9,
+    layout: { visibility: lands ? 'visible' : 'none' },
+    paint: { 'line-color': LAND_COLORS, 'line-opacity': 0.7, 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 14, 1.5] },
+  }, before);
+  map.addLayer({
+    id: 'flood-fill',
+    type: 'fill',
+    source: 'overlays',
+    'source-layer': 'flood_zones',
+    layout: { visibility: flood ? 'visible' : 'none' },
+    paint: {
+      'fill-color': FLOOD_COLORS,
+      'fill-opacity': ['match', ['get', 'kind'], 'floodway', 0.4, 'high', 0.28, 0.16],
+    },
+  }, before);
+  map.addLayer({
+    id: 'lands-label',
+    type: 'symbol',
+    source: 'overlays',
+    'source-layer': 'public_land_labels',
+    minzoom: 11,
+    layout: {
+      visibility: lands ? 'visible' : 'none',
+      'text-field': ['get', 'name'],
+      'text-font': ['noto_sans_regular'],
+      'text-size': 11,
+      'text-max-width': 8,
+    },
+    paint: {
+      'text-color': dark ? '#8fd19e' : '#2b6b3a',
+      'text-halo-color': dark ? '#000000' : '#ffffff',
+      'text-halo-width': 1,
+    },
+  }, before);
+}
+
+function setOverlayVisibility() {
+  if (!map || !styleReady) return;
+  const show = (ids, on) => ids.forEach((id) => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'));
+  show(FLOOD_LAYERS, flood);
+  show(LAND_LAYERS, lands);
+}
+
 function setOutdoorVisibility() {
   if (!map || !styleReady) return;
   for (const id of OUTDOOR_LAYERS) {
@@ -395,6 +479,7 @@ async function init(message) {
     addChargingIcon();
     OUTDOOR_LAYERS.forEach(addOutdoorIcon);
     setOutdoorVisibility();
+    applyOverlays();
     applyTerrain();
   });
   map.on('styleimagemissing', ({ id }) => {
@@ -403,7 +488,13 @@ async function init(message) {
     else addShield(id);
   });
   map.on('moveend', reportView);
-  map.on('error', (e) => post({ kind: 'error', message: String(e.error?.message ?? e.error ?? e) }));
+  map.on('error', (e) => {
+    const message = String(e.error?.message ?? e.error ?? e);
+    // Inside the box around installed terrain, tiles no region's terrain
+    // covers come back empty; MapLibre reports them as undecodable images.
+    if (['terrain-dem', 'contours'].includes(e.sourceId) && message.includes('could not be decoded')) return;
+    post({ kind: 'error', message });
+  });
   map.on('contextmenu', (e) => {
     post({ kind: 'contextmenu', latitude: e.lngLat.lat, longitude: e.lngLat.lng, x: e.point.x, y: e.point.y });
   });
@@ -422,6 +513,9 @@ function setUnits(value) {
 
 function readTerrain(message) {
   outdoor = message.outdoor ?? outdoor;
+  overlays = message.overlays ?? null;
+  flood = message.flood ?? flood;
+  lands = message.lands ?? lands;
   terrain = message.terrain ?? null;
   shading = message.shading ?? shading;
   contours = message.contours ?? contours;
@@ -484,6 +578,11 @@ const handlers = {
   outdoor(message) {
     outdoor = message.visible;
     setOutdoorVisibility();
+  },
+  overlays(message) {
+    flood = message.flood;
+    lands = message.lands;
+    setOverlayVisibility();
   },
   zoom(message) {
     if (map) move({ zoom: map.getZoom() + message.delta });

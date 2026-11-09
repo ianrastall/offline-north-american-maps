@@ -40,6 +40,12 @@ public sealed class AppSettings : Jupiter.UI.IAccentPreferences, Jupiter.UI.IThe
     /// <summary>Shelters, drinking water, campgrounds and toilets on the map.</summary>
     public bool OutdoorPlaces { get; set; } = true;
 
+    /// <summary>Flood hazard zones from installed overlays.</summary>
+    public bool FloodZones { get; set; } = true;
+
+    /// <summary>Public lands from installed overlays.</summary>
+    public bool PublicLands { get; set; } = true;
+
     /// <summary>The offer to rebuild stations and addresses with outdoor places was closed.</summary>
     public bool OutdoorOfferClosed { get; set; }
 
