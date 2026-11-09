@@ -319,10 +319,11 @@ Completed 9 November 2026, for publication on GitHub as Ian decided on 8 Novembe
 
 Verified: build script (fmt, clippy, 69 core, 2 HTTP and 6 ABI tests, 9 interop tests); 0.6.0 installed over 0.5.1; Settings > Apps lists Offline US Maps 0.6.0 under the same AppId; Start has "Offline US Maps" and no longer "Offline Maps"; installed maps (Illinois, Indiana) were kept; the app started from the new Start entry with the window titled Offline US Maps.
 
+Published 9 November 2026: repositories [ianrastall/offline-us-maps](https://github.com/ianrastall/offline-us-maps) and [ianrastall/jupiter-ui](https://github.com/ianrastall/jupiter-ui) (public). Jupiter.UI's `Detach` methods on the theme and accent services, which this app has used since 0.1.0 but which were never committed there, were committed (60a62d4) so the published library builds the app. A clean clone of both repositories, side by side, built the app with no warnings and passed the interop tests. Releases: [v0.6.0](https://github.com/ianrastall/offline-us-maps/releases/tag/v0.6.0) with the installer (not code-signed) and `SHA256SUMS.txt`, and [overlays](https://github.com/ianrastall/offline-us-maps/releases/tag/overlays) with all 52 overlay files, whose GitHub SHA-256 digests match the build manifests. The installed release build downloaded Indiana's flood zones and public lands from GitHub in Map > Regions (51 MB, flood data effective 07/07/2026).
+
 ## Next stages
 
 1. Download the Illinois map and the stations and addresses from Geofabrik in the installed app, then launch with networking disabled and verify map rendering, labels, search, stations, addresses and saved places from a clean process. This is the decisive first-workflow acceptance test.
 2. Accessibility and appearance review: keyboard order, screen reader names, high contrast, text scaling, the light theme and mixed-DPI monitors.
 3. Install on a clean Windows 11 machine.
 4. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
-5. Publish as Offline US Maps under The Unlicense, with Jupiter.UI (see the [project brief](project-brief.md#publication-decided-8-november-2026)).

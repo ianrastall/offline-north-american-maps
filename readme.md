@@ -28,7 +28,7 @@ Map data is not part of the program. You download it yourself, under its own ter
 - Terrain: [Mapterhorn](https://mapterhorn.com/attribution) (USGS 3DEP, public domain; Copernicus GLO-30).
 - Flood zones: FEMA National Flood Hazard Layer; public lands: USGS PAD-US. Both are US Government works in the public domain. The flood data's effective date is shown in Map > Regions.
 
-Status (9 November 2026): version 0.6.0. A WinUI 3/C# app over a Rust core. Not yet verified: a launch with networking disabled.
+Status (9 November 2026): version 0.6.0, published with all 52 regions' flood zones and public lands. A WinUI 3/C# app over a Rust core. Not yet verified: a launch with networking disabled.
 
 - [Project brief](docs/project-brief.md)
 - [Sources and technical decisions](docs/sources-and-architecture.md)
