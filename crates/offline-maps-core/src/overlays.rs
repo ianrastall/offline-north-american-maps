@@ -82,6 +82,8 @@ pub struct ActiveOverlays {
 #[derive(Debug)]
 pub enum OverlaysOutcome {
     UpToDate(ActiveOverlays),
+    /// Check only: the server has a newer file, not downloaded.
+    Available(crate::download::Newer),
     Activated {
         overlays: ActiveOverlays,
         replaced: Option<String>,
@@ -226,6 +228,11 @@ pub fn update_overlays(
         .filter(|a| is_same_file(&a.record, url, &remote))
     {
         return Ok(OverlaysOutcome::UpToDate(active.clone()));
+    }
+    if options.check_only {
+        return Ok(OverlaysOutcome::Available(crate::download::Newer::of(
+            &remote,
+        )));
     }
     check_size(remote.length, options)?;
     let source = download_to_staging(

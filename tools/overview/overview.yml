@@ -1,0 +1,89 @@
+# Planetiler schema for the built-in overview of the United States (see build_overview.py,
+# which fills in the GeoPackage path). Every feature inside a US state or territory carries
+# that region's catalog ID in `region`, so the map can leave out the overview wherever the
+# region's own map is installed. Layers:
+#   water        kind (ocean, lake), region
+#   rivers       name, region
+#   boundaries   kind (country, state), region
+#   roads        kind (interstate, federal, state), expressway (1/0), ref, region
+#   places       name, rank (lower is more important), capital (country, state, none), region
+#   labels       kind (state, country), name, abbrev, region
+schema_name: Offline US Maps overview
+schema_description: Whole-country overview from Natural Earth (public domain)
+attribution: Natural Earth
+args:
+  minzoom: 0
+  maxzoom: 7
+sources:
+  ne:
+    type: geopackage
+    local_path: '@SOURCE@'
+    projection: EPSG:4326
+layers:
+- id: water
+  features:
+  - source: ne
+    geometry: polygon
+    include_when:
+      layer: water
+    min_zoom: '${ feature.tags.min_zoom }'
+    attributes:
+    - key: kind
+    - key: region
+  tile_post_process:
+    merge_polygons:
+      min_area: 1
+- id: rivers
+  features:
+  - source: ne
+    geometry: line
+    include_when:
+      layer: rivers
+    min_zoom: '${ feature.tags.min_zoom }'
+    attributes:
+    - key: name
+    - key: region
+- id: boundaries
+  features:
+  - source: ne
+    geometry: line
+    include_when:
+      layer: boundaries
+    attributes:
+    - key: kind
+    - key: region
+- id: roads
+  features:
+  - source: ne
+    geometry: line
+    include_when:
+      layer: roads
+    min_zoom: '${ feature.tags.min_zoom }'
+    attributes:
+    - key: kind
+    - key: expressway
+    - key: ref
+    - key: region
+- id: places
+  features:
+  - source: ne
+    geometry: point
+    include_when:
+      layer: places
+    min_zoom: '${ feature.tags.min_zoom }'
+    attributes:
+    - key: name
+    - key: rank
+    - key: capital
+    - key: region
+- id: labels
+  features:
+  - source: ne
+    geometry: point
+    include_when:
+      layer: labels
+    attributes:
+    - key: kind
+    - key: name
+    - key: abbrev
+    - key: region

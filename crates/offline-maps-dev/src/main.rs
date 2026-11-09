@@ -376,6 +376,7 @@ fn download(args: &[String], extras: bool) -> Result<(), String> {
         }
         let elapsed = started.elapsed().as_secs_f64();
         match result.map_err(|e| e.to_string())? {
+            ExtrasOutcome::Available(newer) => println!("Newer extras available: {newer:?}"),
             ExtrasOutcome::UpToDate(active) => {
                 println!("Up to date: {} ({elapsed:.1} s)", active.version)
             }
@@ -408,6 +409,7 @@ fn download(args: &[String], extras: bool) -> Result<(), String> {
     }
     let elapsed = started.elapsed().as_secs_f64();
     match result.map_err(|e| e.to_string())? {
+        UpdateOutcome::Available(newer) => println!("Newer map available: {newer:?}"),
         UpdateOutcome::UpToDate(active) => {
             println!("Up to date: {} ({elapsed:.1} s)", active.version)
         }

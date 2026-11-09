@@ -124,6 +124,10 @@ public sealed partial class RegionsWindow : Window
             {
                 parts.Add("flood zones and public lands");
             }
+            if (Enum.GetValues<UpdateTarget>().Any(t => _main.CheckFor(item.Id, t) is { Newer: true }))
+            {
+                parts.Add("update available");
+            }
         }
         else if (installed is { Problem.Length: > 0 })
         {
@@ -187,7 +191,7 @@ public sealed partial class RegionsWindow : Window
             DetailHeading.Text = "Region";
             DetailText.Text = _all.Count == 0
                 ? "The region list could not be read. Restart Offline US Maps to try again."
-                : "Choose a region to download, update or remove it.";
+                : "Choose a region to download it, check it for updates or remove it.";
             Commands.Visibility = Visibility.Collapsed;
             SourceText.Text = "";
             return;
@@ -207,9 +211,9 @@ public sealed partial class RegionsWindow : Window
         var lines = new List<string>();
         if (installed?.Map is { } map)
         {
-            lines.Add(map.DataDate.Length > 0
+            lines.Add((map.DataDate.Length > 0
                 ? $"Map: data of {Format.Date(map.DataDate)}, {Format.Megabytes(map.Bytes)}."
-                : $"Map: downloaded {Format.Date(map.DownloadedAt)}, {Format.Megabytes(map.Bytes)}.");
+                : $"Map: downloaded {Format.Date(map.DownloadedAt)}, {Format.Megabytes(map.Bytes)}.") + CheckText(item.Id, UpdateTarget.Map));
         }
         else
         {
@@ -220,7 +224,8 @@ public sealed partial class RegionsWindow : Window
             lines.Add($"Stations and addresses: data of {Format.Date(extras.DataDate)}; {extras.Fuel:N0} fuel stations, {extras.Charging:N0} charging stations, {extras.Addresses:N0} addresses"
                 + (extras.Outdoor
                     ? $", {extras.Shelters:N0} shelters, {extras.DrinkingWater:N0} drinking water points, {extras.Campgrounds:N0} campgrounds, {extras.Toilets:N0} toilets."
-                    : ". Update to add shelters, drinking water, campgrounds and toilets."));
+                    : ". Update to add shelters, drinking water, campgrounds and toilets.")
+                + CheckText(item.Id, UpdateTarget.Extras));
         }
         else
         {
@@ -228,7 +233,7 @@ public sealed partial class RegionsWindow : Window
         }
         if (installed?.Overlays is { } overlays)
         {
-            lines.Add($"Flood zones and public lands: {Format.Megabytes(overlays.Bytes)}; flood data effective {overlays.FloodEffective}, {overlays.PublicLands}. Shown with View > Flood zones and View > Public lands.");
+            lines.Add($"Flood zones and public lands: {Format.Megabytes(overlays.Bytes)}; flood data effective {overlays.FloodEffective}, {overlays.PublicLands}. Shown with View > Flood zones and View > Public lands." + CheckText(item.Id, UpdateTarget.Overlays));
         }
         else
         {
@@ -238,7 +243,7 @@ public sealed partial class RegionsWindow : Window
         }
         if (installed?.Terrain is { } terrain)
         {
-            lines.Add($"Terrain: downloaded {Format.Date(terrain.DownloadedAt)}, {Format.Megabytes(terrain.Bytes)}. Shown as shading and contour lines (View menu).");
+            lines.Add($"Terrain: downloaded {Format.Date(terrain.DownloadedAt)}, {Format.Megabytes(terrain.Bytes)}. Shown as shading and contour lines (View menu)." + CheckText(item.Id, UpdateTarget.Terrain));
         }
         else
         {
@@ -248,24 +253,66 @@ public sealed partial class RegionsWindow : Window
         {
             lines.Add(installed.Problem);
         }
+        if (hasMap)
+        {
+            lines.Add(_main.CheckedAt(item.Id) is { } at
+                ? $"Checked for updates at {at:t}. Installed maps keep working without a connection whether or not they are updated."
+                : "Installed maps keep working without a connection whether or not they are updated. Check for updates to see whether newer versions exist; nothing is downloaded until you choose.");
+        }
         if (item.Caption.StartsWith("Map:", StringComparison.Ordinal) || item.Caption.StartsWith("Stations", StringComparison.Ordinal) || item.Caption.StartsWith("Terrain:", StringComparison.Ordinal) || item.Caption.StartsWith("Flood", StringComparison.Ordinal) || item.Caption.StartsWith("Queued", StringComparison.Ordinal))
         {
             lines.Add(item.Caption.Split(" · ")[0] + ".");
         }
         DetailText.Text = string.Join(Environment.NewLine + Environment.NewLine, lines);
         Commands.Visibility = Visibility.Visible;
-        Label(MapButton, hasMap ? "Update map" : "Download map");
-        MapButton.IsEnabled = !mapQueued;
-        Label(ExtrasButton, hasExtras ? "Update stations and addresses" : "Download stations and addresses");
-        ExtrasButton.IsEnabled = (hasMap || mapQueued) && !extrasQueued;
-        Label(OverlaysButton, hasOverlays ? "Update flood zones and public lands" : "Download flood zones and public lands");
-        OverlaysButton.IsEnabled = !overlaysQueued && (hasOverlays || r.OverlayBytes > 0);
-        Label(TerrainButton, hasTerrain ? "Update terrain" : "Download terrain");
-        TerrainButton.IsEnabled = (hasMap || mapQueued) && !terrainQueued && !overlaysQueued;
+        bool extrasRebuild = installed?.Extras is { Outdoor: false };
+        Command(MapButton, hasMap, item.Id, UpdateTarget.Map, "map", !mapQueued);
+        Command(ExtrasButton, hasExtras && !extrasRebuild, item.Id, UpdateTarget.Extras, "stations and addresses", (hasMap || mapQueued) && !extrasQueued);
+        if (extrasRebuild)
+        {
+            Label(ExtrasButton, "Update stations and addresses");
+        }
+        Command(OverlaysButton, hasOverlays, item.Id, UpdateTarget.Overlays, "flood zones and public lands", !overlaysQueued && (hasOverlays || r.OverlayBytes > 0));
+        Command(TerrainButton, hasTerrain, item.Id, UpdateTarget.Terrain, "terrain", (hasMap || mapQueued) && !terrainQueued && !overlaysQueued);
+        CheckButton.Visibility = hasMap ? Visibility.Visible : Visibility.Collapsed;
+        CheckButton.IsEnabled = !busy;
         Label(RemoveButton, $"Remove {r.Name}…");
         RemoveButton.Visibility = installed is null ? Visibility.Collapsed : Visibility.Visible;
         RemoveButton.IsEnabled = !busy && !mapQueued && !extrasQueued && !terrainQueued;
         SourceText.Text = $"Map, stations and addresses from Geofabrik ({r.SourcePage}); map data © OpenStreetMap contributors (ODbL). Terrain from Mapterhorn (download.mapterhorn.com): USGS 3DEP and Copernicus GLO-30. Sizes are as of November 2026.";
+    }
+
+    /// <summary>
+    /// Shows a download command for an item that is not installed, or for an installed item that a
+    /// check found a newer version of; hides it otherwise, so nothing suggests a download is needed.
+    /// </summary>
+    private void Command(Button button, bool installed, string regionId, UpdateTarget target, string what, bool enabled)
+    {
+        bool newer = _main.CheckFor(regionId, target) is { Newer: true };
+        button.Visibility = !installed || newer ? Visibility.Visible : Visibility.Collapsed;
+        Label(button, installed ? $"Download newer {what}" : $"Download {what}");
+        button.IsEnabled = enabled;
+    }
+
+    /// <summary>What the last check found for an installed item, as a sentence to follow its line.</summary>
+    private string CheckText(string regionId, UpdateTarget target)
+    {
+        return _main.CheckFor(regionId, target) switch
+        {
+            { Newer: true } check => " A newer version"
+                + (check.RemoteDate.Length > 0 ? $" of {Format.Date(check.RemoteDate)}" : "")
+                + $" is available, about {Format.Megabytes(_main.UpdateBytes(new MainWindow.Job(regionId, target)))}.",
+            { } => " This is the newest version.",
+            null => "",
+        };
+    }
+
+    private async void CheckButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (RegionList.SelectedItem is RegionItem item && Installed(item.Id) is { Map: not null } region)
+        {
+            await _main.CheckForUpdatesAsync([region]);
+        }
     }
 
     /// <summary>Sets a command's name as text that wraps in the narrow pane instead of being cut off.</summary>

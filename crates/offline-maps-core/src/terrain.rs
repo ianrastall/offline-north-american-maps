@@ -78,6 +78,9 @@ pub struct ActiveTerrain {
 #[derive(Debug)]
 pub enum TerrainOutcome {
     UpToDate(ActiveTerrain),
+    /// Check only: the server has a newer file (or the map's area changed),
+    /// not downloaded. The size is not known until the tiles are listed.
+    Available(crate::download::Newer),
     Activated {
         terrain: ActiveTerrain,
         replaced: Option<String>,
@@ -267,6 +270,12 @@ pub fn update_terrain(
             || active.record.source.last_modified.as_deref() == Some(validator.as_str()))
     {
         return Ok(TerrainOutcome::UpToDate(active.clone()));
+    }
+    if options.check_only {
+        return Ok(TerrainOutcome::Available(crate::download::Newer {
+            last_modified: info.last_modified.clone(),
+            length: None,
+        }));
     }
 
     let fetch = |offset: u64, length: u64| {

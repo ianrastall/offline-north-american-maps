@@ -296,6 +296,9 @@ pub enum Progress {
 }
 
 pub struct UpdateOptions {
+    /// Only find out whether the server has something newer: return
+    /// `Available` instead of downloading it.
+    pub check_only: bool,
     /// Hard cap on the package size.
     pub max_bytes: u64,
     /// Free space to leave on the drive after the download completes.
@@ -309,10 +312,29 @@ pub struct UpdateOptions {
 impl Default for UpdateOptions {
     fn default() -> Self {
         Self {
+            check_only: false,
             max_bytes: 2 << 30,
             reserve_bytes: 256 << 20,
             available_space: |path| fs4::available_space(path),
             clock: crate::time::utc_now,
+        }
+    }
+}
+
+/// A newer file on the server, found by a check-only update.
+#[derive(Debug, Clone, Default)]
+pub struct Newer {
+    /// The server's Last-Modified date of the newer file.
+    pub last_modified: Option<String>,
+    /// Its size, when the server reports it.
+    pub length: Option<u64>,
+}
+
+impl Newer {
+    pub(crate) fn of(remote: &RemoteInfo) -> Self {
+        Self {
+            last_modified: remote.last_modified.clone(),
+            length: remote.length,
         }
     }
 }
@@ -322,6 +344,8 @@ pub enum UpdateOutcome {
     /// The server has nothing newer than the active package (the same file, or
     /// an older one from a stale cache); the active package is unchanged.
     UpToDate(ActivePackage),
+    /// Check only: the server has a newer file, not downloaded.
+    Available(Newer),
     Activated {
         package: ActivePackage,
         replaced: Option<String>,
@@ -444,6 +468,9 @@ pub fn update_region(
             )
     }) {
         return Ok(UpdateOutcome::UpToDate(active.clone()));
+    }
+    if options.check_only {
+        return Ok(UpdateOutcome::Available(Newer::of(&remote)));
     }
     check_size(remote.length, options)?;
 

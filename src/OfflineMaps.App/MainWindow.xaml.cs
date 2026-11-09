@@ -84,7 +84,7 @@ public sealed partial class MainWindow : Window
         _placed = true;
         try
         {
-            _core = await Task.Run(() => MapCore.Open(AppPaths.StoreDir, AppPaths.PackageUrl, AppPaths.ExtrasUrl, AppPaths.OverlaysUrl));
+            _core = await Task.Run(() => MapCore.Open(AppPaths.StoreDir, AppPaths.PackageUrl, AppPaths.ExtrasUrl, AppPaths.OverlaysUrl, AppPaths.OverviewPath));
         }
         catch (MapCoreException ex)
         {
@@ -213,7 +213,7 @@ public sealed partial class MainWindow : Window
         ContoursItem.IsChecked = _settings.ContourLines;
         foreach (var item in new[] { ZoomInItem, ZoomOutItem, FitItem })
         {
-            item.IsEnabled = hasMap;
+            item.IsEnabled = hasMap || AppPaths.HasOverview;
         }
         if (status.MapProblem.Length > 0)
         {
@@ -223,7 +223,8 @@ public sealed partial class MainWindow : Window
         {
             ShowError("Saved places could not be read", status.PlacesProblem, "Start a new list", ResetPlaces_Click);
         }
-        if (!hasMap)
+        // With the built-in overview the map is shown before any region is installed.
+        if (!hasMap && !AppPaths.HasOverview)
         {
             MapMessage.Text = status.MapProblem.Length > 0
                 ? "The installed map cannot be shown."
@@ -459,6 +460,7 @@ public sealed partial class MainWindow : Window
         }
         Row("Map folder", status.StoreDirectory);
         Row("Attribution", "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL). Map package and extracts by Geofabrik."
+            + (AppPaths.HasOverview ? " The overview of the whole country is from Natural Earth (naturalearthdata.com), public domain." : "")
             + (status.OverlayCoverage is null ? "" : " Flood zones from the FEMA National Flood Hazard Layer and public lands from the USGS Protected Areas Database (PAD-US), both public domain.")
             + (status.TerrainCoverage is null ? "" : " Terrain from Mapterhorn (mapterhorn.com/attribution): USGS 3D Elevation Program (public domain) and Copernicus GLO-30, © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA."));
         if (status.OverlayCoverage is not null)

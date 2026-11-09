@@ -295,6 +295,41 @@ fn update_replaces_and_prunes_previous_version() {
 }
 
 #[test]
+fn check_only_reports_a_newer_file_without_downloading_it() {
+    let dir = TempDir::new();
+    let store = PackageStore::new(&dir.0);
+    let t = FakeTransport::new(shortbread_package_bytes(b"one"), "\"v1\"");
+    let check = UpdateOptions {
+        check_only: true,
+        ..options()
+    };
+    // Nothing installed: the file counts as newer.
+    assert!(matches!(
+        run(&store, &t, &check),
+        Ok(UpdateOutcome::Available(_))
+    ));
+    assert!(t.0.borrow().fetches.is_empty());
+    let (first, _, _) = activated(run(&store, &t, &options()));
+    assert!(matches!(
+        run(&store, &t, &check),
+        Ok(UpdateOutcome::UpToDate(_))
+    ));
+    let fetched = t.0.borrow().fetches.len();
+    let two = shortbread_package_bytes(b"two");
+    let length = two.len() as u64;
+    t.serve(two, "\"v2\"");
+    let Ok(UpdateOutcome::Available(newer)) = run(&store, &t, &check) else {
+        panic!("expected a newer file");
+    };
+    assert_eq!(newer.length, Some(length));
+    assert_eq!(t.0.borrow().fetches.len(), fetched);
+    assert_eq!(
+        store.active(ILLINOIS.id).unwrap().unwrap().version,
+        first.version
+    );
+}
+
+#[test]
 fn refuses_oversized_packages_full_disks_and_concurrent_updates() {
     let dir = TempDir::new();
     let store = PackageStore::new(&dir.0);

@@ -6,6 +6,11 @@
 // clearSelection, places, zoom, fit, center, reload. Page -> shell: ready,
 // view, contextmenu, place, key, idle, error.
 //
+// Overview: the built-in whole-country map from the core at overview/{z}/{x}/{y}.pbf
+// (Natural Earth, zoom 0-7), drawn under everything else. Zoomed out (below
+// OVERVIEW_ONLY_BELOW) it is the whole map; closer in, it is left out inside
+// installed regions, whose own maps show the same things in detail.
+//
 // Terrain (when installed): Terrarium elevation tiles from the core at
 // terrain/{z}/{x}/{y}.webp, drawn as hillshading by MapLibre and as contour
 // lines by maplibre-contour, which computes them in a worker from the same
@@ -56,7 +61,9 @@ async function loadStyle(name) {
       if (source.type === 'geojson') source.data = absolute(source.data);
       if (source.type !== 'vector') continue;
       source.tiles = source.tiles.map(absolute);
-      source.minzoom = metadata.minZoom;
+      // Zoomed out, the overview stands in for the installed maps, whose
+      // low-zoom tiles carry names for the whole country.
+      source.minzoom = metadata.overview ? Math.max(metadata.minZoom, OVERVIEW_ONLY_BELOW) : metadata.minZoom;
       source.maxzoom = metadata.maxZoom;
       const b = metadata.bounds;
       source.bounds = [b.west, b.south, b.east, b.north];
@@ -417,6 +424,137 @@ function setOutdoorVisibility() {
   }
 }
 
+// The overview's layers, drawn under the base map. Every feature in a US state or
+// territory has `region` (such as us-il); those of installed regions are left out.
+const OVERVIEW_LAYERS = [
+  'overview-water', 'overview-rivers', 'overview-state-lines', 'overview-country-lines',
+  'overview-roads', 'overview-place-dots', 'overview-places', 'overview-labels',
+];
+const OVERVIEW_ONLY_BELOW = 6;
+
+function applyOverview() {
+  if (!map || !styleReady) return;
+  for (const id of OVERVIEW_LAYERS) if (map.getLayer(id)) map.removeLayer(id);
+  if (map.getSource('overview')) map.removeSource('overview');
+  if (!metadata.overview) return;
+  map.addSource('overview', {
+    type: 'vector',
+    tiles: [absolute('overview/{z}/{x}/{y}.pbf')],
+    minzoom: 0,
+    maxzoom: 7,
+    bounds: [-180, 8, -48, 78],
+  });
+  // The base style's own colors, so the overview matches the installed maps.
+  const paint = (id, property, fallback) => (map.getLayer(id) && map.getPaintProperty(id, property)) || fallback;
+  const water = paint('water-ocean', 'fill-color', '#bfd9f2');
+  const river = paint('water-river', 'line-color', '#a6caed');
+  const border = paint('boundary-country', 'line-color', '#a6a6c8');
+  const motorway = paint('street-motorway', 'line-color', '#ffcc88');
+  const casing = paint('street-motorway:outline', 'line-color', '#e9ac77');
+  const trunk = paint('street-trunk', 'line-color', '#ffeeaa');
+  const text = paint('label-place-city', 'text-color', '#333344');
+  const halo = paint('label-place-city', 'text-halo-color', 'rgba(255,255,255,0.8)');
+  const stateText = paint('label-boundary-state', 'text-color', '#3d3d4d');
+  // `region` holds one region ID, or two for the border between them.
+  const installed = metadata.regions ?? [];
+  const outside = ['any', ['<', ['zoom'], OVERVIEW_ONLY_BELOW],
+    ['all', ...installed.map((id) => ['!', ['in', id, ['get', 'region']]])]];
+  // State and country names come from the overview alone, at every zoom.
+  for (const layer of map.getStyle().layers) {
+    if (layer.id.startsWith('label-boundary-')) map.setLayoutProperty(layer.id, 'visibility', 'none');
+  }
+  const before = map.getLayer('slot-below-fills') ? 'slot-below-fills' : undefined;
+  const add = (layer) => map.addLayer({ source: 'overview', ...layer }, before);
+  add({
+    id: 'overview-water',
+    type: 'fill',
+    'source-layer': 'water',
+    filter: outside,
+    paint: { 'fill-color': water },
+  });
+  add({
+    id: 'overview-rivers',
+    type: 'line',
+    'source-layer': 'rivers',
+    filter: outside,
+    paint: { 'line-color': river, 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.5, 7, 1.2, 10, 2] },
+  });
+  add({
+    id: 'overview-state-lines',
+    type: 'line',
+    'source-layer': 'boundaries',
+    filter: ['all', ['==', ['get', 'kind'], 'state'], outside],
+    paint: {
+      'line-color': border,
+      'line-width': ['interpolate', ['linear'], ['zoom'], 2, 0.5, 7, 1, 10, 2],
+      'line-dasharray': [3, 1, 1, 1],
+    },
+  });
+  add({
+    id: 'overview-country-lines',
+    type: 'line',
+    'source-layer': 'boundaries',
+    filter: ['==', ['get', 'kind'], 'country'],
+    paint: { 'line-color': border, 'line-width': ['interpolate', ['linear'], ['zoom'], 2, 1, 7, 2, 10, 3] },
+  });
+  add({
+    id: 'overview-roads',
+    type: 'line',
+    'source-layer': 'roads',
+    filter: outside,
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': ['match', ['get', 'kind'], 'interstate', motorway, trunk],
+      'line-width': ['interpolate', ['linear'], ['zoom'],
+        4, ['match', ['get', 'kind'], 'interstate', 1, 0.5],
+        7, ['match', ['get', 'kind'], 'interstate', 2, 1.2],
+        10, ['match', ['get', 'kind'], 'interstate', 3.5, 2]],
+    },
+  });
+  add({
+    id: 'overview-place-dots',
+    type: 'circle',
+    'source-layer': 'places',
+    filter: outside,
+    paint: {
+      'circle-radius': ['match', ['get', 'capital'], 'none', 2.5, 3.5],
+      'circle-color': text,
+      'circle-stroke-color': halo,
+      'circle-stroke-width': 1,
+    },
+  });
+  add({
+    id: 'overview-places',
+    type: 'symbol',
+    'source-layer': 'places',
+    filter: outside,
+    layout: {
+      'text-field': ['get', 'name'],
+      'text-font': ['noto_sans_regular'],
+      'text-size': ['interpolate', ['linear'], ['zoom'], 3, ['-', 13, ['min', ['get', 'rank'], 6]], 8, ['-', 16, ['min', ['get', 'rank'], 6]]],
+      'text-variable-anchor': ['left', 'right', 'top', 'bottom'],
+      'text-radial-offset': 0.5,
+      'symbol-sort-key': ['get', 'rank'],
+    },
+    paint: { 'text-color': text, 'text-halo-color': halo, 'text-halo-width': 1.5 },
+  });
+  add({
+    id: 'overview-labels',
+    type: 'symbol',
+    'source-layer': 'labels',
+    layout: {
+      'text-field': ['get', 'name'],
+      'text-font': ['noto_sans_regular'],
+      'text-size': ['interpolate', ['linear'], ['zoom'], 3, 9, 6, 13, 9, 16],
+      'text-transform': 'uppercase',
+      'text-letter-spacing': 0.1,
+      'text-max-width': 8,
+      'symbol-sort-key': ['match', ['get', 'kind'], 'country', 0, 1],
+    },
+    paint: { 'text-color': stateText, 'text-halo-color': halo, 'text-halo-width': 1.5, 'text-opacity': 0.8 },
+  });
+}
+
 function reportView() {
   const c = map.getCenter();
   post({ kind: 'view', latitude: c.lat, longitude: c.lng, zoom: map.getZoom() });
@@ -428,6 +566,8 @@ function reportView() {
 // shape. MapLibre will not zoom out past the point where the view would leave
 // these bounds, so a tight margin cut off a tall box in a wide window.
 function maxBounds() {
+  // With the overview, the whole country is in reach.
+  if (metadata.overview) return [[-180, 10], [-50, 76]];
   const b = metadata.bounds;
   const cos = Math.cos((((b.south + b.north) / 2) * Math.PI) / 180);
   const width = b.east - b.west;
@@ -479,6 +619,7 @@ async function init(message) {
     addChargingIcon();
     OUTDOOR_LAYERS.forEach(addOutdoorIcon);
     setOutdoorVisibility();
+    applyOverview();
     applyOverlays();
     applyTerrain();
   });

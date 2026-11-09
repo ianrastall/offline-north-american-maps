@@ -1080,6 +1080,9 @@ fn prune(store: &PackageStore, region_id: &str, active: &str) -> usize {
 #[derive(Debug)]
 pub enum ExtrasOutcome {
     UpToDate(ActiveExtras),
+    /// Check only: the server has a newer file (or the installed extras need
+    /// rebuilding), not downloaded.
+    Available(crate::download::Newer),
     Activated {
         extras: ActiveExtras,
         replaced: Option<String>,
@@ -1148,6 +1151,11 @@ pub fn update_extras(
         })
     {
         return Ok(ExtrasOutcome::UpToDate(active.clone()));
+    }
+    if options.check_only {
+        return Ok(ExtrasOutcome::Available(crate::download::Newer::of(
+            &remote,
+        )));
     }
     check_size(remote.length, options)?;
     let source = download_to_staging(

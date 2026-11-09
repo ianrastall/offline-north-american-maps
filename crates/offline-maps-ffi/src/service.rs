@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex, MutexGuard, RwLock};
 
 use offline_maps_core::Coordinates;
 use offline_maps_core::download::{
-    HttpTransport, Progress, UpdateError, UpdateOptions, UpdateOutcome, update_region,
+    HttpTransport, Newer, Progress, UpdateError, UpdateOptions, UpdateOutcome, update_region,
 };
 use offline_maps_core::extras::{
     ActiveExtras, ExtrasOutcome, active_extras, prune_extras, stations_geojson_all, update_extras,
@@ -85,6 +85,8 @@ pub struct Service {
     extras_url: Option<&'static str>,
     terrain_url: String,
     overlays_base: String,
+    /// The built-in whole-country overview, when the program folder has it.
+    overview: Mutex<Option<TilePackage>>,
     /// Installed regions, in catalog order.
     slots: RwLock<Vec<Arc<Slot>>>,
     places: Mutex<Places>,
@@ -332,6 +334,11 @@ impl Service {
                 "" => OVERLAYS_BASE.to_owned(),
                 url => url.to_owned(),
             },
+            overview: Mutex::new(
+                (!config.overview_path.is_empty())
+                    .then(|| TilePackage::open(Path::new(&config.overview_path)).ok())
+                    .flatten(),
+            ),
             slots: RwLock::new(Vec::new()),
             places: Mutex::new(places),
             progress: Mutex::new(pb::ProgressEvent::default()),
@@ -747,6 +754,33 @@ impl Service {
         Ok(pb::OverlayTile { data })
     }
 
+    pub fn overview_tile(&self, request: &pb::GetOverviewTile) -> Outcome<pb::OverviewTile> {
+        let (x, y) = (request.x, request.y);
+        let Some(z) = u8::try_from(request.z).ok().filter(|z| *z <= 14) else {
+            return Ok(pb::OverviewTile::default());
+        };
+        let n = 1_u64 << z;
+        if u64::from(x) >= n || u64::from(y) >= n {
+            return Ok(pb::OverviewTile::default());
+        }
+        let guard = lock(&self.overview);
+        let Some(overview) = guard.as_ref() else {
+            return Ok(pb::OverviewTile::default());
+        };
+        let tile = overview.tile(z, x, y).map_err(|e| {
+            error(
+                ErrorKind::InvalidData,
+                format!("Overview tile {z}/{x}/{y}: {e}"),
+            )
+        })?;
+        drop(guard);
+        let data = match tile {
+            Some(tile) => decompress(z, x, y, tile.encoding, tile.data)?,
+            None => Vec::new(),
+        };
+        Ok(pb::OverviewTile { data })
+    }
+
     pub fn stations(&self) -> Outcome<pb::Stations> {
         let slots = self.slots();
         let paths: Vec<&Path> = slots
@@ -864,8 +898,17 @@ impl Service {
         let region = self.region(&request.region_id)?;
         let _busy = self.begin(target, Some(&region))?;
         let transport = HttpTransport::new();
-        let options = UpdateOptions::default();
+        let options = UpdateOptions {
+            check_only: request.check_only,
+            ..UpdateOptions::default()
+        };
         let id = region.id;
+        let available = |newer: Newer| pb::UpdateResult {
+            available: true,
+            remote_date: http_date_to_iso(newer.last_modified.as_deref()),
+            remote_bytes: newer.length.unwrap_or_default(),
+            ..Default::default()
+        };
         let result = match target {
             pb::UpdateTarget::Map => update_region(
                 &self.store,
@@ -876,10 +919,12 @@ impl Service {
                 &self.cancel,
             )
             .map(|outcome| match outcome {
+                UpdateOutcome::Available(newer) => available(newer),
                 UpdateOutcome::UpToDate(active) => pb::UpdateResult {
                     up_to_date: true,
                     version: active.version,
                     replaced: String::new(),
+                    ..Default::default()
                 },
                 UpdateOutcome::Activated {
                     package, replaced, ..
@@ -887,6 +932,7 @@ impl Service {
                     up_to_date: false,
                     version: package.version,
                     replaced: replaced.unwrap_or_default(),
+                    ..Default::default()
                 },
             }),
             pb::UpdateTarget::Overlays => update_overlays(
@@ -899,15 +945,18 @@ impl Service {
                 &self.cancel,
             )
             .map(|outcome| match outcome {
+                OverlaysOutcome::Available(newer) => available(newer),
                 OverlaysOutcome::UpToDate(active) => pb::UpdateResult {
                     up_to_date: true,
                     version: active.version,
                     replaced: String::new(),
+                    ..Default::default()
                 },
                 OverlaysOutcome::Activated { overlays, replaced } => pb::UpdateResult {
                     up_to_date: false,
                     version: overlays.version,
                     replaced: replaced.unwrap_or_default(),
+                    ..Default::default()
                 },
             }),
             pb::UpdateTarget::Terrain => {
@@ -934,15 +983,18 @@ impl Service {
                     &self.cancel,
                 )
                 .map(|outcome| match outcome {
+                    TerrainOutcome::Available(newer) => available(newer),
                     TerrainOutcome::UpToDate(active) => pb::UpdateResult {
                         up_to_date: true,
                         version: active.version,
                         replaced: String::new(),
+                        ..Default::default()
                     },
                     TerrainOutcome::Activated { terrain, replaced } => pb::UpdateResult {
                         up_to_date: false,
                         version: terrain.version,
                         replaced: replaced.unwrap_or_default(),
+                        ..Default::default()
                     },
                 })
             }
@@ -955,10 +1007,12 @@ impl Service {
                 &self.cancel,
             )
             .map(|outcome| match outcome {
+                ExtrasOutcome::Available(newer) => available(newer),
                 ExtrasOutcome::UpToDate(active) => pb::UpdateResult {
                     up_to_date: true,
                     version: active.version,
                     replaced: String::new(),
+                    ..Default::default()
                 },
                 ExtrasOutcome::Activated {
                     extras, replaced, ..
@@ -966,11 +1020,12 @@ impl Service {
                     up_to_date: false,
                     version: extras.version,
                     replaced: replaced.unwrap_or_default(),
+                    ..Default::default()
                 },
             }),
         }
         .map_err(update_error)?;
-        if !result.up_to_date {
+        if !result.up_to_date && !result.available {
             // Close the replaced files, then remove them.
             self.reload();
             match target {

@@ -102,6 +102,7 @@ public sealed partial class MainWindow
         bool tile = path.StartsWith("/tiles/", StringComparison.Ordinal);
         bool terrain = path.StartsWith("/terrain/", StringComparison.Ordinal);
         bool overlay = path.StartsWith("/overlays/", StringComparison.Ordinal);
+        bool overview = path.StartsWith("/overview/", StringComparison.Ordinal);
         bool stations = path == "/extras/stations.geojson";
         var deferral = e.GetDeferral();
         try
@@ -110,7 +111,7 @@ public sealed partial class MainWindow
             byte[] body;
             string type;
             int status = 200;
-            if (!tile && !stations && !terrain && !overlay)
+            if (!tile && !stations && !terrain && !overlay && !overview)
             {
                 (body, type, status) = await Task.Run(() => ReadWebFile(path));
             }
@@ -124,6 +125,14 @@ public sealed partial class MainWindow
                 string[] parts = path["/tiles/".Length..].Replace(".pbf", "", StringComparison.Ordinal).Split('/');
                 body = parts.Length == 3 && int.TryParse(parts[0], out int z) && int.TryParse(parts[1], out int x) && int.TryParse(parts[2], out int y)
                     ? await Task.Run(() => core.Tile(z, x, y))
+                    : [];
+                type = "application/x-protobuf";
+            }
+            else if (overview)
+            {
+                string[] parts = path["/overview/".Length..].Replace(".pbf", "", StringComparison.Ordinal).Split('/');
+                body = parts.Length == 3 && int.TryParse(parts[0], out int z) && int.TryParse(parts[1], out int x) && int.TryParse(parts[2], out int y)
+                    ? await Task.Run(() => core.OverviewTile(z, x, y))
                     : [];
                 type = "application/x-protobuf";
             }
@@ -282,10 +291,12 @@ public sealed partial class MainWindow
     /// </summary>
     private void SyncMap()
     {
-        if (!_pageReady || _status is not { Coverage: { } b } status)
+        if (!_pageReady || _status is not { } status || (status.Coverage is null && !AppPaths.HasOverview))
         {
             return;
         }
+        // With nothing installed, the overview of the 48 contiguous states.
+        var b = status.Coverage ?? new OfflineMaps.Interop.Messages.Bounds { West = -125, South = 24, East = -66.5, North = 49.5 };
         if (_shownMap == status.ContentVersion)
         {
             PostPlaces();
@@ -297,8 +308,10 @@ public sealed partial class MainWindow
             ["metadata"] = new JsonObject
             {
                 ["bounds"] = new JsonObject { ["west"] = b.West, ["south"] = b.South, ["east"] = b.East, ["north"] = b.North },
-                ["minZoom"] = status.MinZoom,
-                ["maxZoom"] = status.MaxZoom,
+                ["minZoom"] = status.Coverage is null ? 0 : status.MinZoom,
+                ["maxZoom"] = status.Coverage is null ? 14 : status.MaxZoom,
+                ["regions"] = new JsonArray(status.Regions.Where(r => r.Map is not null).Select(r => (JsonNode)r.Id).ToArray()),
+                ["overview"] = AppPaths.HasOverview,
             },
             ["theme"] = App.Current.Themes.IsDark ? "dark" : "light",
             ["colors"] = Colors(),

@@ -129,7 +129,9 @@ def main() -> None:
         "((c) DLR e.V. 2010-2014 and (c) Airbus Defence and Space GmbH 2014-2018, provided under "
         "COPERNICUS by the European Union and ESA; all rights reserved). Flood zones and public lands, "
         "when downloaded, are prepared from FEMA's National Flood Hazard Layer and the USGS Protected "
-        "Areas Database of the United States (PAD-US), US Government works in the public domain.",
+        "Areas Database of the United States (PAD-US), US Government works in the public domain. "
+        "The built-in overview of the whole country is made from Natural Earth (naturalearthdata.com), "
+        "public domain.",
         "MapLibre GL JS 6.16.0 (map renderer)\n\n" + maplibre.strip(),
         "maplibre-contour 0.1.1 (contour lines from terrain)\n\n" + contour.strip(),
         versatiles.strip().lstrip("# "),

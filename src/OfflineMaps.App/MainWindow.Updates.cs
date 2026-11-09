@@ -63,47 +63,183 @@ public sealed partial class MainWindow
         _ = RunQueueAsync();
     }
 
-    private async void UpdateAll_Click(object sender, RoutedEventArgs e)
+    /// <summary>What a check for updates found for one installed item.</summary>
+    internal sealed record Check(bool Newer, string RemoteDate, ulong Bytes);
+
+    private readonly Dictionary<Job, Check> _checks = [];
+    private readonly Dictionary<string, DateTime> _checkedAt = [];
+
+    /// <summary>The last check's result for a region's map, extras, terrain or overlays, if checked.</summary>
+    internal Check? CheckFor(string regionId, UpdateTarget target) => _checks.GetValueOrDefault(new Job(regionId, target));
+
+    internal DateTime? CheckedAt(string regionId) => _checkedAt.TryGetValue(regionId, out var at) ? at : null;
+
+    /// <summary>The parts of a region that are installed.</summary>
+    private static IEnumerable<UpdateTarget> InstalledTargets(RegionStatus region)
+    {
+        if (region.Map is not null)
+        {
+            yield return UpdateTarget.Map;
+        }
+        if (region.Extras is not null)
+        {
+            yield return UpdateTarget.Extras;
+        }
+        if (region.Overlays is not null)
+        {
+            yield return UpdateTarget.Overlays;
+        }
+        if (region.Terrain is not null)
+        {
+            yield return UpdateTarget.Terrain;
+        }
+    }
+
+    /// <summary>
+    /// Asks the servers whether they have anything newer than what is installed for these regions,
+    /// downloading nothing. Returns the items with a newer version, or null when the check failed.
+    /// </summary>
+    internal async Task<List<Job>?> CheckForUpdatesAsync(IReadOnlyList<RegionStatus> regions)
+    {
+        if (_core is not { } core || _update is not null)
+        {
+            return null;
+        }
+        var jobs = regions.SelectMany(r => InstalledTargets(r).Select(t => new Job(r.Id, t))).ToList();
+        var newer = new List<Job>();
+        UpdateAllItem.IsEnabled = false;
+        ProgressText = "Checking for a newer version";
+        try
+        {
+            foreach (var job in jobs)
+            {
+                _current = job;
+                StatusText.Text = $"Checking for updates: {Subject(job)}";
+                RegionsChanged?.Invoke();
+                var work = Task.Run(() => core.Update(job.Target, job.RegionId, checkOnly: true));
+                _update = work;
+                var result = await work;
+                _checks[job] = new Check(result.Available, result.RemoteDate, result.RemoteBytes);
+                if (result.Available)
+                {
+                    newer.Add(job);
+                }
+            }
+            foreach (var region in regions)
+            {
+                _checkedAt[region.Id] = DateTime.Now;
+            }
+        }
+        catch (MapCoreException ex)
+        {
+            AppLog.Write($"Checking for updates failed: {ex.Kind} {ex.Message}");
+            ShowError("Updates could not be checked", ex.Message);
+            return null;
+        }
+        finally
+        {
+            _update = null;
+            _current = null;
+            ProgressText = "";
+            UpdateAllItem.IsEnabled = _status?.Coverage is not null;
+            RegionsChanged?.Invoke();
+        }
+        StatusText.Text = newer.Count switch
+        {
+            0 => "Everything installed is the newest version available",
+            1 => "1 update available",
+            int n => $"{n} updates available",
+        };
+        return newer;
+    }
+
+    /// <summary>"Illinois map", "Illinois stations and addresses" and so on, for lists.</summary>
+    private string Item(Job job) => job.Target switch
+    {
+        UpdateTarget.Map => $"{RegionName(job.RegionId)} map",
+        UpdateTarget.Terrain => $"{RegionName(job.RegionId)} terrain",
+        UpdateTarget.Overlays => $"{RegionName(job.RegionId)} flood zones and public lands",
+        _ => $"{RegionName(job.RegionId)} stations and addresses",
+    };
+
+    /// <summary>The date of what is installed for a job's item, for comparison with a newer one.</summary>
+    private string InstalledDate(Job job)
+    {
+        var region = _status?.Regions.FirstOrDefault(r => r.Id == job.RegionId);
+        return job.Target switch
+        {
+            UpdateTarget.Map => region?.Map?.DataDate ?? "",
+            UpdateTarget.Extras => region?.Extras?.DataDate ?? "",
+            UpdateTarget.Terrain => region?.Terrain?.DownloadedAt ?? "",
+            _ => "",
+        };
+    }
+
+    /// <summary>The download size of a newer item: as the server reported it, or the catalog's estimate.</summary>
+    internal ulong UpdateBytes(Job job)
+    {
+        if (_checks.GetValueOrDefault(job) is { Bytes: > 0 } check)
+        {
+            return check.Bytes;
+        }
+        var region = _catalog.FirstOrDefault(c => c.Id == job.RegionId);
+        return job.Target switch
+        {
+            UpdateTarget.Map => region?.PackageBytes ?? 0,
+            UpdateTarget.Extras => region?.ExtrasBytes ?? 0,
+            UpdateTarget.Terrain => region?.TerrainBytes ?? 0,
+            _ => region?.OverlayBytes ?? 0,
+        };
+    }
+
+    private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
     {
         var installed = (_status?.Regions ?? []).Where(r => r.Map is not null).ToList();
         if (installed.Count == 0)
         {
             return;
         }
-        int extras = installed.Count(r => r.Extras is not null);
-        int terrain = installed.Count(r => r.Terrain is not null);
-        int overlays = installed.Count(r => r.Overlays is not null);
-        string names = Format.List(installed.Select(r => r.Name));
-        var answer = await ShowDialogAsync(new ContentDialog
-        {
-            Title = "Update all regions?",
-            Content = Text($"Offline US Maps checks Geofabrik (download.geofabrik.de) for newer maps of {names}"
-                + (extras > 0 ? ", newer stations and addresses where they are installed" : "")
-                + (terrain > 0 ? ", newer terrain where it is installed" : "")
-                + (overlays > 0 ? ", newer flood zones and public lands where they are installed" : "")
-                + ", and downloads what has changed. Each map is about the size shown in Regions. The installed maps stay in use until each new one has been downloaded and checked."),
-            PrimaryButtonText = "Update all",
-            CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Primary,
-        });
-        if (answer != ContentDialogResult.Primary)
+        var newer = await CheckForUpdatesAsync(installed);
+        if (newer is null)
         {
             return;
         }
-        foreach (var region in installed)
+        if (newer.Count == 0)
         {
-            Enqueue(region.Id, UpdateTarget.Map);
-            if (region.Extras is not null)
+            await ShowDialogAsync(new ContentDialog
             {
-                Enqueue(region.Id, UpdateTarget.Extras);
-            }
-            if (region.Terrain is not null)
+                Title = "Everything is up to date",
+                Content = Text($"The installed maps and data for {Format.List(installed.Select(r => r.Name))} are the newest versions available. Nothing was downloaded."),
+                CloseButtonText = "OK",
+                DefaultButton = ContentDialogButton.Close,
+            });
+            return;
+        }
+        var lines = newer.Select(job =>
+        {
+            string installedDate = InstalledDate(job);
+            string remote = _checks[job].RemoteDate;
+            string dates = remote.Length > 0
+                ? $"version of {Format.Date(remote)}" + (installedDate.Length > 0 ? $" (installed: {Format.Date(installedDate)})" : "")
+                : "newer version";
+            return $"{Item(job)}: {dates}, about {Format.Megabytes(UpdateBytes(job))}";
+        });
+        ulong total = (ulong)newer.Sum(j => (decimal)UpdateBytes(j));
+        var answer = await ShowDialogAsync(new ContentDialog
+        {
+            Title = newer.Count == 1 ? "1 update available" : $"{newer.Count} updates available",
+            Content = Text(string.Join(Environment.NewLine, lines)
+                + Environment.NewLine + Environment.NewLine
+                + "Geofabrik rebuilds its OpenStreetMap files every day, so a newer map usually adds only recent edits. The installed maps keep working without a connection whether or not they are updated."),
+            PrimaryButtonText = $"Download {Format.Megabytes(total)}",
+            CloseButtonText = "Not now",
+            DefaultButton = ContentDialogButton.Close,
+        });
+        if (answer == ContentDialogResult.Primary)
+        {
+            foreach (var job in newer)
             {
-                Enqueue(region.Id, UpdateTarget.Terrain);
-            }
-            if (region.Overlays is not null)
-            {
-                Enqueue(region.Id, UpdateTarget.Overlays);
+                Enqueue(job.RegionId, job.Target);
             }
         }
     }
@@ -266,6 +402,11 @@ public sealed partial class MainWindow
             {
                 cancelled = true;
                 break;
+            }
+            // Downloaded, or found to be current: either way it is now the newest version.
+            if (_checks.ContainsKey(job))
+            {
+                _checks[job] = new Check(false, "", 0);
             }
             messages.Add(message);
             await RefreshStatusAsync();

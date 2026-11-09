@@ -55,6 +55,7 @@
     <None Include="$(RepoRoot)assets\styles\offline-maps-*.json" Link="Web\styles\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
     <None Include="$(RendererAssetsDir)sprites\base*" Link="Web\sprites\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
     <None Include="$(RendererAssetsDir)glyphs\**\*.pbf" Link="Web\glyphs\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(RepoRoot)assets\overview\us-overview.mbtiles" Link="Overview\us-overview.mbtiles" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
     <None Include="$(RepoRoot)assets\notices\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
   <Target Name="RequireMapAssets" BeforeTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">

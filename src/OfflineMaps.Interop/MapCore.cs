@@ -43,7 +43,7 @@ public sealed class MapCore : IDisposable
     }
 
     /// <summary>Opens the store in <paramref name="storeDirectory"/> (created if missing).</summary>
-    public static unsafe MapCore Open(string storeDirectory, string? packageUrl = null, string? extrasUrl = null, string? overlaysUrl = null)
+    public static unsafe MapCore Open(string storeDirectory, string? packageUrl = null, string? extrasUrl = null, string? overlaysUrl = null, string? overviewPath = null)
     {
         EnsureCompatible();
         byte[] config = new Config
@@ -52,6 +52,7 @@ public sealed class MapCore : IDisposable
             PackageUrl = packageUrl ?? "",
             ExtrasUrl = extrasUrl ?? "",
             OverlaysUrl = overlaysUrl ?? "",
+            OverviewPath = overviewPath ?? "",
         }.ToByteArray();
         NativeStatus status;
         CoreSafeHandle handle;
@@ -128,9 +129,12 @@ public sealed class MapCore : IDisposable
 
     public void ResetPlaces() => Call(new Request { ResetPlaces = new ResetPlaces() });
 
-    /// <summary>Downloads and activates a region's newer map or extras. Blocks for the whole download.</summary>
-    public UpdateResult Update(UpdateTarget target, string regionId) =>
-        Call(new Request { Update = new Update { Target = target, RegionId = regionId } }).Update;
+    /// <summary>
+    /// Downloads and activates a region's newer map, extras, terrain or overlays. Blocks for the whole
+    /// download. With <paramref name="checkOnly"/>, only asks the server whether it has something newer.
+    /// </summary>
+    public UpdateResult Update(UpdateTarget target, string regionId, bool checkOnly = false) =>
+        Call(new Request { Update = new Update { Target = target, RegionId = regionId, CheckOnly = checkOnly } }).Update;
 
     /// <summary>Deletes a region's map, search index and extras. Saved places are kept.</summary>
     public void RemoveRegion(string regionId) => Call(new Request { RemoveRegion = new RemoveRegion { RegionId = regionId } });
@@ -143,6 +147,16 @@ public sealed class MapCore : IDisposable
             return [];
         }
         return Call(new Request { GetTerrainTile = new GetTerrainTile { Z = (uint)z, X = (uint)x, Y = (uint)y } }).TerrainTile.Data.ToByteArray();
+    }
+
+    /// <summary>A decompressed tile of the built-in whole-country overview, or an empty array.</summary>
+    public byte[] OverviewTile(int z, int x, int y)
+    {
+        if (z < 0 || x < 0 || y < 0)
+        {
+            return [];
+        }
+        return Call(new Request { GetOverviewTile = new GetOverviewTile { Z = (uint)z, X = (uint)x, Y = (uint)y } }).OverviewTile.Data.ToByteArray();
     }
 
     /// <summary>A decompressed overlay vector tile (flood zones, public lands), or an empty array.</summary>

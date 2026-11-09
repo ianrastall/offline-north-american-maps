@@ -17,6 +17,11 @@ internal static class AppPaths
 
     public static string WebDir { get; } = Path.Combine(AppContext.BaseDirectory, "Web");
 
+    /// <summary>The built-in whole-country overview, drawn under the installed regions.</summary>
+    public static string OverviewPath { get; } = Path.Combine(AppContext.BaseDirectory, "Overview", "us-overview.mbtiles");
+
+    public static bool HasOverview { get; } = File.Exists(OverviewPath);
+
     /// <summary>
     /// Download addresses for testing against a local server (OFFLINE_MAPS_PACKAGE_URL and
     /// OFFLINE_MAPS_EXTRAS_URL); unset means Geofabrik.

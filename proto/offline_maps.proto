@@ -24,6 +24,9 @@ message Config {
   // Override of where overlay files are published (files are
   // <base>/<region>-overlays.mbtiles), for testing; empty uses the GitHub releases.
   string overlays_url = 5;
+  // The built-in overview of the whole country (an MBTiles file in the program
+  // folder); empty for none.
+  string overview_path = 6;
 }
 
 message Position {
@@ -47,6 +50,7 @@ message Request {
     GetCatalog get_catalog = 12;
     GetTerrainTile get_terrain_tile = 13;
     GetOverlayTile get_overlay_tile = 14;
+    GetOverviewTile get_overview_tile = 15;
   }
 }
 
@@ -94,6 +98,8 @@ message Update {
   UpdateTarget target = 1;
   // A catalog region ID such as "us-il".
   string region_id = 2;
+  // Only ask the server whether it has something newer; download nothing.
+  bool check_only = 3;
 }
 
 // Deletes a region's map, search index and extras from the store.
@@ -107,6 +113,14 @@ message GetCatalog {}
 // An overlay tile (XYZ numbering): a decompressed vector tile with layers
 // flood_zones, public_lands and public_land_labels, merged across regions.
 message GetOverlayTile {
+  uint32 z = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+}
+
+// An overview tile (XYZ numbering): a decompressed vector tile of the built-in
+// whole-country overview, layers water, rivers, boundaries, roads, places and labels.
+message GetOverviewTile {
   uint32 z = 1;
   uint32 x = 2;
   uint32 y = 3;
@@ -159,11 +173,17 @@ message Response {
     Catalog catalog = 8;
     TerrainTile terrain_tile = 9;
     OverlayTile overlay_tile = 10;
+    OverviewTile overview_tile = 11;
   }
 }
 
 message OverlayTile {
   // Empty when no installed overlays have the tile.
+  bytes data = 1;
+}
+
+message OverviewTile {
+  // Empty where the overview has no tile.
   bytes data = 1;
 }
 
@@ -334,6 +354,11 @@ message UpdateResult {
   bool up_to_date = 1;
   string version = 2;
   string replaced = 3;
+  // Check only: the server has something newer, not downloaded.
+  bool available = 4;
+  // Its date (YYYY-MM-DD) and size in bytes, where the server reports them.
+  string remote_date = 5;
+  uint64 remote_bytes = 6;
 }
 
 message Stations {

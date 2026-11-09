@@ -71,9 +71,14 @@
                         x:Name="DetailText"
                         IsTextSelectionEnabled="True"
                         Style="{StaticResource JupiterBodyTextStyle}"
-                        Text="Choose a region to download, update or remove it."
+                        Text="Choose a region to download it, check it for updates or remove it."
                         TextWrapping="Wrap" />
                     <StackPanel x:Name="Commands" Spacing="8">
+                        <Button
+                            x:Name="CheckButton"
+                            HorizontalAlignment="Stretch"
+                            Click="CheckButton_Click"
+                            Content="Check for updates" />
                         <Button
                             x:Name="MapButton"
                             HorizontalAlignment="Stretch"

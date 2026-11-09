@@ -2,6 +2,10 @@
 
 Checked 27 October 2026. Source pages can change; recheck before release.
 
+## Built-in overview (0.7.0)
+
+Natural Earth 1:10m (https://www.naturalearthdata.com/, downloaded from naciscdn.org), public domain: no permission or credit is required. `tools/overview/build_overview.py` reads admin-1 states (for region outlines; Puerto Rico and the Virgin Islands from their admin-0 units), land boundary lines, roads (US Interstate, federal and state levels), populated places, ocean, lakes and rivers (with the North America supplements), clipped to 180°W–48°W, 8°N–78°N; tags each piece with the region it lies in, splitting lines and areas at state borders; and tiles them with Planetiler (`tools/overview/overview.yml`) at zoom 0–7, using Natural Earth's own `min_zoom` per feature. The result is committed and installed in the program folder (`Overview\us-overview.mbtiles`).
+
 ## Provider decision
 
 Google's Maps Static API supports satellite images, but its ordinary size is 640 × 640 logical pixels (scale 2 yields 1280 × 1280). The API returning image bytes does not grant general offline redistribution or bulk download rights. Google's terms section 3.2.3 restricts scraping, caching and bulk downloads; Map Tiles policies explicitly restrict offline use. These APIs are not the selected foundation for this offline road-map workflow.

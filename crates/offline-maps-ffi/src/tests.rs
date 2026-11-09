@@ -109,12 +109,23 @@ fn empty_store_reports_no_map_and_refuses_search() {
         Some(pb::response::Result::OverlayTile(t)) => assert!(t.data.is_empty()),
         other => panic!("{other:?}"),
     }
+    // Without an overview file, overview tiles are empty.
+    let overview = call(
+        core,
+        16,
+        pb::request::Command::GetOverviewTile(pb::GetOverviewTile { z: 4, x: 3, y: 5 }),
+    );
+    match overview.result {
+        Some(pb::response::Result::OverviewTile(t)) => assert!(t.data.is_empty()),
+        other => panic!("{other:?}"),
+    }
     let terrain = call(
         core,
         14,
         pb::request::Command::Update(pb::Update {
             target: pb::UpdateTarget::Terrain as i32,
             region_id: "us-il".into(),
+            ..Default::default()
         }),
     );
     assert_eq!(terrain.error.unwrap().kind, ErrorKind::NotFound as i32);
@@ -357,6 +368,7 @@ fn transport_contract() {
             command: Some(pb::request::Command::Update(pb::Update {
                 target: 42,
                 region_id: "us-il".into(),
+                ..Default::default()
             })),
         }
         .encode_to_vec();
@@ -406,6 +418,7 @@ fn update_against_an_unreachable_server_fails_cleanly() {
         pb::request::Command::Update(pb::Update {
             target: pb::UpdateTarget::Map as i32,
             region_id: "us-il".into(),
+            ..Default::default()
         }),
     );
     assert_eq!(response.error.unwrap().kind, ErrorKind::Network as i32);
@@ -418,6 +431,7 @@ fn update_against_an_unreachable_server_fails_cleanly() {
         pb::request::Command::Update(pb::Update {
             target: pb::UpdateTarget::Map as i32,
             region_id: "us-zz".into(),
+            ..Default::default()
         }),
     );
     assert_eq!(

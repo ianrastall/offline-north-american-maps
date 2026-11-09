@@ -62,7 +62,7 @@
             </MenuBarItem>
             <MenuBarItem Title="Map">
                 <MenuFlyoutItem Click="Regions_Click" Text="Regions…" />
-                <MenuFlyoutItem x:Name="UpdateAllItem" Click="UpdateAll_Click" Text="Update all regions…" />
+                <MenuFlyoutItem x:Name="UpdateAllItem" Click="CheckUpdates_Click" Text="Check for updates…" />
                 <MenuFlyoutItem x:Name="CancelUpdateItem" Click="CancelUpdate_Click" IsEnabled="False" Text="Cancel download" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Name="MapInfoItem" Click="MapInfo_Click" Text="Map information" />
