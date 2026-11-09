@@ -339,7 +339,7 @@ Known at release: some place labels near the Chicago lakefront at zoom 11 lost l
 
 Completed 9 November 2026. The labels with missing letters were public-land names (green, from the flood zones and public lands download). The page inserted them, like the contour labels, below `water-river`, so roads, railways and paths were drawn over them and cut through letters. Both are now inserted just below the base style's first label layer (`label-address-housenumber`): over every road and line, under the base map's own labels. The overview's names and city dots moved there too, so terrain shading and overlay fills no longer dim them.
 
-Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple Park", "Philbrick Park" and "Lunt Park" draw whole where 0.7.0 cut them.
+Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple Park", "Philbrick Park" and "Lunt Park" draw whole where 0.7.0 cut them, in the development build and in the installed 0.7.1 started from Start. Released as [v0.7.1](https://github.com/ianrastall/offline-us-maps/releases/tag/v0.7.1), built from 8748bff; the installer's SHA-256 (06906734…e6d0581) matches GitHub's digest, and Settings > Apps lists 0.7.1.
 
 ## Next stages
 
