@@ -331,6 +331,8 @@ Completed 9 November 2026. Ian asked for a map of the whole country, filled in b
 
 Verified: Rust tests (70 core including a check-only test, 2 HTTP, 6 ABI including an empty overview tile) and the app build with no warnings. In the development build with Illinois and Indiana installed: the whole country at zoom 3.7 with one set of names; Michigan's border with Indiana not drawn twice; at zoom 11 on the Chicago lakefront, no overview water over land; with an empty profile, the overview of the 48 states with the No map is installed bar. Check for updates found the Illinois map (downloaded that morning) and both regions' terrain current, and listed both regions' stations and addresses (Geofabrik's file of 9 November) and Illinois's flood zones (installed from a local test copy, so the GitHub file counts as different), 635 MB together; Not now downloaded nothing.
 
+Released 9 November 2026 as [v0.7.0](https://github.com/ianrastall/offline-us-maps/releases/tag/v0.7.0), built from 7d11e5b; the installer's SHA-256 (25e77b62…dbb6b) matches GitHub's digest. 0.7.0 installed over 0.6.0 here: Settings > Apps lists Offline US Maps 0.7.0 under the same AppId, `Overview\us-overview.mbtiles` is in the program folder, and the app started from the Start entry with the overview around Illinois and Indiana.
+
 Known, not changed: some place labels near the Chicago lakefront at zoom 11 lose letters ("Maple Park" drawn as "Ma le Par k"). The installed 0.6.0 shows the same at that view, so it predates this release.
 
 ## Next stages
