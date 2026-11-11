@@ -341,6 +341,26 @@ Completed 9 November 2026. The labels with missing letters were public-land name
 
 Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple Park", "Philbrick Park" and "Lunt Park" draw whole where 0.7.0 cut them, in the development build and in the installed 0.7.1 started from Start. Released as [v0.7.1](https://github.com/ianrastall/offline-us-maps/releases/tag/v0.7.1), built from 8748bff; the installer's SHA-256 (06906734…e6d0581) matches GitHub's digest, and Settings > Apps lists 0.7.1.
 
+## 0.9.0: Canada, Alaska and Mexico by state
+
+Completed 11 November 2026: stages 2 and 3 of the [North America and Android plan](north-america-and-android.md), and Mexico split by state at Ian's request. Ian chose VersaTiles' Planetiler profile for the built maps and agreed to publishing OpenStreetMap-derived files. Method and figures are in [sources](sources-and-architecture.md#regions-built-for-the-app-from-090).
+
+- **Region files.** In the [`regions` release](https://github.com/ianrastall/offline-us-maps/releases/tag/regions): 32 Mexican state maps and extracts (1.44 GB), 13 Canadian maps with Nunavut as two (`ca-nu-w`, `ca-nu-e`; one file would have been 3.0 GB, over GitHub's 2 GiB limit) and Alaska (8.9 GB together; Quebec 1.7 GB is the largest). GitHub's SHA-256 digests match the local files.
+- **Catalog.** 100 regions: 53 US (Alaska included), 14 Canadian, Mexico whole and its 32 states. The catalog message now carries download addresses, and the Regions window credits maps prepared for the app.
+- **Profile comparison** (Rhode Island against Geofabrik's package): Planetiler's bundled Shortbread sample wrote no boundary lines and fewer addresses and labels; VersaTiles' profile writes boundaries and, in the app's style, draws the same roads, street names and shields.
+- **Overview.** Canada's provinces, highways and cities (4.2 MB, 100 state and province labels); the view reaches 83.5° N.
+- **Search.** French street abbreviations and service words; capitals read "State or provincial capital".
+- **Tests.** 71 core, 2 HTTP and 6 ABI tests (Rust) and 9 interop tests (C#).
+
+Verified, downloading from the published files:
+- Querétaro (development build, fresh profile): map 12 MB, extract 13 MB (266 fuel stations, 6,898 addresses), terrain 60 MB, in 46 s; map with terrain, contours, fuel stations and the 57D shield.
+- New Brunswick (development build): map 83 MB from the release, stations and addresses from Geofabrik (427 fuel, 193 charging stations, 61,862 addresses), terrain 377 MB, in about 2 minutes; "fredericton", "moncton", "essence", "pharmacie", "boul", "rue main" and "123 main st moncton" found what they should; Moncton drawn with streets, buildings and stations.
+- Alaska (installed 0.9.0, separate profile on drive D): map 427 MB and stations and addresses (286 fuel stations, 15,631 addresses) in 84 s; Anchorage, Juneau and Fairbanks found and drawn.
+
+Released 11 November 2026 as [v0.9.0](https://github.com/ianrastall/offline-us-maps/releases/tag/v0.9.0), built from 29d0a5d; the installer's SHA-256 (b0de39df…de3d6c9) matches GitHub's digest. 0.9.0 installed over 0.8.0 here: Settings > Apps lists 0.9.0, Illinois and Indiana were kept, the app started from its Start entry, and `tools/acceptance/offline-check.ps1 -Mode online` gave the same Illinois results.
+
+Not covered: a download of every built region (Nunavut's halves, Quebec and Ontario were built and published but not downloaded through the app); terrain for the northern regions. Not done: provincial and Trans-Canada shields; Inuktitut syllabics; Mexican-style addresses; a schedule for rebuilding the region files.
+
 ## 0.8.0: Mexico
 
 Completed 11 November 2026: stage 1 of the [North America and Android plan](north-america-and-android.md). Details of the data are in [sources](sources-and-architecture.md#mexico-080).
