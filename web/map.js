@@ -448,7 +448,7 @@ function applyOverview() {
     tiles: [absolute('overview/{z}/{x}/{y}.pbf')],
     minzoom: 0,
     maxzoom: 7,
-    bounds: [-180, 8, -48, 78],
+    bounds: [-180, 8, -48, 84],
   });
   // The base style's own colors, so the overview matches the installed maps.
   const paint = (id, property, fallback) => (map.getLayer(id) && map.getPaintProperty(id, property)) || fallback;
@@ -572,8 +572,8 @@ function reportView() {
 // shape. MapLibre will not zoom out past the point where the view would leave
 // these bounds, so a tight margin cut off a tall box in a wide window.
 function maxBounds() {
-  // With the overview, the whole country is in reach.
-  if (metadata.overview) return [[-180, 10], [-50, 76]];
+  // With the overview, the US, Canada and Mexico are in reach.
+  if (metadata.overview) return [[-180, 10], [-50, 83.5]];
   const b = metadata.bounds;
   const cos = Math.cos((((b.south + b.north) / 2) * Math.PI) / 180);
   const width = b.east - b.west;

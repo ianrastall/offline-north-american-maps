@@ -3,6 +3,31 @@
 use crate::mbtiles::Bounds;
 use crate::package::Region;
 
+pub const MX_AGU: Region = Region {
+    id: "mx-agu",
+    name: "Aguascalientes",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-agu-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-agu-latest.osm.pbf",
+    outer: Bounds {
+        west: -103.394,
+        south: 21.102,
+        east: -101.315,
+        north: 22.980,
+    },
+    required_points: &[
+        (-102.355, 22.041),
+        (-102.770, 21.706),
+        (-101.939, 21.706),
+        (-102.770, 22.376),
+        (-101.939, 22.376),
+    ],
+    package_bytes: 5615616,
+    extras_bytes: 4627113,
+    terrain_bytes: 21781408,
+    overlay_bytes: 0,
+};
+
 pub const US_AL: Region = Region {
     id: "us-al",
     name: "Alabama",
@@ -26,6 +51,31 @@ pub const US_AL: Region = Region {
     extras_bytes: 151825646,
     terrain_bytes: 323179730,
     overlay_bytes: 155090944,
+};
+
+pub const MX: Region = Region {
+    id: "mx",
+    name: "All of Mexico",
+    source_page: "https://download.geofabrik.de/north-america/mexico.html",
+    package_url: "https://download.geofabrik.de/north-america/mexico-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/mexico-latest.osm.pbf",
+    outer: Bounds {
+        west: -132.995,
+        south: 8.580,
+        east: -81.105,
+        north: 33.221,
+    },
+    required_points: &[
+        (-108.993, 21.089),
+        (-127.795, 11.783),
+        (-90.191, 11.783),
+        (-127.795, 30.394),
+        (-90.191, 30.394),
+    ],
+    package_bytes: 1918816256,
+    extras_bytes: 648403910,
+    terrain_bytes: 4585118606,
+    overlay_bytes: 0,
 };
 
 pub const US_AZ: Region = Region {
@@ -78,6 +128,56 @@ pub const US_AR: Region = Region {
     overlay_bytes: 50286592,
 };
 
+pub const MX_BCN: Region = Region {
+    id: "mx-bcn",
+    name: "Baja California",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-bcn-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-bcn-latest.osm.pbf",
+    outer: Bounds {
+        west: -118.885,
+        south: 27.480,
+        east: -112.233,
+        north: 33.239,
+    },
+    required_points: &[
+        (-115.559, 30.359),
+        (-117.804, 28.472),
+        (-113.314, 28.472),
+        (-117.804, 32.247),
+        (-113.314, 32.247),
+    ],
+    package_bytes: 34435072,
+    extras_bytes: 50426580,
+    terrain_bytes: 179649434,
+    overlay_bytes: 0,
+};
+
+pub const MX_BCS: Region = Region {
+    id: "mx-bcs",
+    name: "Baja California Sur",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-bcs-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-bcs-latest.osm.pbf",
+    outer: Bounds {
+        west: -116.289,
+        south: 22.352,
+        east: -108.893,
+        north: 28.520,
+    },
+    required_points: &[
+        (-112.591, 25.436),
+        (-115.134, 23.384),
+        (-110.049, 23.384),
+        (-115.134, 27.487),
+        (-110.049, 27.487),
+    ],
+    package_bytes: 11935744,
+    extras_bytes: 10476430,
+    terrain_bytes: 130490878,
+    overlay_bytes: 0,
+};
+
 pub const US_CA: Region = Region {
     id: "us-ca",
     name: "California",
@@ -101,6 +201,131 @@ pub const US_CA: Region = Region {
     extras_bytes: 1335418542,
     terrain_bytes: 1562137584,
     overlay_bytes: 139513856,
+};
+
+pub const MX_CAM: Region = Region {
+    id: "mx-cam",
+    name: "Campeche",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-cam-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-cam-latest.osm.pbf",
+    outer: Bounds {
+        west: -92.989,
+        south: 17.292,
+        east: -88.601,
+        north: 21.368,
+    },
+    required_points: &[
+        (-90.795, 19.330),
+        (-92.134, 18.116),
+        (-89.456, 18.116),
+        (-92.134, 20.545),
+        (-89.456, 20.545),
+    ],
+    package_bytes: 8871936,
+    extras_bytes: 4210694,
+    terrain_bytes: 99343694,
+    overlay_bytes: 0,
+};
+
+pub const MX_CHP: Region = Region {
+    id: "mx-chp",
+    name: "Chiapas",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-chp-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-chp-latest.osm.pbf",
+    outer: Bounds {
+        west: -94.659,
+        south: 14.011,
+        east: -89.852,
+        north: 18.505,
+    },
+    required_points: &[
+        (-92.255, 16.258),
+        (-93.762, 14.876),
+        (-90.748, 14.876),
+        (-93.762, 17.640),
+        (-90.748, 17.640),
+    ],
+    package_bytes: 34525184,
+    extras_bytes: 35619437,
+    terrain_bytes: 252031996,
+    overlay_bytes: 0,
+};
+
+pub const MX_CHH: Region = Region {
+    id: "mx-chh",
+    name: "Chihuahua",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-chh-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-chh-latest.osm.pbf",
+    outer: Bounds {
+        west: -109.595,
+        south: 25.039,
+        east: -102.787,
+        north: 32.304,
+    },
+    required_points: &[
+        (-106.191, 28.671),
+        (-108.498, 26.181),
+        (-103.884, 26.181),
+        (-108.498, 31.161),
+        (-103.884, 31.161),
+    ],
+    package_bytes: 59060224,
+    extras_bytes: 41102635,
+    terrain_bytes: 644477966,
+    overlay_bytes: 0,
+};
+
+pub const MX_COA: Region = Region {
+    id: "mx-coa",
+    name: "Coahuila",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-coa-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-coa-latest.osm.pbf",
+    outer: Bounds {
+        west: -104.480,
+        south: 24.023,
+        east: -99.323,
+        north: 30.400,
+    },
+    required_points: &[
+        (-101.901, 27.211),
+        (-103.548, 25.076),
+        (-100.255, 25.076),
+        (-103.548, 29.346),
+        (-100.255, 29.346),
+    ],
+    package_bytes: 22462464,
+    extras_bytes: 14811580,
+    terrain_bytes: 360582062,
+    overlay_bytes: 0,
+};
+
+pub const MX_COL: Region = Region {
+    id: "mx-col",
+    name: "Colima",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-col-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-col-latest.osm.pbf",
+    outer: Bounds {
+        west: -115.280,
+        south: 17.819,
+        east: -102.966,
+        north: 20.033,
+    },
+    required_points: &[
+        (-109.123, 18.926),
+        (-113.633, 18.456),
+        (-104.614, 18.456),
+        (-113.633, 19.395),
+        (-104.614, 19.395),
+    ],
+    package_bytes: 6373376,
+    extras_bytes: 5351106,
+    terrain_bytes: 24064998,
+    overlay_bytes: 0,
 };
 
 pub const US_CO: Region = Region {
@@ -203,6 +428,31 @@ pub const US_DC: Region = Region {
     overlay_bytes: 999424,
 };
 
+pub const MX_DUR: Region = Region {
+    id: "mx-dur",
+    name: "Durango",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-dur-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-dur-latest.osm.pbf",
+    outer: Bounds {
+        west: -107.730,
+        south: 21.825,
+        east: -101.953,
+        north: 27.365,
+    },
+    required_points: &[
+        (-104.841, 24.595),
+        (-106.736, 22.795),
+        (-102.946, 22.795),
+        (-106.736, 26.395),
+        (-102.946, 26.395),
+    ],
+    package_bytes: 21430272,
+    extras_bytes: 15752153,
+    terrain_bytes: 398931484,
+    overlay_bytes: 0,
+};
+
 pub const US_FL: Region = Region {
     id: "us-fl",
     name: "Florida",
@@ -253,6 +503,56 @@ pub const US_GA: Region = Region {
     overlay_bytes: 166105088,
 };
 
+pub const MX_GUA: Region = Region {
+    id: "mx-gua",
+    name: "Guanajuato",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-gua-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-gua-latest.osm.pbf",
+    outer: Bounds {
+        west: -102.617,
+        south: 19.393,
+        east: -99.151,
+        north: 22.359,
+    },
+    required_points: &[
+        (-100.884, 20.876),
+        (-101.855, 20.105),
+        (-99.914, 20.105),
+        (-101.855, 21.647),
+        (-99.914, 21.647),
+    ],
+    package_bytes: 28315648,
+    extras_bytes: 31759539,
+    terrain_bytes: 86395638,
+    overlay_bytes: 0,
+};
+
+pub const MX_GRO: Region = Region {
+    id: "mx-gro",
+    name: "Guerrero",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-gro-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-gro-latest.osm.pbf",
+    outer: Bounds {
+        west: -102.704,
+        south: 15.796,
+        east: -97.487,
+        north: 19.408,
+    },
+    required_points: &[
+        (-100.096, 17.602),
+        (-101.767, 16.573),
+        (-98.425, 16.573),
+        (-101.767, 18.631),
+        (-98.425, 18.631),
+    ],
+    package_bytes: 26431488,
+    extras_bytes: 23919310,
+    terrain_bytes: 197921252,
+    overlay_bytes: 0,
+};
+
 pub const US_HI: Region = Region {
     id: "us-hi",
     name: "Hawaii",
@@ -276,6 +576,31 @@ pub const US_HI: Region = Region {
     extras_bytes: 27653711,
     terrain_bytes: 31292542,
     overlay_bytes: 7802880,
+};
+
+pub const MX_HID: Region = Region {
+    id: "mx-hid",
+    name: "Hidalgo",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-hid-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-hid-latest.osm.pbf",
+    outer: Bounds {
+        west: -100.380,
+        south: 19.078,
+        east: -97.465,
+        north: 21.919,
+    },
+    required_points: &[
+        (-98.922, 20.498),
+        (-99.672, 19.778),
+        (-98.172, 19.778),
+        (-99.672, 21.218),
+        (-98.172, 21.218),
+    ],
+    package_bytes: 22740992,
+    extras_bytes: 21133351,
+    terrain_bytes: 83090510,
+    overlay_bytes: 0,
 };
 
 pub const US_ID: Region = Region {
@@ -351,6 +676,31 @@ pub const US_IA: Region = Region {
     extras_bytes: 134409988,
     terrain_bytes: 370944722,
     overlay_bytes: 322338816,
+};
+
+pub const MX_JAL: Region = Region {
+    id: "mx-jal",
+    name: "Jalisco",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-jal-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-jal-latest.osm.pbf",
+    outer: Bounds {
+        west: -106.215,
+        south: 18.406,
+        east: -100.991,
+        north: 23.270,
+    },
+    required_points: &[
+        (-103.603, 20.838),
+        (-105.277, 19.308),
+        (-101.929, 19.308),
+        (-105.277, 22.368),
+        (-101.929, 22.368),
+    ],
+    package_bytes: 40300544,
+    extras_bytes: 37408517,
+    terrain_bytes: 294414920,
+    overlay_bytes: 0,
 };
 
 pub const US_KS: Region = Region {
@@ -503,28 +853,28 @@ pub const US_MA: Region = Region {
     overlay_bytes: 59772928,
 };
 
-pub const MX: Region = Region {
-    id: "mx",
-    name: "Mexico",
-    source_page: "https://download.geofabrik.de/north-america/mexico.html",
-    package_url: "https://download.geofabrik.de/north-america/mexico-shortbread-1.0.mbtiles",
-    extras_url: "https://download.geofabrik.de/north-america/mexico-latest.osm.pbf",
+pub const MX_CMX: Region = Region {
+    id: "mx-cmx",
+    name: "Mexico City",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-cmx-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-cmx-latest.osm.pbf",
     outer: Bounds {
-        west: -132.995,
-        south: 8.580,
-        east: -81.105,
-        north: 33.221,
+        west: -99.885,
+        south: 18.529,
+        east: -98.420,
+        north: 20.113,
     },
     required_points: &[
-        (-108.993, 21.089),
-        (-127.795, 11.783),
-        (-90.191, 11.783),
-        (-127.795, 30.394),
-        (-90.191, 30.394),
+        (-99.153, 19.321),
+        (-99.322, 19.103),
+        (-98.983, 19.103),
+        (-99.322, 19.538),
+        (-98.983, 19.538),
     ],
-    package_bytes: 1918816256,
-    extras_bytes: 648403910,
-    terrain_bytes: 4585118606,
+    package_bytes: 17350656,
+    extras_bytes: 22924917,
+    terrain_bytes: 8754862,
     overlay_bytes: 0,
 };
 
@@ -551,6 +901,31 @@ pub const US_MI: Region = Region {
     extras_bytes: 317258877,
     terrain_bytes: 654279782,
     overlay_bytes: 86523904,
+};
+
+pub const MX_MIC: Region = Region {
+    id: "mx-mic",
+    name: "Michoacán",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-mic-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-mic-latest.osm.pbf",
+    outer: Bounds {
+        west: -104.259,
+        south: 17.395,
+        east: -99.543,
+        north: 20.915,
+    },
+    required_points: &[
+        (-101.901, 19.155),
+        (-103.371, 18.163),
+        (-100.431, 18.163),
+        (-103.371, 20.147),
+        (-100.431, 20.147),
+    ],
+    package_bytes: 29794304,
+    extras_bytes: 30055373,
+    terrain_bytes: 193318168,
+    overlay_bytes: 0,
 };
 
 pub const US_MN: Region = Region {
@@ -651,6 +1026,56 @@ pub const US_MT: Region = Region {
     extras_bytes: 101460740,
     terrain_bytes: 1358736114,
     overlay_bytes: 73805824,
+};
+
+pub const MX_MOR: Region = Region {
+    id: "mx-mor",
+    name: "Morelos",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-mor-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-mor-latest.osm.pbf",
+    outer: Bounds {
+        west: -100.014,
+        south: 17.812,
+        east: -98.113,
+        north: 19.652,
+    },
+    required_points: &[
+        (-99.064, 18.732),
+        (-99.408, 18.412),
+        (-98.719, 18.412),
+        (-99.408, 19.052),
+        (-98.719, 19.052),
+    ],
+    package_bytes: 8392704,
+    extras_bytes: 8254917,
+    terrain_bytes: 24316342,
+    overlay_bytes: 0,
+};
+
+pub const MX_NAY: Region = Region {
+    id: "mx-nay",
+    name: "Nayarit",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-nay-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-nay-latest.osm.pbf",
+    outer: Bounds {
+        west: -107.223,
+        south: 20.083,
+        east: -103.201,
+        north: 23.605,
+    },
+    required_points: &[
+        (-105.212, 21.844),
+        (-106.405, 20.851),
+        (-104.019, 20.851),
+        (-106.405, 22.836),
+        (-104.019, 22.836),
+    ],
+    package_bytes: 13021184,
+    extras_bytes: 11752211,
+    terrain_bytes: 118953528,
+    overlay_bytes: 0,
 };
 
 pub const US_NE: Region = Region {
@@ -853,6 +1278,56 @@ pub const US_ND: Region = Region {
     overlay_bytes: 93777920,
 };
 
+pub const MX_NLE: Region = Region {
+    id: "mx-nle",
+    name: "Nuevo León",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-nle-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-nle-latest.osm.pbf",
+    outer: Bounds {
+        west: -101.727,
+        south: 22.643,
+        east: -97.902,
+        north: 28.319,
+    },
+    required_points: &[
+        (-99.814, 25.481),
+        (-100.928, 23.626),
+        (-98.700, 23.626),
+        (-100.928, 27.335),
+        (-98.700, 27.335),
+    ],
+    package_bytes: 24350720,
+    extras_bytes: 22629419,
+    terrain_bytes: 189367482,
+    overlay_bytes: 0,
+};
+
+pub const MX_OAX: Region = Region {
+    id: "mx-oax",
+    name: "Oaxaca",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-oax-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-oax-latest.osm.pbf",
+    outer: Bounds {
+        west: -99.073,
+        south: 15.137,
+        east: -93.347,
+        north: 19.190,
+    },
+    required_points: &[
+        (-96.210, 17.163),
+        (-98.084, 15.958),
+        (-94.336, 15.958),
+        (-98.084, 18.368),
+        (-94.336, 18.368),
+    ],
+    package_bytes: 33419264,
+    extras_bytes: 32199447,
+    terrain_bytes: 270895752,
+    overlay_bytes: 0,
+};
+
 pub const US_OH: Region = Region {
     id: "us-oh",
     name: "Ohio",
@@ -953,6 +1428,31 @@ pub const US_PA: Region = Region {
     overlay_bytes: 143863808,
 };
 
+pub const MX_PUE: Region = Region {
+    id: "mx-pue",
+    name: "Puebla",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-pue-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-pue-latest.osm.pbf",
+    outer: Bounds {
+        west: -99.590,
+        south: 17.341,
+        east: -96.205,
+        north: 21.360,
+    },
+    required_points: &[
+        (-97.898, 19.350),
+        (-98.836, 18.159),
+        (-96.959, 18.159),
+        (-98.836, 20.542),
+        (-96.959, 20.542),
+    ],
+    package_bytes: 32587776,
+    extras_bytes: 32535998,
+    terrain_bytes: 151348130,
+    overlay_bytes: 0,
+};
+
 pub const US_PR: Region = Region {
     id: "us-pr",
     name: "Puerto Rico",
@@ -978,6 +1478,56 @@ pub const US_PR: Region = Region {
     overlay_bytes: 5345280,
 };
 
+pub const MX_QUE: Region = Region {
+    id: "mx-que",
+    name: "Querétaro",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-que-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-que-latest.osm.pbf",
+    outer: Bounds {
+        west: -101.117,
+        south: 19.495,
+        east: -98.523,
+        north: 22.190,
+    },
+    required_points: &[
+        (-99.820, 20.843),
+        (-100.441, 20.181),
+        (-99.198, 20.181),
+        (-100.441, 21.505),
+        (-99.198, 21.505),
+    ],
+    package_bytes: 12238848,
+    extras_bytes: 13047787,
+    terrain_bytes: 60256420,
+    overlay_bytes: 0,
+};
+
+pub const MX_ROO: Region = Region {
+    id: "mx-roo",
+    name: "Quintana Roo",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-roo-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-roo-latest.osm.pbf",
+    outer: Bounds {
+        west: -89.817,
+        south: 17.374,
+        east: -86.191,
+        north: 22.125,
+    },
+    required_points: &[
+        (-88.004, 19.750),
+        (-89.038, 18.265),
+        (-86.969, 18.265),
+        (-89.038, 21.234),
+        (-86.969, 21.234),
+    ],
+    package_bytes: 14745600,
+    extras_bytes: 11309825,
+    terrain_bytes: 91371818,
+    overlay_bytes: 0,
+};
+
 pub const US_RI: Region = Region {
     id: "us-ri",
     name: "Rhode Island",
@@ -1001,6 +1551,81 @@ pub const US_RI: Region = Region {
     extras_bytes: 52531197,
     terrain_bytes: 12174714,
     overlay_bytes: 8355840,
+};
+
+pub const MX_SLP: Region = Region {
+    id: "mx-slp",
+    name: "San Luis Potosí",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-slp-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-slp-latest.osm.pbf",
+    outer: Bounds {
+        west: -102.816,
+        south: 20.640,
+        east: -97.806,
+        north: 25.012,
+    },
+    required_points: &[
+        (-100.311, 22.826),
+        (-101.899, 21.493),
+        (-98.723, 21.493),
+        (-101.899, 24.158),
+        (-98.723, 24.158),
+    ],
+    package_bytes: 17625088,
+    extras_bytes: 12677778,
+    terrain_bytes: 215969946,
+    overlay_bytes: 0,
+};
+
+pub const MX_SIN: Region = Region {
+    id: "mx-sin",
+    name: "Sinaloa",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-sin-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-sin-latest.osm.pbf",
+    outer: Bounds {
+        west: -109.965,
+        south: 21.947,
+        east: -104.872,
+        north: 27.562,
+    },
+    required_points: &[
+        (-107.418, 24.755),
+        (-109.039, 22.925),
+        (-105.797, 22.925),
+        (-109.039, 26.585),
+        (-105.797, 26.585),
+    ],
+    package_bytes: 26599424,
+    extras_bytes: 20703399,
+    terrain_bytes: 270131432,
+    overlay_bytes: 0,
+};
+
+pub const MX_SON: Region = Region {
+    id: "mx-son",
+    name: "Sonora",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-son-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-son-latest.osm.pbf",
+    outer: Bounds {
+        west: -115.573,
+        south: 25.777,
+        east: -107.904,
+        north: 33.014,
+    },
+    required_points: &[
+        (-111.739, 29.396),
+        (-114.390, 26.917),
+        (-109.087, 26.917),
+        (-114.390, 31.874),
+        (-109.087, 31.874),
+    ],
+    package_bytes: 39034880,
+    extras_bytes: 24146174,
+    terrain_bytes: 529445002,
+    overlay_bytes: 0,
 };
 
 pub const US_SC: Region = Region {
@@ -1053,6 +1678,81 @@ pub const US_SD: Region = Region {
     overlay_bytes: 163807232,
 };
 
+pub const MX_MEX: Region = Region {
+    id: "mx-mex",
+    name: "State of Mexico",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-mex-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-mex-latest.osm.pbf",
+    outer: Bounds {
+        west: -101.133,
+        south: 17.847,
+        east: -98.077,
+        north: 20.806,
+    },
+    required_points: &[
+        (-99.605, 19.326),
+        (-100.411, 18.559),
+        (-98.798, 18.559),
+        (-100.411, 20.094),
+        (-98.798, 20.094),
+    ],
+    package_bytes: 44953600,
+    extras_bytes: 50123751,
+    terrain_bytes: 87328176,
+    overlay_bytes: 0,
+};
+
+pub const MX_TAB: Region = Region {
+    id: "mx-tab",
+    name: "Tabasco",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-tab-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-tab-latest.osm.pbf",
+    outer: Bounds {
+        west: -94.650,
+        south: 16.731,
+        east: -90.467,
+        north: 19.170,
+    },
+    required_points: &[
+        (-92.559, 17.951),
+        (-93.816, 17.391),
+        (-91.302, 17.391),
+        (-93.816, 18.510),
+        (-91.302, 18.510),
+    ],
+    package_bytes: 10801152,
+    extras_bytes: 7394870,
+    terrain_bytes: 65595814,
+    overlay_bytes: 0,
+};
+
+pub const MX_TAM: Region = Region {
+    id: "mx-tam",
+    name: "Tamaulipas",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-tam-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-tam-latest.osm.pbf",
+    outer: Bounds {
+        west: -100.665,
+        south: 21.687,
+        east: -96.625,
+        north: 28.199,
+    },
+    required_points: &[
+        (-98.645, 24.943),
+        (-99.845, 22.754),
+        (-97.445, 22.754),
+        (-99.845, 27.132),
+        (-97.445, 27.132),
+    ],
+    package_bytes: 24522752,
+    extras_bytes: 14494579,
+    terrain_bytes: 178051408,
+    overlay_bytes: 0,
+};
+
 pub const US_TN: Region = Region {
     id: "us-tn",
     name: "Tennessee",
@@ -1103,6 +1803,31 @@ pub const US_TX: Region = Region {
     overlay_bytes: 259031040,
 };
 
+pub const MX_TLA: Region = Region {
+    id: "mx-tla",
+    name: "Tlaxcala",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-tla-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-tla-latest.osm.pbf",
+    outer: Bounds {
+        west: -99.228,
+        south: 18.585,
+        east: -97.105,
+        north: 20.249,
+    },
+    required_points: &[
+        (-98.167, 19.417),
+        (-98.600, 19.167),
+        (-97.734, 19.167),
+        (-98.600, 19.667),
+        (-97.734, 19.667),
+    ],
+    package_bytes: 7008256,
+    extras_bytes: 5617452,
+    terrain_bytes: 18965790,
+    overlay_bytes: 0,
+};
+
 pub const US_VI: Region = Region {
     id: "us-vi",
     name: "US Virgin Islands",
@@ -1151,6 +1876,31 @@ pub const US_UT: Region = Region {
     extras_bytes: 171584374,
     terrain_bytes: 576923954,
     overlay_bytes: 36081664,
+};
+
+pub const MX_VER: Region = Region {
+    id: "mx-ver",
+    name: "Veracruz",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-ver-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-ver-latest.osm.pbf",
+    outer: Bounds {
+        west: -99.202,
+        south: 16.617,
+        east: -93.088,
+        north: 22.992,
+    },
+    required_points: &[
+        (-96.145, 19.804),
+        (-98.174, 17.670),
+        (-94.115, 17.670),
+        (-98.174, 21.938),
+        (-94.115, 21.938),
+    ],
+    package_bytes: 50016256,
+    extras_bytes: 43374965,
+    terrain_bytes: 294245162,
+    overlay_bytes: 0,
 };
 
 pub const US_VT: Region = Region {
@@ -1303,35 +2053,102 @@ pub const US_WY: Region = Region {
     overlay_bytes: 61960192,
 };
 
+pub const MX_YUC: Region = Region {
+    id: "mx-yuc",
+    name: "Yucatán",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-yuc-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-yuc-latest.osm.pbf",
+    outer: Bounds {
+        west: -92.828,
+        south: 19.031,
+        east: -87.013,
+        north: 23.049,
+    },
+    required_points: &[
+        (-89.921, 21.040),
+        (-91.831, 19.849),
+        (-88.011, 19.849),
+        (-91.831, 22.231),
+        (-88.011, 22.231),
+    ],
+    package_bytes: 12201984,
+    extras_bytes: 10196761,
+    terrain_bytes: 76994264,
+    overlay_bytes: 0,
+};
+
+pub const MX_ZAC: Region = Region {
+    id: "mx-zac",
+    name: "Zacatecas",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-zac-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/mx-zac-latest.osm.pbf",
+    outer: Bounds {
+        west: -104.874,
+        south: 20.522,
+        east: -100.222,
+        north: 25.645,
+    },
+    required_points: &[
+        (-102.548, 23.084),
+        (-103.992, 21.450),
+        (-101.103, 21.450),
+        (-103.992, 24.717),
+        (-101.103, 24.717),
+    ],
+    package_bytes: 16371712,
+    extras_bytes: 9634663,
+    terrain_bytes: 247117284,
+    overlay_bytes: 0,
+};
+
 /// Every region that can be downloaded, by name.
-pub static ALL: [Region; 53] = [
+pub static ALL: [Region; 85] = [
+    MX_AGU,
     US_AL,
+    MX,
     US_AZ,
     US_AR,
+    MX_BCN,
+    MX_BCS,
     US_CA,
+    MX_CAM,
+    MX_CHP,
+    MX_CHH,
+    MX_COA,
+    MX_COL,
     US_CO,
     US_CT,
     US_DE,
     US_DC,
+    MX_DUR,
     US_FL,
     US_GA,
+    MX_GUA,
+    MX_GRO,
     US_HI,
+    MX_HID,
     US_ID,
     crate::package::ILLINOIS,
     US_IN,
     US_IA,
+    MX_JAL,
     US_KS,
     US_KY,
     US_LA,
     US_ME,
     US_MD,
     US_MA,
-    MX,
+    MX_CMX,
     US_MI,
+    MX_MIC,
     US_MN,
     US_MS,
     US_MO,
     US_MT,
+    MX_MOR,
+    MX_NAY,
     US_NE,
     US_NV,
     US_NH,
@@ -1340,22 +2157,37 @@ pub static ALL: [Region; 53] = [
     US_NY,
     US_NC,
     US_ND,
+    MX_NLE,
+    MX_OAX,
     US_OH,
     US_OK,
     US_OR,
     US_PA,
+    MX_PUE,
     US_PR,
+    MX_QUE,
+    MX_ROO,
     US_RI,
+    MX_SLP,
+    MX_SIN,
+    MX_SON,
     US_SC,
     US_SD,
+    MX_MEX,
+    MX_TAB,
+    MX_TAM,
     US_TN,
     US_TX,
+    MX_TLA,
     US_VI,
     US_UT,
+    MX_VER,
     US_VT,
     US_VA,
     US_WA,
     US_WV,
     US_WI,
     US_WY,
+    MX_YUC,
+    MX_ZAC,
 ];

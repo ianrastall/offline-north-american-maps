@@ -172,22 +172,24 @@ pub(crate) const EMERGENCY: [&str; 10] = [
 ];
 
 /// Words a category is found by: its own words plus common synonyms, in
-/// English and Spanish (without accents, as queries are compared).
+/// English, Spanish and French (without accents, as queries are compared).
 fn category_words(category: &str) -> String {
     match category {
-        "fuel" => "fuel gas station petrol gasolinera".into(),
+        "fuel" => "fuel gas station petrol gasolinera essence station service".into(),
         "charging_station" => {
             "charging station ev charger electric vehicle estacion de carga".into()
         }
-        "shelter" => "shelter hut refugio albergue".into(),
-        "drinking_water" => "drinking water fountain tap spring agua potable bebedero".into(),
+        "shelter" => "shelter hut refugio albergue abri refuge".into(),
+        "drinking_water" => {
+            "drinking water fountain tap spring agua potable bebedero eau potable".into()
+        }
         "camp_site" => "campground camping camp site rv park campamento".into(),
-        "toilets" => "toilets toilet restroom restrooms bathroom banos sanitarios".into(),
-        "hospital" => "hospital".into(),
-        "clinic" => "clinic clinica".into(),
-        "pharmacy" => "pharmacy farmacia".into(),
+        "toilets" => "toilets toilet restroom restrooms bathroom banos sanitarios toilettes".into(),
+        "hospital" => "hospital hopital".into(),
+        "clinic" => "clinic clinica clinique".into(),
+        "pharmacy" => "pharmacy farmacia pharmacie".into(),
         "police" => "police policia".into(),
-        "fire_station" => "fire station bomberos".into(),
+        "fire_station" => "fire station bomberos pompiers caserne".into(),
         other => other.replace('_', " "),
     }
 }
@@ -568,7 +570,7 @@ fn write_index(
 }
 
 /// Word pairs treated as equivalent in names and queries (full, short).
-const ABBREVIATIONS: [(&str, &str); 42] = [
+const ABBREVIATIONS: [(&str, &str); 45] = [
     ("street", "st"),
     ("avenue", "ave"),
     ("road", "rd"),
@@ -612,6 +614,10 @@ const ABBREVIATIONS: [(&str, &str); 42] = [
     ("santa", "sta"),
     ("santo", "sto"),
     ("presidente", "pdte"),
+    // French (Canada).
+    ("chemin", "ch"),
+    ("sainte", "ste"),
+    ("boul", "blvd"),
 ];
 
 /// Lower-case alphanumeric tokens without accents, the way the FTS tokenizer

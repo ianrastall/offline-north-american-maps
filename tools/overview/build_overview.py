@@ -1,11 +1,12 @@
 """Builds the overview built into Offline US Maps: assets/overview/us-overview.mbtiles.
 
 The overview is drawn under the installed regions so the map is never blank outside them:
-coast, lakes and large rivers, country and state borders, Interstates, US and Mexican federal
-highways, cities and state names, at zoom 0-7 (shown enlarged beyond that). It covers the US
-and Mexico. Every feature in a catalog region carries the region's ID (`region`, such as us-il,
-or mx for all of Mexico), and the map leaves out the overview inside installed regions, whose
-own maps show the same things in detail.
+coast, lakes and large rivers, country, state and province borders, main highways, cities and
+state and province names, at zoom 0-7 (shown enlarged beyond that). It covers the US, Canada
+and Mexico. Every feature in a catalog region carries the region's ID (`region`: us-il, ca-on,
+mx-que), and the map leaves out the overview inside installed regions, whose own maps show the
+same things in detail. The map matches IDs by substring, so the whole-country region mx also
+hides every Mexican state's features.
 
 Source: Natural Earth 1:10m (naturalearthdata.com), public domain, downloaded from
 naciscdn.org. Run on the maintainer's machine after changing it; the result is committed.
@@ -41,9 +42,9 @@ OUT = ROOT / "assets" / "overview" / "us-overview.mbtiles"
 REGIONS = {r["id"] for r in json.loads((ROOT / "tools" / "layers" / "regions.json").read_text(encoding="utf-8"))}
 
 # West, south, east, north: the 50 states (Alaska's islands west of 180 degrees aside),
-# Puerto Rico, the US Virgin Islands and Mexico, with the bordering parts of Canada and
-# Central America.
-BOUNDS = (-180.0, 8.0, -48.0, 78.0)
+# Puerto Rico, the US Virgin Islands, Canada and Mexico, with the bordering parts of Central
+# America and Greenland.
+BOUNDS = (-180.0, 8.0, -48.0, 84.0)
 MAX_ZOOM = 7
 FILES = [
     "cultural/ne_10m_admin_1_states_provinces",
@@ -57,11 +58,10 @@ FILES = [
     "physical/ne_10m_rivers_north_america",
 ]
 TERRITORIES = {"PRI": ("us-pr", "Puerto Rico", "PR"), "VIR": ("us-vi", "U.S. Virgin Islands", "VI")}
-# Mexico is one catalog region (Geofabrik has one file for it); its states keep their own
-# outlines and names. Natural Earth still has the old name of Mexico City, and the state of
-# Mexico is named in full so that it is not read as the country.
-MEXICO = "mx"
+# Natural Earth still has the old name and ISO code of Mexico City, and the state of Mexico is
+# named in full so that it is not read as the country.
 MEXICAN_NAMES = {"DF": "Ciudad de México", "MX": "Estado de México"}
+ISO_FIXES = {"MX-DIF": "MX-CMX"}
 
 
 def fetch() -> None:
@@ -85,24 +85,35 @@ def zoom(values: pd.Series) -> pd.Series:
     return values.fillna(MAX_ZOOM).apply(lambda z: min(MAX_ZOOM, max(0, math.floor(z))))
 
 
+def region_id(adm0: str, postal: str, iso: str) -> str:
+    if adm0 in TERRITORIES:
+        return TERRITORIES[adm0][0]
+    if adm0 == "USA":
+        return f"us-{postal.lower()}"
+    iso = ISO_FIXES.get(iso, iso)
+    if not iso[3:].isalpha():
+        return "mx" if adm0 == "MEX" else "ca"  # unnamed islands
+    return iso.lower()
+
+
+def country(region: str) -> str:
+    return region.split("-")[0]
+
+
 def regions() -> gpd.GeoDataFrame:
-    """One row per US state or territory and per Mexican state, with its catalog region."""
-    df = read("ne_10m_admin_1_states_provinces", where="adm0_a3 IN ('USA','PRI','VIR','MEX')")
-    mexican = df["adm0_a3"] == "MEX"
-    df["region"] = [
-        MEXICO if a == "MEX" else TERRITORIES[a][0] if a in TERRITORIES else f"us-{p.lower()}"
-        for a, p in zip(df["adm0_a3"], df["postal"])
-    ]
+    """One row per US state or territory, Canadian province or territory and Mexican state,
+    with its catalog region."""
+    df = read("ne_10m_admin_1_states_provinces", where="adm0_a3 IN ('USA','PRI','VIR','MEX','CAN')")
+    df["region"] = [region_id(a, p or "", i or "") for a, p, i in zip(df["adm0_a3"], df["postal"], df["iso_3166_2"])]
     df["name"] = [
         MEXICAN_NAMES.get(p, n) if a == "MEX" else TERRITORIES[a][1] if a in TERRITORIES else n
         for a, p, n in zip(df["adm0_a3"], df["postal"], df["name"])
     ]
     df["abbrev"] = [TERRITORIES[a][2] if a in TERRITORIES else p for a, p in zip(df["adm0_a3"], df["postal"])]
-    # US regions are dissolved (Puerto Rico has many parts); Mexican states stay apart.
-    df["key"] = df["region"].where(~mexican, "mx:" + df["adm1_code"].fillna(""))
-    df = df.dissolve(by="key", aggfunc="first", as_index=False)
+    # Puerto Rico and the Virgin Islands have many parts.
+    df = df.dissolve(by="region", aggfunc="first", as_index=False)
     df["name"] = df["name"].fillna("")
-    missing = REGIONS - set(df["region"])
+    missing = REGIONS - set(df["region"]) - {"mx"}
     if missing:
         raise RuntimeError(f"no Natural Earth outline for {sorted(missing)}")
     return df[["region", "name", "abbrev", "latitude", "longitude", "geometry"]]
@@ -132,12 +143,12 @@ def state_borders(states: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         if i >= j:
             continue
         a, b = states.iloc[i], states.iloc[j]
-        if (a["region"] == MEXICO) != (b["region"] == MEXICO):
+        if country(a["region"]) != country(b["region"]):
             continue
         shared = a.geometry.boundary.intersection(b.geometry.boundary)
         parts = [g for g in shapely.get_parts(shared) if g.geom_type in ("LineString", "MultiLineString")]
         if parts:
-            regions.append(a["region"] if a["region"] == b["region"] else f"{a['region']} {b['region']}")
+            regions.append(f"{a['region']} {b['region']}")
             lines.append(shapely.line_merge(shapely.union_all(parts)))
     return frame({"kind": "state", "region": regions}, lines)
 
@@ -162,23 +173,24 @@ def build() -> None:
     layers["rivers"] = tag(rivers, states)
 
     countries = read("ne_10m_admin_0_boundary_lines_land")
-    countries = countries[countries["ADM0_A3_L"].isin(["USA", "MEX"]) | countries["ADM0_A3_R"].isin(["USA", "MEX"])]
+    countries = countries[countries["ADM0_A3_L"].isin(["USA", "MEX", "CAN"]) | countries["ADM0_A3_R"].isin(["USA", "MEX", "CAN"])]
     country_lines = frame({"kind": "country", "region": ""}, countries.geometry)
     layers["boundaries"] = pd.concat([country_lines, state_borders(states)], ignore_index=True)
 
-    roads = read("ne_10m_roads", where="sov_a3 IN ('USA','MEX')")
+    roads = read("ne_10m_roads", where="sov_a3 IN ('USA','MEX','CAN')")
     roads = roads[roads["level"].isin(["Interstate", "Federal", "State"]) & (roads["type"] != "Ferry Route")]
     # Natural Earth's "Interstate" level in Mexico is the federal toll motorways (95D).
     kind = roads["level"].str.lower()
     ref = [
-        f"MEX {n}" if country == "MEX" and level != "State"
+        f"MEX {n}" if sov == "MEX" and level != "State"
+        else str(n) if sov == "CAN"
         else f"I-{n}" if level == "Interstate" else f"US {n}" if level == "Federal" else str(n)
-        for country, level, n in zip(roads["sov_a3"], roads["level"], roads["name"].fillna(""))
+        for sov, level, n in zip(roads["sov_a3"], roads["level"], roads["name"].fillna(""))
     ]
     roads = frame({"kind": kind.values, "expressway": roads["expressway"].fillna(0).astype(int).values, "ref": ref, "min_zoom": zoom(roads["min_zoom"]).values}, roads.geometry)
     layers["roads"] = tag(roads, states)
 
-    places = read("ne_10m_populated_places", where="ADM0_A3 IN ('USA','PRI','VIR','MEX')")
+    places = read("ne_10m_populated_places", where="ADM0_A3 IN ('USA','PRI','VIR','MEX','CAN')")
     capital = ["country" if c == "Admin-0 capital" else "state" if c == "Admin-1 capital" else "none" for c in places["FEATURECLA"]]
     places = frame({"name": places["NAME"], "rank": places["SCALERANK"].astype(int), "capital": capital, "min_zoom": zoom(places["MIN_ZOOM"])}, places.geometry)
     places = gpd.sjoin(places, states[["region", "geometry"]], how="left", predicate="within").drop(columns="index_right")

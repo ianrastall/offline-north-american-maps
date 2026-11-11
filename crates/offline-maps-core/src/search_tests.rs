@@ -370,4 +370,14 @@ fn accents_and_spanish_street_words() {
     assert_eq!(names(&found), ["Avenida Benito Juárez"]);
     assert!(category_words("fuel").split(' ').any(|w| w == "gasolinera"));
     assert!(category_words("toilets").contains("banos"));
+    // French (Quebec).
+    assert_eq!(
+        canonical("Boulevard Saint-Laurent"),
+        canonical("boul st laurent")
+    );
+    assert_eq!(
+        canonical("Chemin de la Côte-Sainte-Catherine"),
+        "ch de la cote ste catherine"
+    );
+    assert!(category_words("fuel").split(' ').any(|w| w == "essence"));
 }

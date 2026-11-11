@@ -412,6 +412,8 @@ impl Service {
                     source_page: r.source_page.to_owned(),
                     terrain_bytes: r.terrain_bytes,
                     overlay_bytes: r.overlay_bytes,
+                    package_url: r.package_url.to_owned(),
+                    extras_url: r.extras_url.to_owned(),
                 })
                 .collect(),
         }

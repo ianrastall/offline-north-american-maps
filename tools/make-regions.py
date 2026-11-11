@@ -14,7 +14,12 @@ Inputs (downloaded separately; nothing here touches the network):
   extract-boxes.txt "<slug> <west> <south> <east> <north>" per line: the header box of each
                   raw extract (tools/extract-boxes.py)
 
-Usage: python -I tools/make-regions.py index-v1.json sizes.txt pbf-sizes.txt terrain-sizes.txt extract-boxes.txt <date YYYY-MM-DD> [overlays-summary.json]
+  built.json      (optional, --built) regions whose packages are built for the app and published
+                  with its releases (tools/regions-build): a list of {id, name, source_page,
+                  package_url, extras_url, package_box, outline_box, extract_box, package_bytes,
+                  extras_bytes, terrain_bytes}; boxes are [west, south, east, north]
+
+Usage: python -I tools/make-regions.py index-v1.json sizes.txt pbf-sizes.txt terrain-sizes.txt extract-boxes.txt <date YYYY-MM-DD> [overlays-summary.json] [--built built.json]
        then cargo fmt
 
 Each region's coverage check is its outline's bounding box (Geofabrik's package
@@ -35,7 +40,7 @@ SKIP = {"alaska"}
 HANDWRITTEN = {"illinois": "crate::package::ILLINOIS"}
 BASE = "https://download.geofabrik.de/north-america/us"
 # Countries outside the US, by Geofabrik ID: (base URL, catalog ID, name).
-COUNTRIES = {"mexico": ("https://download.geofabrik.de/north-america", "mx", "Mexico")}
+COUNTRIES = {"mexico": ("https://download.geofabrik.de/north-america", "mx", "All of Mexico")}
 
 
 
@@ -70,14 +75,20 @@ def sizes(path):
 
 
 def main():
-    index_path, shortbread_path, pbf_path, terrain_path, boxes_path, date = sys.argv[1:7]
+    args = sys.argv[1:]
+    built = []
+    if "--built" in args:
+        i = args.index("--built")
+        built = json.loads(Path(args[i + 1]).read_text(encoding="utf-8"))
+        del args[i:i + 2]
+    index_path, shortbread_path, pbf_path, terrain_path, boxes_path, date = args[:6]
     extract_boxes = {}
     for line in Path(boxes_path).read_text(encoding="utf-8").splitlines():
         slug, *values = line.split()
         extract_boxes[slug] = tuple(float(v) for v in values)
     overlays = {}
-    if len(sys.argv) > 7:
-        summary = json.loads(Path(sys.argv[7]).read_text(encoding="utf-8"))
+    if len(args) > 6:
+        summary = json.loads(Path(args[6]).read_text(encoding="utf-8"))
         overlays = {k: v.get("bytes", 0) for k, v in summary.items()}
     index = json.loads(Path(index_path).read_text(encoding="utf-8"))
     shortbread, pbf, terrain = sizes(shortbread_path), sizes(pbf_path), sizes(terrain_path)
@@ -95,6 +106,14 @@ def main():
             continue
         code = props["iso3166-2"][0].lower()
         regions.append((display_name(slug), slug, code, BASE, bbox(feature["geometry"])))
+    # Built regions carry their own addresses, boxes and sizes.
+    built_by_id = {b["id"]: b for b in built}
+    for b in built:
+        regions.append((b["name"], b["id"], b["id"], None, tuple(b["outline_box"])))
+        shortbread[b["id"]] = b["package_bytes"]
+        pbf[b["id"]] = b["extras_bytes"]
+        terrain[b["id"]] = b["terrain_bytes"]
+        extract_boxes[b["id"]] = tuple(b["extract_box"])
     regions.sort()
 
     lines = [
@@ -107,8 +126,12 @@ def main():
     names = []
     for name, slug, code, base, (west, south, east, north) in regions:
         const = code.upper().replace("-", "_")
-        # The outer box holds both the package (the outline's box) and the raw extract.
+        # The outer box holds the package, the outline's box and the raw extract.
+        b = built_by_id.get(slug)
         ow, os_, oe, on = west, south, east, north
+        if b:
+            pw, ps, pe, pn = b["package_box"]
+            ow, os_, oe, on = min(ow, pw), min(os_, ps), max(oe, pe), max(on, pn)
         xw, xs, xe, xn = extract_boxes[slug]
         ow, os_, oe, on = min(ow, xw), min(os_, xs), max(oe, xe), max(on, xn)
         names.append(HANDWRITTEN.get(slug, const))
@@ -127,9 +150,9 @@ def main():
             f"pub const {const}: Region = Region {{",
             f'    id: "{code}",',
             f'    name: "{name}",',
-            f'    source_page: "{base}/{slug}.html",',
-            f'    package_url: "{base}/{slug}-shortbread-1.0.mbtiles",',
-            f'    extras_url: "{base}/{slug}-latest.osm.pbf",',
+            f'    source_page: "{b["source_page"] if b else f"{base}/{slug}.html"}",',
+            f'    package_url: "{b["package_url"] if b else f"{base}/{slug}-shortbread-1.0.mbtiles"}",',
+            f'    extras_url: "{b["extras_url"] if b else f"{base}/{slug}-latest.osm.pbf"}",',
             "    outer: Bounds {",
             f"        west: {max(-180.0, ow - OUTER_MARGIN):.3f},",
             f"        south: {max(-90.0, os_ - OUTER_MARGIN):.3f},",

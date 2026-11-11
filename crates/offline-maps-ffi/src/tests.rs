@@ -80,9 +80,9 @@ fn empty_store_reports_no_map_and_refuses_search() {
     let Some(pb::response::Result::Catalog(catalog)) = catalog.result else {
         panic!("{catalog:?}");
     };
-    assert_eq!(catalog.regions.len(), 53);
+    assert_eq!(catalog.regions.len(), 85);
     let mexico = catalog.regions.iter().find(|r| r.id == "mx").unwrap();
-    assert_eq!(mexico.name, "Mexico");
+    assert_eq!(mexico.name, "All of Mexico");
     assert_eq!(mexico.overlay_bytes, 0);
     let illinois = catalog.regions.iter().find(|r| r.id == "us-il").unwrap();
     assert_eq!(illinois.name, "Illinois");

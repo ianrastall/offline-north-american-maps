@@ -323,7 +323,15 @@ public sealed partial class RegionsWindow : Window
         Label(RemoveButton, $"Remove {r.Name}…");
         RemoveButton.Visibility = installed is null ? Visibility.Collapsed : Visibility.Visible;
         RemoveButton.IsEnabled = !busy && !mapQueued && !extrasQueued && !terrainQueued;
-        SourceText.Text = $"Map, stations and addresses from Geofabrik ({r.SourcePage}); map data © OpenStreetMap contributors (ODbL). Terrain from Mapterhorn (download.mapterhorn.com): USGS 3DEP and Copernicus GLO-30. Sizes are as of November 2026.";
+        bool builtMap = r.PackageUrl.StartsWith("https://github.com/", StringComparison.Ordinal);
+        bool builtExtras = r.ExtrasUrl.StartsWith("https://github.com/", StringComparison.Ordinal);
+        string source = (builtMap, builtExtras) switch
+        {
+            (true, true) => $"Map, stations and addresses prepared for Offline US Maps from Geofabrik's OpenStreetMap data and published with its releases ({r.SourcePage})",
+            (true, false) => $"Map built for Offline US Maps from Geofabrik's OpenStreetMap extract and published with its releases ({r.SourcePage}); stations and addresses from Geofabrik",
+            _ => $"Map, stations and addresses from Geofabrik ({r.SourcePage})",
+        };
+        SourceText.Text = $"{source}; map data © OpenStreetMap contributors (ODbL). Terrain from Mapterhorn (download.mapterhorn.com): USGS 3DEP and Copernicus GLO-30. Sizes are as of November 2026.";
     }
 
     /// <summary>

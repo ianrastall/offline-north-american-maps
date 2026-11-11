@@ -244,6 +244,10 @@ message CatalogRegion {
   uint64 terrain_bytes = 6;
   // 0 when no flood zones and public lands file is published for the region.
   uint64 overlay_bytes = 7;
+  // Where the map and the raw extract are downloaded from (Geofabrik, or this
+  // project's releases for regions it builds).
+  string package_url = 8;
+  string extras_url = 9;
 }
 
 message Catalog {

@@ -90,4 +90,5 @@ def main():
     Path(out_path).write_text("".join(line + "\n" for line in lines), encoding="utf-8")
 
 
-main()
+if __name__ == "__main__":
+    main()

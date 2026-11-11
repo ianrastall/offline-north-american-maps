@@ -53,6 +53,7 @@ Planned (10 November 2026): Canada and Alaska, and an Android app with GPS that 
 | `web/` | The map page hosted in WebView2 |
 | `tests/OfflineMaps.Interop.Tests` | Managed/native boundary tests |
 | `build/` | Release script, native build target, installer script |
+| `tools/regions-build/` | Map files for regions Geofabrik does not publish on their own (Mexican states, Canada, Alaska), published in the `regions` release |
 | `tools/acceptance/` | Scripted check of the installed app (map, search, stations, addresses, saved places), with or without a network |
 | `tools/layers/` | Overlay build (flood zones, public lands): Python with GDAL wheels and Planetiler; run by the maintainer, not part of the app |
 
