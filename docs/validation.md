@@ -357,6 +357,8 @@ Verified in the development build with a separate profile on drive D (`--setting
 
 Not done: Mexico by state (Geofabrik publishes one file for the country; separate states need self-built tiles, as Canada does), addresses written with the number after the street ("Reforma 222" finds places named so, not the address), and Mexican state route shields.
 
+Released 11 November 2026 as [v0.8.0](https://github.com/ianrastall/offline-us-maps/releases/tag/v0.8.0), built from 92e3fd9; the installer's SHA-256 (67752d95…94a3f1f1) matches GitHub's digest. 0.8.0 installed over 0.7.1 here: Settings > Apps lists 0.8.0, Illinois and Indiana were kept, the app started from its Start entry, and `tools/acceptance/offline-check.ps1 -Mode online` gave the same Illinois results as for 0.7.1. The release build needs `pwsh -NoProfile` with `DOTNET_ROOT` cleared, since the user profile points it at an SDK folder without the pinned 10.0.114.
+
 ## Offline acceptance test
 
 Passed 11 November 2026 with the installed 0.7.1. This is the first workflow's decisive test: the app started with no network and did everything from local files.
