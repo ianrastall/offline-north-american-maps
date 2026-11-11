@@ -352,6 +352,8 @@ Completed 11 November 2026: stage 4 of the [North America and Android plan](nort
 
 Verified: 0.10.0 installed silently over 0.9.0 here. Settings > Apps lists Offline North American Maps 0.10.0 under the same AppId; Start lists "Offline North American Maps" and no longer "Offline US Maps"; started from Start, the window is titled Offline North American Maps; Illinois and Indiana were kept; `tools/acceptance/offline-check.ps1 -Mode online` gave the same results as for 0.9.0.
 
+Released 11 November 2026 as [v0.10.0](https://github.com/ianrastall/offline-north-american-maps/releases/tag/v0.10.0), built from 719655e; the installer's SHA-256 (5bc35615…f586cb7b) matches GitHub's digest.
+
 ## 0.9.0: Canada, Alaska and Mexico by state
 
 Completed 11 November 2026: stages 2 and 3 of the [North America and Android plan](north-america-and-android.md), and Mexico split by state at Ian's request. Ian chose VersaTiles' Planetiler profile for the built maps and agreed to publishing OpenStreetMap-derived files. Method and figures are in [sources](sources-and-architecture.md#regions-built-for-the-app-from-090).
