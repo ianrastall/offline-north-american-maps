@@ -31,7 +31,10 @@ The built-in overview is made from [Natural Earth](https://www.naturalearthdata.
 
 Status (9 November 2026): version 0.7.1, with the built-in overview and update checks; all 52 regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. Not yet verified: a launch with networking disabled.
 
+Planned (10 November 2026): Canada, Mexico and Alaska, and an Android app with GPS that receives maps from the desktop. See the [North America and Android plan](docs/north-america-and-android.md).
+
 - [Project brief](docs/project-brief.md)
+- [North America and Android plan](docs/north-america-and-android.md)
 - [Sources and technical decisions](docs/sources-and-architecture.md)
 - [Renderer proof and decision](docs/renderer-proof.md)
 - [Implementation stages and verification](docs/validation.md)

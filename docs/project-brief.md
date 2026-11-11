@@ -14,7 +14,7 @@ Ian wants road maps for getting around during an emergency, available offline. S
 4. Find a town or saved location offline. Retain data source, coverage and last update details locally.
 5. Update maps while online without replacing the last working package until the new package validates.
 
-Offline search is part of the intended first workflow. A downloadable file alone does not complete it. Turn-by-turn routing, GPS integration, live closures, traffic and mobile applications are separate decisions. Windows 11 x64 is the initial platform under Jupiter conventions. A desktop app can help prepare for travel; use on a phone or a GPS device would require an additional delivery target.
+Offline search is part of the intended first workflow. A downloadable file alone does not complete it. Turn-by-turn routing, GPS integration, live closures, traffic and mobile applications are separate decisions (an Android app with GPS was agreed on 10 November 2026; see below). Windows 11 x64 is the initial platform under Jupiter conventions. A desktop app can help prepare for travel; use on a phone or a GPS device would require an additional delivery target.
 
 ## Interface direction
 
@@ -26,6 +26,17 @@ Map workspace with a traditional menu bar, compact map controls, a regions/searc
 - Licence: public domain, as The Unlicense, for the app's own code. Bundled components keep their own licences and notices (MapLibre GL JS and maplibre-contour BSD-3-Clause, VersaTiles style MIT, sprites CC0, Noto Sans OFL, Rust crates MIT/Apache-2.0). Map data is downloaded by the user under its own terms.
 - Jupiter.UI is published as its own public repository under the same licence, so the source can be built by others.
 - World coverage was considered and set aside: Geofabrik publishes Shortbread packages for 356 of its 554 regions (checked 8 November 2026; none for Germany, Japan, Brazil, Ontario or Britain, for example), and search abbreviations, address parsing and route shields are US-specific. The region catalog itself is not US-specific.
+
+## North America and Android (direction agreed 10 November 2026)
+
+Ian reviewed the purpose: a survival tool for a serious national or world crisis, when electricity is available but internet is not. Two conclusions follow, and they replace the US-only scope above and the brief's earlier note that mobile applications are a separate decision.
+
+- **North America, not the US alone.** People in a crisis cross borders, and Alaska is reachable by land only through Canada. Coverage extends to Canada and Mexico, and Alaska is added.
+- **A phone app as well as the desktop app.** An Android phone is the more useful tool in a crisis, mainly because its GPS works without internet. The desktop is the "guy in the chair": it downloads over a good connection, does the heavy processing, shows everything on a large screen and copies prepared regions to the phone over USB, which needs no internet. The phone carries the regions and shows where you are.
+
+Phone capacity is not the limit: the map engine reads only the tiles on screen, and Illinois with every optional download takes about 0.9 GB. What does not port is the WinUI shell and the WebView2 map page; the Rust core does.
+
+The stages, facts checked and open decisions are in [North America and Android plan](north-america-and-android.md). No stage has started. The first step is the networking-disabled acceptance test of the existing app.
 
 ## Acceptance conditions
 

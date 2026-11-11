@@ -347,3 +347,5 @@ Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple P
 2. Accessibility and appearance review: keyboard order, screen reader names, high contrast, text scaling, the light theme and mixed-DPI monitors.
 3. Install on a clean Windows 11 machine.
 4. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
+
+After stage 1, the work continues with the [North America and Android plan](north-america-and-android.md) (agreed 10 November 2026): Mexico, a tile build for Canada and Alaska, a rename, then the Android app.
