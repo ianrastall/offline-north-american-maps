@@ -36,7 +36,7 @@ Ian reviewed the purpose: a survival tool for a serious national or world crisis
 
 Phone capacity is not the limit: the map engine reads only the tiles on screen, and Illinois with every optional download takes about 0.9 GB. What does not port is the WinUI shell and the WebView2 map page; the Rust core does.
 
-The stages, facts checked and open decisions are in [North America and Android plan](north-america-and-android.md). No stage has started. The first step is the networking-disabled acceptance test of the existing app.
+The stages, facts checked and open decisions are in [North America and Android plan](north-america-and-android.md). Stage 0, the networking-disabled acceptance test of the existing app, passed on 11 November 2026 ([validation](validation.md#offline-acceptance-test)).
 
 ## Acceptance conditions
 

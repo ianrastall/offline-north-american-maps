@@ -341,11 +341,29 @@ Completed 9 November 2026. The labels with missing letters were public-land name
 
 Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple Park", "Philbrick Park" and "Lunt Park" draw whole where 0.7.0 cut them, in the development build and in the installed 0.7.1 started from Start. Released as [v0.7.1](https://github.com/ianrastall/offline-us-maps/releases/tag/v0.7.1), built from 8748bff; the installer's SHA-256 (06906734…e6d0581) matches GitHub's digest, and Settings > Apps lists 0.7.1.
 
+## Offline acceptance test
+
+Passed 11 November 2026 with the installed 0.7.1. This is the first workflow's decisive test: the app started with no network and did everything from local files.
+
+- **Data.** Installed earlier through the app from Geofabrik: the Illinois map (`illinois-shortbread-1.0.mbtiles`, 9 November build, SHA-256 fb6876ce…) and its stations and addresses (`illinois-latest.osm.pbf` of 8 November: 3,415 fuel, 432 charging, 843,142 addresses). Indiana, Illinois terrain and Illinois flood zones and public lands were also installed; saved places held "Home".
+- **No network.** Ian switched Airplane mode on. Before launch and again at the end the script found no network adapter up apart from Hyper-V's virtual switches, no connection profile with internet, and a TCP connection to 1.1.1.1:443 failing. It changes no network settings itself.
+- **Method.** `tools/acceptance/offline-check.ps1` (Windows PowerShell 5.1) waits for the network to go, closes any running copy and starts `OfflineMaps.exe` from the install folder as a new process. It drives the window through UI Automation, takes page screenshots through WebView2's DevTools port on loopback (`--remote-debugging-port=9222`, only for this process, with `tools/acceptance/cdp.mjs`) and samples TCP connections of the app and its WebView2 processes. When it finishes it restores `settings.json`, says so in a message box and waits for the network to return. `-Mode online` runs the same check without waiting.
+- **Results, offline.** The window opened in 1 s and the map page in 2 s. The status bar read "Illinois and Indiana maps, data of 9 November 2026 · stations and addresses", and no error bar was shown. The map drew roads, labels, route shields, buildings, contour lines, hillshading, flood shading, public lands, fuel stations, drinking water and shelters, with the credits line.
+  - "springfield": 50 results headed by the state capital (186 mi); selecting it moved the map to Springfield at zoom 11, fully drawn with I‑55 and I‑72 shields and fuel stations.
+  - "1060 w addison st chicago": one address result; selecting it showed Wrigley Field at zoom 18.
+  - "fuel", "campground", "drinking water" and "charging": 50 results each, nearest first, with towns and street addresses ("Shell. Fuel station · near Lake View · 0.4 mi · 801 West Addison Street, Chicago").
+  - Clearing the search listed the saved places again; selecting "Home" returned the map to it. `saved-places.json` was unchanged.
+  - Remote TCP connections from the app's process tree: none. The map page requested nothing outside `https://map.local/`. The app log gained no lines.
+- **Same check online** (just before): identical results. WebView2's own processes held connections to Microsoft and to Comcast's DNS-over-HTTPS service; none were needed, as the offline run shows.
+
+Observed: the installed Illinois flood zones and public lands are the local test build of 8 November (built 00:08 UTC 9 November, installed from a local server), from before easements lost their labels, so programme codes such as "Crep 20010796" are drawn around Springfield. The published file is a later build (different SHA-256, same size), and Check for updates already lists it as newer.
+
+Not covered: Indiana's search and map, a cold start after a reboot, toggling layers while offline and a clean machine. `navigator.onLine` stayed true, because Hyper-V's virtual adapters stay up; the page does not depend on it.
+
 ## Next stages
 
-1. Download the Illinois map and the stations and addresses from Geofabrik in the installed app, then launch with networking disabled and verify map rendering, labels, search, stations, addresses and saved places from a clean process. This is the decisive first-workflow acceptance test.
-2. Accessibility and appearance review: keyboard order, screen reader names, high contrast, text scaling, the light theme and mixed-DPI monitors.
-3. Install on a clean Windows 11 machine.
-4. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
+1. Accessibility and appearance review: keyboard order, screen reader names, high contrast, text scaling, the light theme and mixed-DPI monitors.
+2. Install on a clean Windows 11 machine.
+3. If town attribution near municipal lines proves wrong in use, assign towns from administrative boundaries (`admin_level=8`) in the extract instead of settlement points.
 
-After stage 1, the work continues with the [North America and Android plan](north-america-and-android.md) (agreed 10 November 2026): Mexico, a tile build for Canada and Alaska, a rename, then the Android app.
+After the offline acceptance test, the work continues with the [North America and Android plan](north-america-and-android.md) (agreed 10 November 2026): Mexico, a tile build for Canada and Alaska, a rename, then the Android app.

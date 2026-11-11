@@ -29,7 +29,7 @@ The built-in overview is made from [Natural Earth](https://www.naturalearthdata.
 - Terrain: [Mapterhorn](https://mapterhorn.com/attribution) (USGS 3DEP, public domain; Copernicus GLO-30).
 - Flood zones: FEMA National Flood Hazard Layer; public lands: USGS PAD-US. Both are US Government works in the public domain. The flood data's effective date is shown in Map > Regions.
 
-Status (9 November 2026): version 0.7.1, with the built-in overview and update checks; all 52 regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. Not yet verified: a launch with networking disabled.
+Status (9 November 2026): version 0.7.1, with the built-in overview and update checks; all 52 regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. On 11 November 2026 the installed app passed the offline acceptance test: with no network, it showed the Illinois map and found places, addresses, stations, outdoor places and saved places ([validation](docs/validation.md#offline-acceptance-test)).
 
 Planned (10 November 2026): Canada, Mexico and Alaska, and an Android app with GPS that receives maps from the desktop. See the [North America and Android plan](docs/north-america-and-android.md).
 
@@ -53,6 +53,7 @@ Planned (10 November 2026): Canada, Mexico and Alaska, and an Android app with G
 | `web/` | The map page hosted in WebView2 |
 | `tests/OfflineMaps.Interop.Tests` | Managed/native boundary tests |
 | `build/` | Release script, native build target, installer script |
+| `tools/acceptance/` | Scripted check of the installed app (map, search, stations, addresses, saved places), with or without a network |
 | `tools/layers/` | Overlay build (flood zones, public lands): Python with GDAL wheels and Planetiler; run by the maintainer, not part of the app |
 
 ## Build and release

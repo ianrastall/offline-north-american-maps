@@ -1,6 +1,6 @@
 # North America and Android plan
 
-10 November 2026. Direction agreed by Ian on 10 November 2026 ([project brief](project-brief.md#north-america-and-android-direction-agreed-10-november-2026)). No stage has started.
+10 November 2026. Direction agreed by Ian on 10 November 2026 ([project brief](project-brief.md#north-america-and-android-direction-agreed-10-november-2026)). Stage 0 passed on 11 November 2026; stage 1 has not started.
 
 ## Purpose
 
@@ -40,7 +40,7 @@ So Mexico can use Geofabrik's package as the US regions do. Canada and Alaska ne
 
 ### 0. Offline acceptance test of the existing app
 
-Stage 1 of [validation's next stages](validation.md#next-stages): download Illinois and its stations and addresses in the installed app, then launch with networking disabled and verify the map, labels, search, stations, addresses and saved places. It is the app's central promise and is still unverified, so it comes before any expansion.
+Stage 1 of [validation's next stages](validation.md#next-stages): download Illinois and its stations and addresses in the installed app, then launch with networking disabled and verify the map, labels, search, stations, addresses and saved places. It is the app's central promise, so it comes before any expansion. **Passed 11 November 2026** ([validation](validation.md#offline-acceptance-test)).
 
 ### 1. Mexico
 
