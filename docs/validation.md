@@ -341,6 +341,17 @@ Completed 9 November 2026. The labels with missing letters were public-land name
 
 Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple Park", "Philbrick Park" and "Lunt Park" draw whole where 0.7.0 cut them, in the development build and in the installed 0.7.1 started from Start. Released as [v0.7.1](https://github.com/ianrastall/offline-north-american-maps/releases/tag/v0.7.1), built from 8748bff; the installer's SHA-256 (06906734…e6d0581) matches GitHub's digest, and Settings > Apps lists 0.7.1.
 
+## 0.10.0: Offline North American Maps
+
+Completed 11 November 2026: stage 4 of the [North America and Android plan](north-america-and-android.md), with the name Ian chose.
+
+- **Name.** Offline North American Maps in windows, dialogs, the installer, Start, Settings > Apps and the setup file (`OfflineNorthAmericanMaps-<version>-win-x64-setup.exe`). The installer keeps the AppId, install folder (`%LOCALAPPDATA%\Programs\Offline Maps`), data folder, mutex and Start identity (`Jupiter.OfflineMaps`), and deletes "Offline US Maps" shortcuts left by earlier versions.
+- **Repository.** Renamed on GitHub to `ianrastall/offline-north-american-maps`. The catalog, overlay and region download addresses use the new name; GitHub redirects the old addresses (checked: `offline-us-maps/releases/download/regions/ca-pe-shortbread-1.0.mbtiles` answers 301 to the new address, then the file), so 0.9.0 and earlier keep downloading.
+- **Unchanged.** Project and crate names (`OfflineMaps.*`, `offline-maps-*`), the overlay files' metadata keys (`offline-us-maps:*`, written into published files) and the overview's file name.
+- **Tests.** 71 core, 2 HTTP and 6 ABI tests (Rust) and 9 interop tests (C#); the regenerated catalog is identical to the edited one.
+
+Verified: 0.10.0 installed silently over 0.9.0 here. Settings > Apps lists Offline North American Maps 0.10.0 under the same AppId; Start lists "Offline North American Maps" and no longer "Offline US Maps"; started from Start, the window is titled Offline North American Maps; Illinois and Indiana were kept; `tools/acceptance/offline-check.ps1 -Mode online` gave the same results as for 0.9.0.
+
 ## 0.9.0: Canada, Alaska and Mexico by state
 
 Completed 11 November 2026: stages 2 and 3 of the [North America and Android plan](north-america-and-android.md), and Mexico split by state at Ian's request. Ian chose VersaTiles' Planetiler profile for the built maps and agreed to publishing OpenStreetMap-derived files. Method and figures are in [sources](sources-and-architecture.md#regions-built-for-the-app-from-090).
