@@ -60,7 +60,7 @@ Stage 1 of [validation's next stages](validation.md#next-stages): download Illin
 - Decide a rebuild schedule (for example monthly). Update checks already compare server dates, so a rebuilt file shows as newer.
 - Add Inuktitut syllabics to the bundled glyphs.
 
-**Done for 0.9.0 (11 November 2026).** Built with VersaTiles' Planetiler profile (Ian's choice) and published in the [`regions` release](https://github.com/ianrastall/offline-us-maps/releases/tag/regions). Nunavut is two regions split at 90° W because one file would be 3.0 GB, over GitHub's 2 GiB limit; Quebec is the largest single file (1.7 GB). Rebuilds are by hand for now. Mexico is also split by state (Ian, 11 November): the states' maps are cut from Geofabrik's Mexico package and their extracts from its raw extract.
+**Done for 0.9.0 (11 November 2026).** Built with VersaTiles' Planetiler profile (Ian's choice) and published in the [`regions` release](https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions). Nunavut is two regions split at 90° W because one file would be 3.0 GB, over GitHub's 2 GiB limit; Quebec is the largest single file (1.7 GB). Rebuilds are by hand for now. Mexico is also split by state (Ian, 11 November): the states' maps are cut from Geofabrik's Mexico package and their extracts from its raw extract.
 
 ### 3. Canada and Alaska in the app
 
@@ -75,6 +75,8 @@ Stage 1 of [validation's next stages](validation.md#next-stages): download Illin
 ### 4. Name
 
 Rename the app and repository for North America (the name is Ian's choice). The installer keeps its AppId, so existing installs upgrade in place, as they did for the 0.6.0 rename. The data folder does not change. GitHub redirects the old repository address.
+
+**Done in 0.10.0 (11 November 2026):** Offline North American Maps, repository `offline-north-american-maps` (Ian's choice of name). The install folder, data folder, Start identity and project names (`OfflineMaps.*`, `offline-maps-*`) are unchanged.
 
 ### 5. Android foundation
 
@@ -101,8 +103,8 @@ Downloading on the phone when it is online, with a Wi-Fi-only setting and a stor
 
 ## Open decisions for Ian
 
-1. The new name.
-2. Publishing self-built OpenStreetMap tiles (required for Canada and Alaska; see licensing).
+1. The new name: decided 11 November 2026, Offline North American Maps.
+2. Publishing self-built OpenStreetMap tiles (required for Canada and Alaska; see licensing): accepted 11 November 2026, in the `regions` release.
 3. Whether the first Android version receives maps only from the desktop, or also downloads directly.
 4. Android distribution: GitHub APK only, or F-Droid too.
 5. Whether overlays outside the US are wanted.

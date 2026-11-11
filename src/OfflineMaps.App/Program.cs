@@ -11,7 +11,7 @@ public static partial class Program
     public const string InstanceMutexName = @"Jupiter.OfflineMaps";
     private const string ShowEventName = @"Local\Jupiter.OfflineMaps.Show";
 
-    /// <summary>The identity the taskbar groups and pins Offline US Maps under; the Start shortcut carries it too.</summary>
+    /// <summary>The identity the taskbar groups and pins Offline North American Maps under; the Start shortcut carries it too.</summary>
     public const string AppUserModelId = "Jupiter.OfflineMaps";
 
     private static EventWaitHandle? s_showSignal;

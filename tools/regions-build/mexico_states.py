@@ -116,7 +116,7 @@ def state_header(state: dict, timestamp: str) -> osmium.io.Header:
     header = osmium.io.Header()
     w, s, e, n = state["wide"].bounds
     header.add_box(osmium.osm.Box(osmium.osm.Location(w, s), osmium.osm.Location(e, n)))
-    header.set("generator", "Offline US Maps tools/regions-build/mexico_states.py")
+    header.set("generator", "Offline North American Maps tools/regions-build/mexico_states.py")
     if timestamp:
         header.set("osmosis_replication_timestamp", timestamp)
     return header

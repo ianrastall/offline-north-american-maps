@@ -63,14 +63,14 @@ def log(message: str) -> None:
 
 def download(url: str, target: Path) -> None:
     """Downloads `url` to `target` unless a complete copy is there (same length)."""
-    req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "offline-us-maps-maintainer", "Cache-Control": "no-cache"})
+    req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "offline-north-american-maps-maintainer", "Cache-Control": "no-cache"})
     with urllib.request.urlopen(req, timeout=60) as r:
         length = int(r.headers["Content-Length"])
     if target.exists() and target.stat().st_size == length:
         return
     log(f"downloading {url} ({length / 1e6:.0f} MB)")
     partial = target.with_suffix(target.suffix + ".part")
-    req = urllib.request.Request(url, headers={"User-Agent": "offline-us-maps-maintainer", "Cache-Control": "no-cache"})
+    req = urllib.request.Request(url, headers={"User-Agent": "offline-north-american-maps-maintainer", "Cache-Control": "no-cache"})
     with urllib.request.urlopen(req, timeout=120) as r, open(partial, "wb") as f:
         while chunk := r.read(1 << 20):
             f.write(chunk)
@@ -104,7 +104,7 @@ def build(region_id: str, out: Path) -> dict:
         "description": f"{name}: Shortbread vector tiles built with Planetiler (VersaTiles profile) from Geofabrik's extract",
         "attribution": "© OpenStreetMap contributors (ODbL)",
         "license": "Open Database License 1.0",
-        "author": "OpenStreetMap contributors; built for Offline US Maps",
+        "author": "OpenStreetMap contributors; built for Offline North American Maps",
     }
     for key, value in updates.items():
         db.execute("DELETE FROM metadata WHERE name = ?", (key,))

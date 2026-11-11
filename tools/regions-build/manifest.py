@@ -17,8 +17,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-RELEASE = "https://github.com/ianrastall/offline-us-maps/releases/download/regions"
-RELEASE_PAGE = "https://github.com/ianrastall/offline-us-maps/releases/tag/regions"
+RELEASE = "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions"
+RELEASE_PAGE = "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions"
 GEOFABRIK = "https://download.geofabrik.de/north-america"
 
 spec = importlib.util.spec_from_file_location("extract_boxes", Path(__file__).resolve().parents[1] / "extract-boxes.py")

@@ -1,7 +1,7 @@
 namespace OfflineMaps.App;
 
 /// <summary>
-/// Where Offline US Maps keeps things. Everything is under %LOCALAPPDATA%\Jupiter\OfflineMaps, outside
+/// Where Offline North American Maps keeps things. Everything is under %LOCALAPPDATA%\Jupiter\OfflineMaps, outside
 /// the install folder, so maps, saved places and settings survive upgrades and uninstalling.
 /// </summary>
 internal static class AppPaths

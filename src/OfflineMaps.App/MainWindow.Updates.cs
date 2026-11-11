@@ -427,7 +427,7 @@ public sealed partial class MainWindow
             core.PrepareSearch();
             return "Search is ready";
         }));
-        await FinishAsync(message ?? "Cancelled. Search is prepared next time Offline US Maps starts.");
+        await FinishAsync(message ?? "Cancelled. Search is prepared next time Offline North American Maps starts.");
     }
 
     /// <summary>Runs one job with the progress bar shown. Returns the result message, or null when cancelled or failed.</summary>

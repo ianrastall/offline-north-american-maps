@@ -1,4 +1,4 @@
-// Builds the Offline US Maps light and dark map styles from the pinned
+// Builds the Offline North American Maps light and dark map styles from the pinned
 // VersaTiles 7.0.1 "colorful" styles (MIT). Run `node proof/renderer/fetch-assets.mjs`
 // first. Output: assets/styles/offline-maps-{light,dark}.json.
 //
@@ -213,5 +213,5 @@ function build(sourceName, outName, title, dark) {
   console.log(`${outName}.json: ${style.layers.length} layers, fonts ${[...fonts].join(', ')}`);
 }
 
-build('colorful', 'offline-maps-light', 'Offline US Maps light', false);
-build('colorful-dark', 'offline-maps-dark', 'Offline US Maps dark', true);
+build('colorful', 'offline-maps-light', 'Offline North American Maps light', false);
+build('colorful-dark', 'offline-maps-dark', 'Offline North American Maps dark', true);

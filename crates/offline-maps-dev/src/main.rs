@@ -1,4 +1,4 @@
-//! Development tools for Offline US Maps. Not part of the shipped application.
+//! Development tools for Offline North American Maps. Not part of the shipped application.
 //!
 //!   offline-maps-dev inspect <package.mbtiles> [--source-url U] [--etag E]
 //!       [--last-modified L] [--downloaded-at T] [--record out.json]

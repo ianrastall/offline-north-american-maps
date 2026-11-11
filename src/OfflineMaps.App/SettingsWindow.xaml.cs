@@ -5,7 +5,7 @@ using Windows.Graphics;
 
 namespace OfflineMaps.App;
 
-/// <summary>Settings - Offline US Maps: one per app, non-modal; changes apply immediately.</summary>
+/// <summary>Settings - Offline North American Maps: one per app, non-modal; changes apply immediately.</summary>
 public sealed partial class SettingsWindow : Window
 {
     private readonly MainWindow _main;

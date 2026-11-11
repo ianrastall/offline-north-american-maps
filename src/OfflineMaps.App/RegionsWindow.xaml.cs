@@ -62,7 +62,7 @@ public sealed class RegionGroup : ObservableCollection<RegionItem>
 }
 
 /// <summary>
-/// Regions - Offline US Maps: one per app, non-modal. Lists every region that can be downloaded;
+/// Regions - Offline North American Maps: one per app, non-modal. Lists every region that can be downloaded;
 /// downloads are queued in the map window, which shows their progress.
 /// </summary>
 public sealed partial class RegionsWindow : Window
@@ -227,7 +227,7 @@ public sealed partial class RegionsWindow : Window
         {
             DetailHeading.Text = "Region";
             DetailText.Text = _all.Count == 0
-                ? "The region list could not be read. Restart Offline US Maps to try again."
+                ? "The region list could not be read. Restart Offline North American Maps to try again."
                 : "Choose a region to download it, check it for updates or remove it.";
             Commands.Visibility = Visibility.Collapsed;
             SourceText.Text = "";
@@ -275,7 +275,7 @@ public sealed partial class RegionsWindow : Window
         else
         {
             lines.Add(r.OverlayBytes > 0
-                ? $"Flood zones and public lands: not installed. About {Format.Megabytes(r.OverlayBytes)}: FEMA flood hazard zones and USGS public lands, prepared for Offline US Maps and published with its releases."
+                ? $"Flood zones and public lands: not installed. About {Format.Megabytes(r.OverlayBytes)}: FEMA flood hazard zones and USGS public lands, prepared for Offline North American Maps and published with its releases."
                 : item.Id.StartsWith("us-", StringComparison.Ordinal)
                     ? "Flood zones and public lands: not available for this region yet."
                     : "Flood zones and public lands: US regions only (FEMA and USGS data).");
@@ -327,8 +327,8 @@ public sealed partial class RegionsWindow : Window
         bool builtExtras = r.ExtrasUrl.StartsWith("https://github.com/", StringComparison.Ordinal);
         string source = (builtMap, builtExtras) switch
         {
-            (true, true) => $"Map, stations and addresses prepared for Offline US Maps from Geofabrik's OpenStreetMap data and published with its releases ({r.SourcePage})",
-            (true, false) => $"Map built for Offline US Maps from Geofabrik's OpenStreetMap extract and published with its releases ({r.SourcePage}); stations and addresses from Geofabrik",
+            (true, true) => $"Map, stations and addresses prepared for Offline North American Maps from Geofabrik's OpenStreetMap data and published with its releases ({r.SourcePage})",
+            (true, false) => $"Map built for Offline North American Maps from Geofabrik's OpenStreetMap extract and published with its releases ({r.SourcePage}); stations and addresses from Geofabrik",
             _ => $"Map, stations and addresses from Geofabrik ({r.SourcePage})",
         };
         SourceText.Text = $"{source}; map data © OpenStreetMap contributors (ODbL). Terrain from Mapterhorn (download.mapterhorn.com): USGS 3DEP and Copernicus GLO-30. Sizes are as of November 2026.";

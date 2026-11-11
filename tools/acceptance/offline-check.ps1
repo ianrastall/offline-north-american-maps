@@ -1,4 +1,4 @@
-# Scripted acceptance check of the installed Offline US Maps (Windows PowerShell 5.1).
+# Scripted acceptance check of the installed Offline North American Maps (Windows PowerShell 5.1).
 # -Mode offline waits until this PC has no network, runs the check, tells Ian to reconnect,
 # then waits for the network to return. It never changes network settings itself.
 param([ValidateSet('online', 'offline')][string]$Mode = 'online', [string]$Out)
@@ -16,7 +16,7 @@ $data = Join-Path $env:LOCALAPPDATA 'Jupiter\OfflineMaps'
 if (-not $Out) { $Out = Join-Path $env:TEMP "offline-maps-check-$Mode" }
 New-Item -ItemType Directory -Force $Out | Out-Null
 $log = Join-Path $Out 'report.txt'
-Set-Content $log "Offline US Maps check, mode $Mode, started $(Get-Date -Format o)" -Encoding UTF8
+Set-Content $log "Offline North American Maps check, mode $Mode, started $(Get-Date -Format o)" -Encoding UTF8
 function Note($s) { Add-Content $log $s -Encoding UTF8 }
 
 function Online {
@@ -169,7 +169,7 @@ Note "New app log lines: $($newLog.Count)"; $newLog | Select-Object -First 20 | 
 Note "Finished $(Get-Date -Format o)"
 
 if ($Mode -eq 'offline') {
-    $msg = "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('The offline check of Offline US Maps has finished. You can switch Airplane mode off now.', 'Offline check finished', 'OK', 'Information', 'Button1', 'ServiceNotification')"
+    $msg = "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('The offline check of Offline North American Maps has finished. You can switch Airplane mode off now.', 'Offline check finished', 'OK', 'Information', 'Button1', 'ServiceNotification')"
     Start-Process powershell.exe -WindowStyle Hidden -ArgumentList '-NoProfile', '-Command', $msg
     [System.Media.SystemSounds]::Asterisk.Play()
     $deadline = (Get-Date).AddMinutes(60)

@@ -38,7 +38,7 @@ public sealed partial class MainWindow
         catch (Exception ex)
         {
             AppLog.Write($"WebView2 could not start: {ex}");
-            MapMessage.Text = $"The map view could not start. The Microsoft Edge WebView2 Runtime may be missing; reinstall Offline US Maps to add it. ({ex.Message})";
+            MapMessage.Text = $"The map view could not start. The Microsoft Edge WebView2 Runtime may be missing; reinstall Offline North American Maps to add it. ({ex.Message})";
             return;
         }
         var web = MapView.CoreWebView2;

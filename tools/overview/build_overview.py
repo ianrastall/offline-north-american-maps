@@ -1,4 +1,4 @@
-"""Builds the overview built into Offline US Maps: assets/overview/us-overview.mbtiles.
+"""Builds the overview built into Offline North American Maps: assets/overview/us-overview.mbtiles.
 
 The overview is drawn under the installed regions so the map is never blank outside them:
 coast, lakes and large rivers, country, state and province borders, main highways, cities and

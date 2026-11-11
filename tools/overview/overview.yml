@@ -8,7 +8,7 @@
 #   roads        kind (interstate, federal, state), expressway (1/0), ref, region
 #   places       name, rank (lower is more important), capital (country, state, none), region
 #   labels       kind (state, country), name, abbrev, region
-schema_name: Offline US Maps overview
+schema_name: Offline North American Maps overview
 schema_description: Whole-country overview from Natural Earth (public domain)
 attribution: Natural Earth
 args:
