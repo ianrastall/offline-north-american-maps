@@ -357,6 +357,8 @@ pub(crate) fn search_ranked(
     while let Some(row) = rows.next()? {
         let (id, name, town, match_name): (i64, String, String, String) =
             (row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?);
+        // Extras built before 0.8.0 kept accents in `match_name`.
+        let match_name = crate::search::fold(&match_name);
         let core = without_compass_words(&match_name);
         let with_town = canonical(&format!("{name} {town}"));
         let strength = u8::from(

@@ -460,7 +460,7 @@ public sealed partial class MainWindow : Window
         }
         Row("Map folder", status.StoreDirectory);
         Row("Attribution", "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL). Map package and extracts by Geofabrik."
-            + (AppPaths.HasOverview ? " The overview of the whole country is from Natural Earth (naturalearthdata.com), public domain." : "")
+            + (AppPaths.HasOverview ? " The overview of the United States and Mexico is from Natural Earth (naturalearthdata.com), public domain." : "")
             + (status.OverlayCoverage is null ? "" : " Flood zones from the FEMA National Flood Hazard Layer and public lands from the USGS Protected Areas Database (PAD-US), both public domain.")
             + (status.TerrainCoverage is null ? "" : " Terrain from Mapterhorn (mapterhorn.com/attribution): USGS 3D Elevation Program (public domain) and Copernicus GLO-30, © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA."));
         if (status.OverlayCoverage is not null)

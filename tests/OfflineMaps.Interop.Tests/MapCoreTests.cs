@@ -47,7 +47,8 @@ public class MapCoreTests
         Assert.Empty(core.TerrainTile(12, 1046, 1520));
         Assert.Equal(ErrorKind.NotFound, Assert.Throws<MapCoreException>(() => core.Update(UpdateTarget.Terrain, "us-il")).Kind);
         var catalog = core.Catalog();
-        Assert.Equal(52, catalog.Count);
+        Assert.Equal(53, catalog.Count);
+        Assert.Contains(catalog, r => r.Id == "mx" && r.Name == "Mexico");
         Assert.Contains(catalog, r => r.Id == "us-il" && r.Name == "Illinois");
         core.RemoveRegion("us-in");
         Assert.Equal(ErrorKind.InvalidArgument, Assert.Throws<MapCoreException>(() => core.RemoveRegion("us-ak")).Kind);

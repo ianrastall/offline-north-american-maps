@@ -231,6 +231,17 @@
   ]
  },
  {
+  "id": "mx",
+  "name": "Mexico",
+  "slug": "mexico",
+  "bbox": [
+   -132.4952,
+   9.45671,
+   -85.49087,
+   32.72067
+  ]
+ },
+ {
   "id": "us-mi",
   "name": "Michigan",
   "slug": "michigan",

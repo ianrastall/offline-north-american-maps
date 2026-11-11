@@ -86,12 +86,14 @@ function applyColors(colors) {
 }
 
 // Route shields: stretchable rounded markers. Interstate: blue with red cap;
-// US: white with black border; Illinois: white square-cornered; other: grey.
-// These are map content (road signage), not interface colors.
+// US: white with black border; Illinois: white square-cornered; Mexican federal:
+// white with a black cap; other: grey. These are map content (road signage),
+// not interface colors.
 const SHIELDS = {
   'route-interstate': { fill: '#1d4f9c', border: '#ffffff', cap: '#c8102e', radius: 6 },
   'route-us': { fill: '#ffffff', border: '#111111', radius: 6 },
   'route-state': { fill: '#ffffff', border: '#111111', radius: 1 },
+  'route-mex': { fill: '#ffffff', border: '#111111', cap: '#111111', radius: 3 },
   'route-other': { fill: '#eeeeee', border: '#777777', radius: 3 },
 };
 

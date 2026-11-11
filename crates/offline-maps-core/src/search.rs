@@ -171,15 +171,23 @@ pub(crate) const EMERGENCY: [&str; 10] = [
     "charging_station",
 ];
 
-/// Words a category is found by: its own words plus common synonyms.
+/// Words a category is found by: its own words plus common synonyms, in
+/// English and Spanish (without accents, as queries are compared).
 fn category_words(category: &str) -> String {
     match category {
-        "fuel" => "fuel gas station petrol".into(),
-        "charging_station" => "charging station ev charger electric vehicle".into(),
-        "shelter" => "shelter hut".into(),
-        "drinking_water" => "drinking water fountain tap spring".into(),
-        "camp_site" => "campground camping camp site rv park".into(),
-        "toilets" => "toilets toilet restroom restrooms bathroom".into(),
+        "fuel" => "fuel gas station petrol gasolinera".into(),
+        "charging_station" => {
+            "charging station ev charger electric vehicle estacion de carga".into()
+        }
+        "shelter" => "shelter hut refugio albergue".into(),
+        "drinking_water" => "drinking water fountain tap spring agua potable bebedero".into(),
+        "camp_site" => "campground camping camp site rv park campamento".into(),
+        "toilets" => "toilets toilet restroom restrooms bathroom banos sanitarios".into(),
+        "hospital" => "hospital".into(),
+        "clinic" => "clinic clinica".into(),
+        "pharmacy" => "pharmacy farmacia".into(),
+        "police" => "police policia".into(),
+        "fire_station" => "fire station bomberos".into(),
         other => other.replace('_', " "),
     }
 }
@@ -560,7 +568,7 @@ fn write_index(
 }
 
 /// Word pairs treated as equivalent in names and queries (full, short).
-const ABBREVIATIONS: [(&str, &str); 26] = [
+const ABBREVIATIONS: [(&str, &str); 42] = [
     ("street", "st"),
     ("avenue", "ave"),
     ("road", "rd"),
@@ -587,13 +595,55 @@ const ABBREVIATIONS: [(&str, &str); 26] = [
     ("route", "rte"),
     ("center", "ctr"),
     ("hospital", "hosp"),
+    // Spanish (Mexico), compared without accents.
+    ("avenida", "av"),
+    ("calzada", "calz"),
+    ("carretera", "carr"),
+    ("bulevar", "blvd"),
+    ("prolongacion", "prol"),
+    ("privada", "priv"),
+    ("callejon", "cjon"),
+    ("colonia", "col"),
+    ("fraccionamiento", "fracc"),
+    ("general", "gral"),
+    ("licenciado", "lic"),
+    ("ingeniero", "ing"),
+    ("doctor", "dr"),
+    ("santa", "sta"),
+    ("santo", "sto"),
+    ("presidente", "pdte"),
 ];
 
-/// Lower-case alphanumeric tokens, the way the FTS tokenizer splits text.
+/// Lower-case alphanumeric tokens without accents, the way the FTS tokenizer
+/// (`remove_diacritics 2`) splits and compares text.
 pub(crate) fn tokens(text: &str) -> Vec<String> {
     text.split(|c: char| !c.is_alphanumeric())
         .filter(|t| !t.is_empty())
-        .map(str::to_lowercase)
+        .map(|t| fold(&t.to_lowercase()))
+        .collect()
+}
+
+/// Lower-case text with the accents of Latin letters removed ("querétaro" ->
+/// "queretaro", "peñón" -> "penon"), for comparing names typed without them.
+pub(crate) fn fold(text: &str) -> String {
+    text.chars()
+        .map(|c| match c {
+            'à' | 'á' | 'â' | 'ã' | 'ä' | 'å' | 'ā' | 'ă' | 'ą' => 'a',
+            'ç' | 'ć' | 'č' | 'ĉ' | 'ċ' => 'c',
+            'ď' | 'đ' => 'd',
+            'è' | 'é' | 'ê' | 'ë' | 'ē' | 'ė' | 'ę' | 'ě' => 'e',
+            'ğ' | 'ĝ' | 'ġ' | 'ģ' => 'g',
+            'ì' | 'í' | 'î' | 'ï' | 'ĩ' | 'ī' | 'į' | 'ı' => 'i',
+            'ñ' | 'ń' | 'ň' | 'ņ' => 'n',
+            'ò' | 'ó' | 'ô' | 'õ' | 'ö' | 'ø' | 'ō' | 'ő' => 'o',
+            'ŕ' | 'ř' => 'r',
+            'ś' | 'š' | 'ş' | 'ŝ' => 's',
+            'ť' | 'ţ' => 't',
+            'ù' | 'ú' | 'û' | 'ü' | 'ũ' | 'ū' | 'ů' | 'ű' | 'ų' => 'u',
+            'ý' | 'ÿ' => 'y',
+            'ź' | 'ż' | 'ž' => 'z',
+            other => other,
+        })
         .collect()
 }
 
@@ -896,13 +946,21 @@ fn collect_candidates(
         let (lat, lon): (f64, f64) = (row.get(4)?, row.get(5)?);
         let tier: u8 = row.get(6)?;
         let population: i64 = row.get(7)?;
-        let (match_name, match_ref): (String, String) = (row.get(9)?, row.get(10)?);
+        // Indexes built before 0.8.0 kept accents in these.
+        let (match_name, match_ref): (String, String) = (
+            fold(&row.get::<_, String>(9)?),
+            fold(&row.get::<_, String>(10)?),
+        );
         // "West Main Street" is a strong match for "main street".
         let core_name = without_compass_words(&match_name);
         let exact = match_name == query_canonical || core_name == query_canonical;
         // "gas station" is a strong match for the category "fuel".
         let category_words = canonical(&category_words(&category));
+        // A city with every word of the query is a strong match too: "queretaro"
+        // finds Santiago de Querétaro, the state capital.
+        let major_settlement = kind == EntryKind::Place && tier == 0;
         let strong = exact
+            || (major_settlement && words_in(&match_name))
             || match_name.starts_with(query_canonical)
             || core_name.starts_with(query_canonical)
             || (!match_ref.is_empty() && match_ref.starts_with(query_canonical))
@@ -917,10 +975,17 @@ fn collect_candidates(
         };
         let settlement = kind == EntryKind::Place && tier <= 2;
         let distance = near.map(|c| distance_km(c.latitude(), c.longitude(), lat, lon));
-        // Settlements: an exact name, then cities before towns before
-        // villages, so "carb" puts Carbondale above nearer Carbon Hill.
+        // Settlements: cities and towns before villages, an exact name first
+        // within each, then cities before towns, so "carb" puts Carbondale above
+        // nearer Carbon Hill and "queretaro" the city above a village of that name.
         let order = match distance {
-            Some(d) if settlement => (class, false, u8::from(!exact), tier, d),
+            Some(d) if settlement => (
+                class,
+                false,
+                u8::from(tier >= 2) * 2 + u8::from(!exact),
+                tier,
+                d,
+            ),
             Some(d) => (class, true, 0, 0, d),
             None => (
                 class,

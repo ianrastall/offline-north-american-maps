@@ -1,6 +1,6 @@
 # Offline US Maps
 
-A Windows app for downloading road maps of US states before an emergency and using them without internet access. Regions: the US states except Alaska, the District of Columbia, Puerto Rico and the US Virgin Islands, in any combination. Everything runs on your computer; there is no account, server or tracking.
+A Windows app for downloading road maps before an emergency and using them without internet access. Regions: the US states except Alaska, the District of Columbia, Puerto Rico, the US Virgin Islands and Mexico, in any combination. Everything runs on your computer; there is no account, server or tracking.
 
 ## Install
 
@@ -10,12 +10,12 @@ Then open Map > Regions, choose regions and download them while you have a conne
 
 ## Features
 
-- **Overview:** a map of the whole country is built in (Natural Earth: coast, lakes, rivers, state and country borders, Interstates and US highways, cities), so the map shows the United States from the first start and around the regions you install. Zoomed out, the overview is the whole map; closer in, each installed region's own map replaces it.
+- **Overview:** a map of the United States and Mexico is built in (Natural Earth: coast, lakes, rivers, state and country borders, Interstates, US and Mexican federal highways, cities), so the map shows both countries from the first start and around the regions you install. Zoomed out, the overview is the whole map; closer in, each installed region's own map replaces it.
 - **Map:** downloads Geofabrik's map package for each chosen region with resume, verification and atomic activation, and shows the installed regions as one map with MapLibre in WebView2, entirely from local files. Tiles on a border between installed regions are merged. Light and dark map styles show interstate, US and state route shields.
 - **Terrain:** an optional download per region of Mapterhorn elevation tiles (USGS 3DEP and Copernicus GLO-30, to zoom 12, about 15 m per pixel), drawn as hillshading and contour lines in feet or metres. View > Terrain shading and View > Contour lines turn them on and off.
-- **Flood zones and public lands:** an optional download per region of FEMA flood hazard zones and USGS PAD-US public lands (coloured by public access), prebuilt by `tools/layers/build_overlays.py` and published in this repository's [`overlays` release](https://github.com/ianrastall/offline-us-maps/releases/tag/overlays). View > Flood zones and View > Public lands turn them on and off.
+- **Flood zones and public lands:** an optional download per region of FEMA flood hazard zones and USGS PAD-US public lands (coloured by public access), prebuilt by `tools/layers/build_overlays.py` and published in this repository's [`overlays` release](https://github.com/ianrastall/offline-us-maps/releases/tag/overlays). View > Flood zones and View > Public lands turn them on and off. US regions only.
 - **Downloads and updates:** queued and run one at a time. Installed maps never expire. Map > Check for updates (or Check for updates in Map > Regions) asks the servers whether anything newer exists, without downloading, and lists what is newer with dates and sizes; nothing is downloaded until you choose. Geofabrik rebuilds its files daily, so a newer map usually adds only recent edits.
-- **Search:** finds places, streets, landmarks, transit and water offline, across all installed regions. An optional second download adds fuel stations, charging stations, house-number addresses and outdoor places (shelters, drinking water, campgrounds, public toilets), read from Geofabrik's raw extract; outdoor places are also drawn on the map (View > Outdoor places).
+- **Search:** finds places, streets, landmarks, transit and water offline, across all installed regions, with or without accents ("queretaro" finds Querétaro) and with common English and Spanish street abbreviations (St, Ave, Av., Calz., Carr.). An optional second download adds fuel stations, charging stations, house-number addresses and outdoor places (shelters, drinking water, campgrounds, public toilets), read from Geofabrik's raw extract; outdoor places are also drawn on the map (View > Outdoor places).
 - **Saved places:** kept apart from map packages, so they survive map updates, app upgrades and uninstalling.
 - **Not included:** routing, and current conditions such as road closures or active flooding. Flood zones are FEMA's mapped hazard areas, not forecasts.
 
@@ -29,9 +29,9 @@ The built-in overview is made from [Natural Earth](https://www.naturalearthdata.
 - Terrain: [Mapterhorn](https://mapterhorn.com/attribution) (USGS 3DEP, public domain; Copernicus GLO-30).
 - Flood zones: FEMA National Flood Hazard Layer; public lands: USGS PAD-US. Both are US Government works in the public domain. The flood data's effective date is shown in Map > Regions.
 
-Status (9 November 2026): version 0.7.1, with the built-in overview and update checks; all 52 regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. On 11 November 2026 the installed app passed the offline acceptance test: with no network, it showed the Illinois map and found places, addresses, stations, outdoor places and saved places ([validation](docs/validation.md#offline-acceptance-test)).
+Status (11 November 2026): version 0.8.0, which adds Mexico and fixes stations-and-addresses downloads for 16 states; all 52 US regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. On 11 November 2026 the installed app passed the offline acceptance test: with no network, it showed the Illinois map and found places, addresses, stations, outdoor places and saved places ([validation](docs/validation.md#offline-acceptance-test)).
 
-Planned (10 November 2026): Canada, Mexico and Alaska, and an Android app with GPS that receives maps from the desktop. See the [North America and Android plan](docs/north-america-and-android.md).
+Planned (10 November 2026): Canada and Alaska, and an Android app with GPS that receives maps from the desktop. See the [North America and Android plan](docs/north-america-and-android.md).
 
 - [Project brief](docs/project-brief.md)
 - [North America and Android plan](docs/north-america-and-android.md)
@@ -110,9 +110,11 @@ cargo run --release -p offline-maps-dev -- download data/store [--url URL] [--st
 cargo run --release -p offline-maps-dev -- download-extras data/store [--url URL] [--stop-after BYTES]
 cargo run --release -p offline-maps-dev -- search data/store "main st clinton" [--near LAT,LON]
 cargo run --release -p offline-maps-dev -- extract data/sources/illinois-latest.osm.pbf data/illinois-extras.sqlite
+cargo run --release -p offline-maps-dev -- terrain-size <west> <south> <east> <north>
+python -I tools/extract-boxes.py data/catalog/index-v1.json data/catalog/extract-boxes.txt
 ```
 
-- `probe` sends one HEAD request.
+- `probe` sends one HEAD request. `terrain-size` and `tools/extract-boxes.py` measure inputs of `tools/make-regions.py` (terrain bytes from Mapterhorn's index; each raw extract's header box from its first 64 KB).
 - `download` and `download-extras` without `--url` download from Geofabrik (about 363 MB each). The dev server serves local copies at `http://127.0.0.1:8765/source/package.mbtiles` and, with `--source-pbf`, at `/source/extract.osm.pbf`.
 - The dev server's browser page is at http://127.0.0.1:8765/.
 - Map data goes under `data/`, which is not committed.

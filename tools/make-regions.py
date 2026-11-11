@@ -1,4 +1,5 @@
-"""Writes crates/offline-maps-core/src/regions_data.rs, the catalog of US regions.
+"""Writes crates/offline-maps-core/src/regions_data.rs, the catalog of regions: the US states
+and territories, and Mexico.
 
 Inputs (downloaded separately; nothing here touches the network):
   index-v1.json   https://download.geofabrik.de/index-v1.json (region outlines)
@@ -8,17 +9,22 @@ Inputs (downloaded separately; nothing here touches the network):
   overlays-summary.json (optional) data/layer-build/out/summary.json from
                   tools/layers/build_overlays.py; regions without a built overlay file get 0
   terrain-sizes.txt "<slug> <bytes>" per line: bytes of Mapterhorn's planet.pmtiles tiles,
-                  zoom 0-12, touching the region's outline box (read from the archive's
-                  index only; see docs/validation.md, 0.3.0)
+                  zoom 0-12, touching the region's outline box (offline-maps-dev
+                  terrain-size, which reads the archive's index only)
+  extract-boxes.txt "<slug> <west> <south> <east> <north>" per line: the header box of each
+                  raw extract (tools/extract-boxes.py)
 
-Usage: python -I tools/make-regions.py index-v1.json sizes.txt pbf-sizes.txt terrain-sizes.txt <date YYYY-MM-DD> [overlays-summary.json]
+Usage: python -I tools/make-regions.py index-v1.json sizes.txt pbf-sizes.txt terrain-sizes.txt extract-boxes.txt <date YYYY-MM-DD> [overlays-summary.json]
        then cargo fmt
 
 Each region's coverage check is its outline's bounding box (Geofabrik's package
 bounds equal it): the package must lie within the box widened by OUTER_MARGIN
-degrees and must cover five points inside it. Illinois keeps its hand-written
+degrees and must cover five points inside it. Geofabrik cuts the raw extracts with
+boundaries that can reach further than the index outline (16 states and Mexico on
+11 November 2026), so the outer box also takes in each extract's header box. Illinois keeps its hand-written
 entry in package.rs. Alaska is left out: its outline crosses the 180th meridian,
 so its package spans the whole width of the world (29.6 GB on 8 November 2026).
+Mexico is one region (Geofabrik does not split it), with the ID mx.
 """
 import json
 import sys
@@ -28,6 +34,9 @@ OUTER_MARGIN = 0.5
 SKIP = {"alaska"}
 HANDWRITTEN = {"illinois": "crate::package::ILLINOIS"}
 BASE = "https://download.geofabrik.de/north-america/us"
+# Countries outside the US, by Geofabrik ID: (base URL, catalog ID, name).
+COUNTRIES = {"mexico": ("https://download.geofabrik.de/north-america", "mx", "Mexico")}
+
 
 
 def bbox(geometry):
@@ -61,23 +70,31 @@ def sizes(path):
 
 
 def main():
-    index_path, shortbread_path, pbf_path, terrain_path, date = sys.argv[1:6]
+    index_path, shortbread_path, pbf_path, terrain_path, boxes_path, date = sys.argv[1:7]
+    extract_boxes = {}
+    for line in Path(boxes_path).read_text(encoding="utf-8").splitlines():
+        slug, *values = line.split()
+        extract_boxes[slug] = tuple(float(v) for v in values)
     overlays = {}
-    if len(sys.argv) > 6:
-        summary = json.loads(Path(sys.argv[6]).read_text(encoding="utf-8"))
+    if len(sys.argv) > 7:
+        summary = json.loads(Path(sys.argv[7]).read_text(encoding="utf-8"))
         overlays = {k: v.get("bytes", 0) for k, v in summary.items()}
     index = json.loads(Path(index_path).read_text(encoding="utf-8"))
     shortbread, pbf, terrain = sizes(shortbread_path), sizes(pbf_path), sizes(terrain_path)
     regions = []
     for feature in index["features"]:
         props = feature["properties"]
+        if props["id"] in COUNTRIES:
+            base, code, name = COUNTRIES[props["id"]]
+            regions.append((name, props["id"], code, base, bbox(feature["geometry"])))
+            continue
         if not props["id"].startswith("us/"):
             continue
         slug = props["id"][3:]
         if slug in SKIP:
             continue
         code = props["iso3166-2"][0].lower()
-        regions.append((display_name(slug), slug, code, bbox(feature["geometry"])))
+        regions.append((display_name(slug), slug, code, BASE, bbox(feature["geometry"])))
     regions.sort()
 
     lines = [
@@ -88,8 +105,12 @@ def main():
         "",
     ]
     names = []
-    for name, slug, code, (west, south, east, north) in regions:
+    for name, slug, code, base, (west, south, east, north) in regions:
         const = code.upper().replace("-", "_")
+        # The outer box holds both the package (the outline's box) and the raw extract.
+        ow, os_, oe, on = west, south, east, north
+        xw, xs, xe, xn = extract_boxes[slug]
+        ow, os_, oe, on = min(ow, xw), min(os_, xs), max(oe, xe), max(on, xn)
         names.append(HANDWRITTEN.get(slug, const))
         if slug in HANDWRITTEN:
             continue
@@ -106,14 +127,14 @@ def main():
             f"pub const {const}: Region = Region {{",
             f'    id: "{code}",',
             f'    name: "{name}",',
-            f'    source_page: "{BASE}/{slug}.html",',
-            f'    package_url: "{BASE}/{slug}-shortbread-1.0.mbtiles",',
-            f'    extras_url: "{BASE}/{slug}-latest.osm.pbf",',
+            f'    source_page: "{base}/{slug}.html",',
+            f'    package_url: "{base}/{slug}-shortbread-1.0.mbtiles",',
+            f'    extras_url: "{base}/{slug}-latest.osm.pbf",',
             "    outer: Bounds {",
-            f"        west: {max(-180.0, west - OUTER_MARGIN):.3f},",
-            f"        south: {max(-90.0, south - OUTER_MARGIN):.3f},",
-            f"        east: {min(180.0, east + OUTER_MARGIN):.3f},",
-            f"        north: {min(90.0, north + OUTER_MARGIN):.3f},",
+            f"        west: {max(-180.0, ow - OUTER_MARGIN):.3f},",
+            f"        south: {max(-90.0, os_ - OUTER_MARGIN):.3f},",
+            f"        east: {min(180.0, oe + OUTER_MARGIN):.3f},",
+            f"        north: {min(90.0, on + OUTER_MARGIN):.3f},",
             "    },",
             f"    required_points: &[{point_text}],",
             f"    package_bytes: {shortbread[slug]},",
@@ -130,7 +151,7 @@ def main():
     # The same list for the overlay build (tools/layers), with outline boxes.
     listing = [
         {"id": code, "name": name, "slug": slug, "bbox": [round(v, 5) for v in box]}
-        for name, slug, code, box in regions
+        for name, slug, code, _, box in regions
     ]
     (Path(__file__).resolve().parent / "layers" / "regions.json").write_text(
         json.dumps(listing, indent=1) + "\n", encoding="utf-8", newline="\n")

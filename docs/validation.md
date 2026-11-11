@@ -341,6 +341,22 @@ Completed 9 November 2026. The labels with missing letters were public-land name
 
 Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple Park", "Philbrick Park" and "Lunt Park" draw whole where 0.7.0 cut them, in the development build and in the installed 0.7.1 started from Start. Released as [v0.7.1](https://github.com/ianrastall/offline-us-maps/releases/tag/v0.7.1), built from 8748bff; the installer's SHA-256 (06906734…e6d0581) matches GitHub's digest, and Settings > Apps lists 0.7.1.
 
+## 0.8.0: Mexico
+
+Completed 11 November 2026: stage 1 of the [North America and Android plan](north-america-and-android.md). Details of the data are in [sources](sources-and-architecture.md#mexico-080).
+
+- **Catalog.** Mexico is the 53rd region (`mx`). `tools/make-regions.py` was rerun with fresh sizes for every region (inputs measured 11 November: HEAD sizes, terrain sizes from Mapterhorn's index with the new `offline-maps-dev terrain-size`, and extract boxes from the new `tools/extract-boxes.py`).
+- **Fault found in every release since 0.2.0.** A raw extract's header box must lie inside the region's outer box, which was the index outline's box widened by half a degree. Geofabrik cuts the extracts with boundaries that reach further: for 16 states (Arizona, Colorado, Florida, Hawaii, Kansas, Maine, Michigan, Minnesota, Montana, Nebraska, New Mexico, North Carolina, North Dakota, Ohio, Pennsylvania, South Dakota) and Mexico, Download stations and addresses would have failed with "The OpenStreetMap extract does not match". Only Illinois and Indiana had been downloaded before. The outer boxes now also take in each extract's header box; a range request for the first 64 KB of all 53 extracts confirms every one fits, and a test keeps Michigan, Kansas, Hawaii and Mexico in.
+- **Size limits.** The cap on one download was 2 GiB (Mexico's map is 1.92 GB) and on one region's terrain 4 GiB (Mexico's is 4.59 GB). They are now 8 GiB and 16 GiB; the free-space check before each download is unchanged.
+- **Regions window.** Regions are listed under country headings (United States, then Canada when it has regions, then Mexico); the filter also matches the country's name. The flood zones and public lands command is not shown for Mexico, whose details say they cover US regions only.
+- **Search.** Accents are folded when names are compared; Spanish street abbreviations and Spanish words for fuel, pharmacies, police, fire stations, drinking water, toilets, shelters and campgrounds are understood. A city or capital containing every word of the query is a strong match, and villages come after cities and towns even with an exact name, so "queretaro" lists Santiago de Querétaro (the state capital) before a village called Querétaro in Chiapas.
+- **Overview and shields.** The overview covers Mexico (3.8 MB); `MEX` federal routes have their own shield.
+- **Tests.** 71 core (new: accents and Spanish words, the Querétaro ranking, extract boxes), 2 HTTP and 6 ABI tests (Rust); the app builds with no warnings.
+
+Verified in the development build with a separate profile on drive D (`--settings`), downloading from Geofabrik and Mapterhorn through the Regions window: the map (1,919 MB in about 4 minutes, then its search index in about 2 minutes: 2.5 million entries, 520 MB); stations and addresses (648 MB; 9,189 fuel and 105 charging stations, 1,090,066 addresses, 992 shelters, 485 drinking water points, 546 campgrounds, 1,872 toilets); terrain (4,585 MB in about 13 minutes). The first attempts failed as described above (the extract box, then the terrain cap) and passed after the fixes. Searches: "queretaro" (Santiago de Querétaro first, map drawn with terrain, contours, fuel stations and the 57D shield), "ciudad de mexico", "av insurgentes" (Avenida Insurgentes, MEX 85), "gasolinera" (Pemex stations with addresses), "farmacia", "222 paseo de la reforma" (the address), "monterrey". The overview at first start shows Mexico's states, highways and border.
+
+Not done: Mexico by state (Geofabrik publishes one file for the country; separate states need self-built tiles, as Canada does), addresses written with the number after the street ("Reforma 222" finds places named so, not the address), and Mexican state route shields.
+
 ## Offline acceptance test
 
 Passed 11 November 2026 with the installed 0.7.1. This is the first workflow's decisive test: the app started with no network and did everything from local files.

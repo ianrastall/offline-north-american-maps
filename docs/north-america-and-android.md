@@ -1,6 +1,6 @@
 # North America and Android plan
 
-10 November 2026. Direction agreed by Ian on 10 November 2026 ([project brief](project-brief.md#north-america-and-android-direction-agreed-10-november-2026)). Stage 0 passed on 11 November 2026; stage 1 has not started.
+10 November 2026. Direction agreed by Ian on 10 November 2026 ([project brief](project-brief.md#north-america-and-android-direction-agreed-10-november-2026)). Stage 0 passed on 11 November 2026; stage 1 (Mexico) was released in 0.8.0 the same day.
 
 ## Purpose
 
@@ -49,6 +49,8 @@ Stage 1 of [validation's next stages](validation.md#next-stages): download Illin
 - Route shields: Mexican federal highways (`MEX 15`) need their own shield or a generic one.
 - Extend the overview south to cover Mexico (Natural Earth admin-1 states, roads, cities).
 - Terrain from Mapterhorn; no overlays.
+
+**Done in 0.8.0 (11 November 2026)**, except Mexican-style addresses: see [sources](sources-and-architecture.md#mexico-080) and [validation](validation.md#080-mexico). Search finds house numbers only when they come first ("222 paseo de la reforma", not "reforma 222"); reading a trailing number would also turn "route 66" into an address search, so it needs its own rule. Mexican state routes (`SON 15`) use the plain marker.
 
 ### 2. Tile build for Canada and Alaska
 

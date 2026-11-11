@@ -271,3 +271,103 @@ fn searches_several_regions_as_one() {
     }
     assert!(search_all(&[], "spring", None, 10).unwrap().is_empty());
 }
+
+#[test]
+fn accents_and_spanish_street_words() {
+    assert_eq!(fold("querétaro"), "queretaro");
+    assert_eq!(fold("peñón"), "penon");
+    assert_eq!(
+        tokens("Avenida Insurgentes Sur"),
+        ["avenida", "insurgentes", "sur"]
+    );
+    assert_eq!(canonical("Prolongación Av. Hidalgo"), "prol av hidalgo");
+    assert_eq!(
+        canonical("Calzada de Tlalpan"),
+        canonical("calz de tlalpan")
+    );
+    assert_eq!(
+        canonical("Bulevar Agua Caliente"),
+        canonical("blvd agua caliente")
+    );
+    assert!(expand("Av. Juárez").split(' ').any(|t| t == "avenida"));
+    // "dr" stands for both drive and doctor.
+    let alts = alternatives("dr");
+    assert!(alts.contains(&"drive") && alts.contains(&"doctor"));
+    assert_eq!(
+        match_expression(&tokens("av juarez")),
+        r#"("av" OR "avenida") AND ("juarez"*)"#
+    );
+
+    // An index of accented names finds them typed without accents, and
+    // ranks the exact name first.
+    let file = TempFile::new("accents.sqlite");
+    let entry = |name: &str, kind, category: &str, lon, lat, tier| Entry {
+        name: name.into(),
+        alt_name: None,
+        reference: None,
+        kind,
+        category: category.into(),
+        lon,
+        lat,
+        tier,
+        population: 0,
+        detail: None,
+    };
+    // The city of Querétaro is named Santiago de Querétaro; a village in
+    // Chiapas has the plain name.
+    let entries = [
+        entry(
+            "Santiago de Querétaro",
+            EntryKind::Place,
+            "state_capital",
+            -100.39,
+            20.59,
+            0,
+        ),
+        entry("Querétaro", EntryKind::Place, "village", -92.76, 15.84, 2),
+        entry(
+            "Avenida Querétaro",
+            EntryKind::Street,
+            "primary",
+            -99.16,
+            19.41,
+            3,
+        ),
+        entry(
+            "Avenida Benito Juárez",
+            EntryKind::Street,
+            "primary",
+            -99.14,
+            19.43,
+            3,
+        ),
+    ];
+    let towns = TownGrid::from_points(std::iter::once((
+        "Ciudad de México".to_owned(),
+        -99.13,
+        19.43,
+    )));
+    let mut stats = IndexStats::default();
+    write_database(&file.0, |tx| {
+        insert_entries(tx, &entries, &towns, &mut stats)?;
+        let mut meta = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
+        meta.execute(params!["schema", SEARCH_SCHEMA.to_string()])?;
+        meta.execute(params!["package_sha256", "test"])?;
+        Ok(())
+    })
+    .unwrap();
+    let index = SearchIndex::open(&file.0, "test").unwrap();
+    let found = index.search("queretaro", None, 5).unwrap();
+    assert_eq!(
+        names(&found),
+        ["Santiago de Querétaro", "Querétaro", "Avenida Querétaro"]
+    );
+    // Nearer the village, the city still comes first.
+    let chiapas = Coordinates::new(16.0, -93.0).unwrap();
+    let found = index.search("queretaro", Some(chiapas), 5).unwrap();
+    assert_eq!(names(&found)[..2], ["Santiago de Querétaro", "Querétaro"]);
+    let found = index.search("av benito juarez", None, 5).unwrap();
+    assert_eq!(names(&found), ["Avenida Benito Juárez"]);
+    assert!(category_words("fuel").split(' ').any(|w| w == "gasolinera"));
+    assert!(category_words("toilets").contains("banos"));
+}

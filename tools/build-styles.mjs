@@ -7,7 +7,7 @@
 // - Mercator projection, no sky;
 // - OSM/Geofabrik attribution only;
 // - the zoom-14 motorway ref text is replaced by route shields: interstates
-//   from zoom 10, US/Illinois routes on trunk/primary roads from zoom 12 and
+//   from zoom 10, US/Illinois and Mexican federal routes on trunk/primary roads from zoom 12 and
 //   secondary roads from zoom 13 (the zooms at which the Shortbread tiles
 //   carry refs). Shield images are drawn by the map page on demand;
 // - fuel and charging stations and outdoor places (shelters, drinking water,
@@ -40,10 +40,12 @@ function shieldExpression(output) {
     ['all', ['==', ['slice', f, 0, 2], 'I '], simple(2)], 'interstate',
     ['all', ['==', ['slice', f, 0, 3], 'US '], simple(3)], 'us',
     ['all', ['==', ['slice', f, 0, 3], 'IL '], simple(3)], 'state',
+    ['all', ['==', ['slice', f, 0, 4], 'MEX '], simple(4)], 'mex',
     'other'];
   const text = ['case',
     ['==', ['var', 'n'], 'interstate'], rest(2),
     ['any', ['==', ['var', 'n'], 'us'], ['==', ['var', 'n'], 'state']], rest(3),
+    ['==', ['var', 'n'], 'mex'], rest(4),
     f];
   const body = {
     image: ['concat', 'route-', ['var', 'n']],

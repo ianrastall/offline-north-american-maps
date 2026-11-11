@@ -56,7 +56,9 @@ OUT = WORK / "out"
 PLANETILER = WORK / "tools" / "planetiler.jar"
 PLANETILER_SHA256 = "f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d"
 TEMPLATE = Path(__file__).with_name("overlays.yml")
-REGIONS = json.loads(Path(__file__).with_name("regions.json").read_text(encoding="utf-8"))
+# FEMA and PAD-US cover US regions only.
+REGIONS = [r for r in json.loads(Path(__file__).with_name("regions.json").read_text(encoding="utf-8"))
+           if r["id"].startswith("us-")]
 
 USER_AGENT = "OfflineUSMapsLayerBuild/1 (offline map data preparation)"
 MSC_SEARCH = "https://msc.fema.gov/portal/advanceSearch"

@@ -313,7 +313,8 @@ impl Default for UpdateOptions {
     fn default() -> Self {
         Self {
             check_only: false,
-            max_bytes: 2 << 30,
+            // Mexico's map is 1.9 GB; the free-space check still applies.
+            max_bytes: 8 << 30,
             reserve_bytes: 256 << 20,
             available_space: |path| fs4::available_space(path),
             clock: crate::time::utc_now,

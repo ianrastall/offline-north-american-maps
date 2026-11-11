@@ -12,6 +12,8 @@
 //!       [--extras FILE]   (builds the active package's search index first if
 //!       it is missing; uses the store's active extras unless --extras is given)
 //!   offline-maps-dev extract <file.osm.pbf> <extras.sqlite>
+//!   offline-maps-dev terrain-size <west> <south> <east> <north>
+//!       (reads only Mapterhorn's index; prints tiles and bytes at zoom 0-12)
 //!
 //! `serve` binds 127.0.0.1 only and stands in for the WebView2 request
 //! interception the app will use: tiles come from the Rust core, every
@@ -31,6 +33,57 @@ fn probe(url: &str) -> Result<(), String> {
         .probe(url)
         .map_err(|e| format!("{url}: {e}"))?;
     println!("{url}\n{info:#?}\nstrong ETag: {:?}", info.strong_etag());
+    Ok(())
+}
+
+/// The terrain download's size for a box, as `update_terrain` would fetch it.
+fn terrain_size(args: &[String]) -> Result<(), String> {
+    use offline_maps_core::download::{HttpTransport, Transport};
+    use offline_maps_core::mbtiles::Bounds;
+    use offline_maps_core::pmtiles::{HEADER_LENGTH, Header, Index};
+    use offline_maps_core::terrain::{TERRAIN_MAX_ZOOM, TERRAIN_URL, tile_range};
+    let v: Vec<f64> = args
+        .iter()
+        .map(|a| a.parse::<f64>().map_err(|e| format!("{a}: {e}")))
+        .collect::<Result<_, _>>()?;
+    let [west, south, east, north] = v[..] else {
+        return Err("usage: terrain-size <west> <south> <east> <north>".into());
+    };
+    let bounds = Bounds {
+        west,
+        south,
+        east,
+        north,
+    };
+    let transport = HttpTransport::new();
+    let (_, head) = transport
+        .fetch_range(TERRAIN_URL, 0, HEADER_LENGTH, None)
+        .map_err(|e| e.to_string())?;
+    let header = Header::parse(&head).map_err(|e| e.to_string())?;
+    let mut fetched = 0_u64;
+    let fetch = |offset: u64, length: u64| {
+        fetched += length;
+        transport
+            .fetch_range(TERRAIN_URL, offset, length, None)
+            .map(|(_, bytes)| bytes)
+    };
+    let mut index = Index::with_header(header.clone(), fetch).map_err(|e| e.to_string())?;
+    let mut locations = std::collections::BTreeSet::new();
+    let mut tiles = 0_u64;
+    for z in header.min_zoom..=TERRAIN_MAX_ZOOM.min(header.max_zoom) {
+        let (x0, x1, y0, y1) = tile_range(z, &bounds);
+        for x in x0..=x1 {
+            for y in y0..=y1 {
+                if let Some(location) = index.locate(z, x, y).map_err(|e| e.to_string())? {
+                    tiles += 1;
+                    locations.insert(location);
+                }
+            }
+        }
+    }
+    drop(index);
+    let bytes: u64 = locations.iter().map(|(_, l)| u64::from(*l)).sum();
+    println!("tiles {tiles} bytes {bytes} index_read {fetched}");
     Ok(())
 }
 
@@ -214,6 +267,7 @@ fn main() -> ExitCode {
         Some("index") => index(&args[1..]),
         Some("search") => search(&args[1..]),
         Some("extract") => extract(&args[1..]),
+        Some("terrain-size") => terrain_size(&args[1..]),
         _ => Err("usage: offline-maps-dev inspect|serve <package.mbtiles> | download <store-dir> [options]".into()),
     };
     match result {

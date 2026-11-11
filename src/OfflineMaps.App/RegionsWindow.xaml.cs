@@ -4,6 +4,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 using OfflineMaps.Interop.Messages;
 using Windows.Graphics;
 
@@ -36,7 +37,28 @@ public sealed class RegionItem : INotifyPropertyChanged
 
     public string AutomationName => $"{Name}. {Caption}";
 
+    /// <summary>The country the region belongs to, by its ID: us-il, ca-on, mx.</summary>
+    public string Country => Id.StartsWith("us-", StringComparison.Ordinal) ? RegionGroup.UnitedStates
+        : Id.StartsWith("ca-", StringComparison.Ordinal) ? RegionGroup.Canada
+        : RegionGroup.Mexico;
+
     public event PropertyChangedEventHandler? PropertyChanged;
+}
+
+/// <summary>The regions of one country, under its name in the region list.</summary>
+public sealed class RegionGroup : ObservableCollection<RegionItem>
+{
+    public const string UnitedStates = "United States";
+    public const string Canada = "Canada";
+    public const string Mexico = "Mexico";
+
+    /// <summary>Countries in list order; a country without regions is not shown.</summary>
+    public static readonly string[] Order = [UnitedStates, Canada, Mexico];
+
+    public required string Key { get; init; }
+
+    /// <summary>The group's accessible name.</summary>
+    public override string ToString() => Key;
 }
 
 /// <summary>
@@ -47,7 +69,10 @@ public sealed partial class RegionsWindow : Window
 {
     private readonly MainWindow _main;
     private readonly List<RegionItem> _all;
-    private readonly ObservableCollection<RegionItem> _shown = [];
+    private readonly ObservableCollection<RegionGroup> _groups = [];
+
+    /// <summary>The rows shown under the current filter, in list order.</summary>
+    private IEnumerable<RegionItem> Shown => _groups.SelectMany(g => g);
 
     public RegionsWindow(MainWindow main)
     {
@@ -57,7 +82,7 @@ public sealed partial class RegionsWindow : Window
         App.Current.Accent.Attach(Root);
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
         _all = main.Catalog.Select(r => new RegionItem { Region = r }).ToList();
-        RegionList.ItemsSource = _shown;
+        RegionList.ItemsSource = new CollectionViewSource { IsSourceGrouped = true, Source = _groups }.View;
         ApplyFilter();
         Refresh();
         main.RegionsChanged += Refresh;
@@ -75,7 +100,7 @@ public sealed partial class RegionsWindow : Window
             }
             // Start on the first installed region, so its state is in view.
             var installed = _main.CurrentStatus?.Regions.FirstOrDefault(r => r.Map is not null);
-            RegionList.SelectedItem = _shown.FirstOrDefault(i => i.Id == installed?.Id);
+            RegionList.SelectedItem = Shown.FirstOrDefault(i => i.Id == installed?.Id);
             if (RegionList.SelectedItem is { } item)
             {
                 RegionList.ScrollIntoView(item);
@@ -163,12 +188,24 @@ public sealed partial class RegionsWindow : Window
     {
         string filter = FilterBox.Text.Trim();
         var selected = RegionList.SelectedItem;
-        _shown.Clear();
-        foreach (var item in _all.Where(i => filter.Length == 0 || i.Name.Contains(filter, StringComparison.CurrentCultureIgnoreCase)))
+        _groups.Clear();
+        // A filter matches a region's name or its country's ("canada" lists every province).
+        var matching = _all.Where(i => filter.Length == 0
+            || i.Name.Contains(filter, StringComparison.CurrentCultureIgnoreCase)
+            || i.Country.Contains(filter, StringComparison.CurrentCultureIgnoreCase));
+        foreach (string country in RegionGroup.Order)
         {
-            _shown.Add(item);
+            var group = new RegionGroup { Key = country };
+            foreach (var item in matching.Where(i => i.Country == country))
+            {
+                group.Add(item);
+            }
+            if (group.Count > 0)
+            {
+                _groups.Add(group);
+            }
         }
-        if (selected is RegionItem s && _shown.Contains(s))
+        if (selected is RegionItem s && Shown.Contains(s))
         {
             RegionList.SelectedItem = s;
         }
@@ -239,7 +276,9 @@ public sealed partial class RegionsWindow : Window
         {
             lines.Add(r.OverlayBytes > 0
                 ? $"Flood zones and public lands: not installed. About {Format.Megabytes(r.OverlayBytes)}: FEMA flood hazard zones and USGS public lands, prepared for Offline US Maps and published with its releases."
-                : "Flood zones and public lands: not available for this region yet.");
+                : item.Id.StartsWith("us-", StringComparison.Ordinal)
+                    ? "Flood zones and public lands: not available for this region yet."
+                    : "Flood zones and public lands: US regions only (FEMA and USGS data).");
         }
         if (installed?.Terrain is { } terrain)
         {
@@ -273,6 +312,11 @@ public sealed partial class RegionsWindow : Window
             Label(ExtrasButton, "Update stations and addresses");
         }
         Command(OverlaysButton, hasOverlays, item.Id, UpdateTarget.Overlays, "flood zones and public lands", !overlaysQueued && (hasOverlays || r.OverlayBytes > 0));
+        // Flood zones and public lands are US data; elsewhere there is nothing to offer.
+        if (item.Country != RegionGroup.UnitedStates && !hasOverlays)
+        {
+            OverlaysButton.Visibility = Visibility.Collapsed;
+        }
         Command(TerrainButton, hasTerrain, item.Id, UpdateTarget.Terrain, "terrain", (hasMap || mapQueued) && !terrainQueued && !overlaysQueued);
         CheckButton.Visibility = hasMap ? Visibility.Visible : Visibility.Collapsed;
         CheckButton.IsEnabled = !busy;

@@ -39,6 +39,19 @@
                     AutomationProperties.Name="Regions"
                     SelectionChanged="RegionList_SelectionChanged"
                     SelectionMode="Single">
+                    <!--  One group per country: United States, Canada, Mexico  -->
+                    <ListView.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate x:DataType="local:RegionGroup">
+                                    <TextBlock
+                                        AutomationProperties.HeadingLevel="Level2"
+                                        Style="{StaticResource JupiterCaptionStrongTextStyle}"
+                                        Text="{x:Bind Key}" />
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ListView.GroupStyle>
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="local:RegionItem">
                             <StackPanel Padding="0,8" AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}" Spacing="4">

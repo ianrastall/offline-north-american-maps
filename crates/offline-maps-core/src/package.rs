@@ -67,7 +67,7 @@ pub const ILLINOIS: Region = Region {
         (-89.176, 37.005),
         (-91.410, 39.936),
     ],
-    package_bytes: 362_586_112,
+    package_bytes: 362_692_608,
     extras_bytes: 363_155_297,
     terrain_bytes: 365_559_838,
     overlay_bytes: 69_693_440,
