@@ -1,6 +1,6 @@
 # Offline US Maps
 
-A Windows app for downloading road maps before an emergency and using them without internet access. Regions: the US states except Alaska, the District of Columbia, Puerto Rico, the US Virgin Islands and Mexico, in any combination. Everything runs on your computer; there is no account, server or tracking.
+A Windows app for downloading road maps before an emergency and using them without internet access. Regions: the US states, the District of Columbia, Puerto Rico and the US Virgin Islands; the Canadian provinces and territories; and Mexico, as a whole or by state, in any combination. Everything runs on your computer; there is no account, server or tracking.
 
 ## Install
 
@@ -10,12 +10,12 @@ Then open Map > Regions, choose regions and download them while you have a conne
 
 ## Features
 
-- **Overview:** a map of the United States and Mexico is built in (Natural Earth: coast, lakes, rivers, state and country borders, Interstates, US and Mexican federal highways, cities), so the map shows both countries from the first start and around the regions you install. Zoomed out, the overview is the whole map; closer in, each installed region's own map replaces it.
-- **Map:** downloads Geofabrik's map package for each chosen region with resume, verification and atomic activation, and shows the installed regions as one map with MapLibre in WebView2, entirely from local files. Tiles on a border between installed regions are merged. Light and dark map styles show interstate, US and state route shields.
+- **Overview:** a map of the United States, Canada and Mexico is built in (Natural Earth: coast, lakes, rivers, state, province and country borders, main highways, cities), so the map shows all three countries from the first start and around the regions you install. Zoomed out, the overview is the whole map; closer in, each installed region's own map replaces it.
+- **Map:** downloads the map package for each chosen region (Geofabrik's, or for Canada, Alaska and the Mexican states one made from Geofabrik's data and published in this repository's [`regions` release](https://github.com/ianrastall/offline-us-maps/releases/tag/regions)) with resume, verification and atomic activation, and shows the installed regions as one map with MapLibre in WebView2, entirely from local files. Tiles on a border between installed regions are merged. Light and dark map styles show interstate, US and state route shields.
 - **Terrain:** an optional download per region of Mapterhorn elevation tiles (USGS 3DEP and Copernicus GLO-30, to zoom 12, about 15 m per pixel), drawn as hillshading and contour lines in feet or metres. View > Terrain shading and View > Contour lines turn them on and off.
 - **Flood zones and public lands:** an optional download per region of FEMA flood hazard zones and USGS PAD-US public lands (coloured by public access), prebuilt by `tools/layers/build_overlays.py` and published in this repository's [`overlays` release](https://github.com/ianrastall/offline-us-maps/releases/tag/overlays). View > Flood zones and View > Public lands turn them on and off. US regions only.
 - **Downloads and updates:** queued and run one at a time. Installed maps never expire. Map > Check for updates (or Check for updates in Map > Regions) asks the servers whether anything newer exists, without downloading, and lists what is newer with dates and sizes; nothing is downloaded until you choose. Geofabrik rebuilds its files daily, so a newer map usually adds only recent edits.
-- **Search:** finds places, streets, landmarks, transit and water offline, across all installed regions, with or without accents ("queretaro" finds Querétaro) and with common English and Spanish street abbreviations (St, Ave, Av., Calz., Carr.). An optional second download adds fuel stations, charging stations, house-number addresses and outdoor places (shelters, drinking water, campgrounds, public toilets), read from Geofabrik's raw extract; outdoor places are also drawn on the map (View > Outdoor places).
+- **Search:** finds places, streets, landmarks, transit and water offline, across all installed regions, with or without accents ("queretaro" finds Querétaro) and with common English, Spanish and French street abbreviations (St, Ave, Av., Calz., Carr., boul., ch.). An optional second download adds fuel stations, charging stations, house-number addresses and outdoor places (shelters, drinking water, campgrounds, public toilets), read from Geofabrik's raw extract; outdoor places are also drawn on the map (View > Outdoor places).
 - **Saved places:** kept apart from map packages, so they survive map updates, app upgrades and uninstalling.
 - **Not included:** routing, and current conditions such as road closures or active flooding. Flood zones are FEMA's mapped hazard areas, not forecasts.
 
@@ -29,9 +29,9 @@ The built-in overview is made from [Natural Earth](https://www.naturalearthdata.
 - Terrain: [Mapterhorn](https://mapterhorn.com/attribution) (USGS 3DEP, public domain; Copernicus GLO-30).
 - Flood zones: FEMA National Flood Hazard Layer; public lands: USGS PAD-US. Both are US Government works in the public domain. The flood data's effective date is shown in Map > Regions.
 
-Status (11 November 2026): version 0.8.0, which adds Mexico and fixes stations-and-addresses downloads for 16 states; all 52 US regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. On 11 November 2026 the installed app passed the offline acceptance test: with no network, it showed the Illinois map and found places, addresses, stations, outdoor places and saved places ([validation](docs/validation.md#offline-acceptance-test)).
+Status (11 November 2026): version 0.9.0, with 100 regions: the US (Alaska included), Canada and Mexico by state. All 52 US regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. On 11 November 2026 the installed app passed the offline acceptance test: with no network, it showed the Illinois map and found places, addresses, stations, outdoor places and saved places ([validation](docs/validation.md#offline-acceptance-test)).
 
-Planned (10 November 2026): Canada and Alaska, and an Android app with GPS that receives maps from the desktop. See the [North America and Android plan](docs/north-america-and-android.md).
+Planned (10 November 2026): a new name for North America, and an Android app with GPS that receives maps from the desktop. See the [North America and Android plan](docs/north-america-and-android.md).
 
 - [Project brief](docs/project-brief.md)
 - [North America and Android plan](docs/north-america-and-android.md)

@@ -53,6 +53,56 @@ pub const US_AL: Region = Region {
     overlay_bytes: 155090944,
 };
 
+pub const US_AK: Region = Region {
+    id: "us-ak",
+    name: "Alaska",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/us-ak-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/us/alaska-latest.osm.pbf",
+    outer: Bounds {
+        west: -180.000,
+        south: 49.309,
+        east: 180.000,
+        north: 74.298,
+    },
+    required_points: &[
+        (-154.950, 61.300),
+        (-174.990, 53.060),
+        (-134.910, 53.060),
+        (-174.990, 69.540),
+        (-134.910, 69.540),
+    ],
+    package_bytes: 427343872,
+    extras_bytes: 144211221,
+    terrain_bytes: 10549890424,
+    overlay_bytes: 0,
+};
+
+pub const CA_AB: Region = Region {
+    id: "ca-ab",
+    name: "Alberta",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-ab-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/alberta-latest.osm.pbf",
+    outer: Bounds {
+        west: -120.504,
+        south: 47.811,
+        east: -109.502,
+        north: 60.503,
+    },
+    required_points: &[
+        (-115.003, 54.157),
+        (-119.004, 49.480),
+        (-111.002, 49.480),
+        (-119.004, 58.833),
+        (-111.002, 58.833),
+    ],
+    package_bytes: 415399936,
+    extras_bytes: 352207737,
+    terrain_bytes: 2444114214,
+    overlay_bytes: 0,
+};
+
 pub const MX: Region = Region {
     id: "mx",
     name: "All of Mexico",
@@ -175,6 +225,31 @@ pub const MX_BCS: Region = Region {
     package_bytes: 11935744,
     extras_bytes: 10476430,
     terrain_bytes: 130490878,
+    overlay_bytes: 0,
+};
+
+pub const CA_BC: Region = Region {
+    id: "ca-bc",
+    name: "British Columbia",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-bc-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/british-columbia-latest.osm.pbf",
+    outer: Bounds {
+        west: -143.372,
+        south: 44.885,
+        east: -113.549,
+        north: 60.507,
+    },
+    required_points: &[
+        (-128.460, 52.696),
+        (-139.989, 46.847),
+        (-116.931, 46.847),
+        (-139.989, 58.545),
+        (-116.931, 58.545),
+    ],
+    package_bytes: 953622528,
+    extras_bytes: 1249178632,
+    terrain_bytes: 5949592526,
     overlay_bytes: 0,
 };
 
@@ -803,6 +878,31 @@ pub const US_ME: Region = Region {
     overlay_bytes: 56655872,
 };
 
+pub const CA_MB: Region = Region {
+    id: "ca-mb",
+    name: "Manitoba",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-mb-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/manitoba-latest.osm.pbf",
+    outer: Bounds {
+        west: -102.514,
+        south: 48.491,
+        east: -87.622,
+        north: 60.508,
+    },
+    required_points: &[
+        (-95.068, 54.500),
+        (-100.625, 50.092),
+        (-89.511, 50.092),
+        (-100.625, 58.907),
+        (-89.511, 58.907),
+    ],
+    package_bytes: 308617216,
+    extras_bytes: 218500762,
+    terrain_bytes: 1993697036,
+    overlay_bytes: 0,
+};
+
 pub const US_MD: Region = Region {
     id: "us-md",
     name: "Maryland",
@@ -1128,6 +1228,31 @@ pub const US_NV: Region = Region {
     overlay_bytes: 44707840,
 };
 
+pub const CA_NB: Region = Region {
+    id: "ca-nb",
+    name: "New Brunswick",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-nb-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/new-brunswick-latest.osm.pbf",
+    outer: Bounds {
+        west: -69.690,
+        south: 43.692,
+        east: -62.386,
+        north: 48.881,
+    },
+    required_points: &[
+        (-66.038, 46.286),
+        (-68.560, 44.611),
+        (-63.516, 44.611),
+        (-68.560, 47.962),
+        (-63.516, 47.962),
+    ],
+    package_bytes: 83058688,
+    extras_bytes: 66575842,
+    terrain_bytes: 377213932,
+    overlay_bytes: 0,
+};
+
 pub const US_NH: Region = Region {
     id: "us-nh",
     name: "New Hampshire",
@@ -1228,6 +1353,31 @@ pub const US_NY: Region = Region {
     overlay_bytes: 151199744,
 };
 
+pub const CA_NL: Region = Region {
+    id: "ca-nl",
+    name: "Newfoundland and Labrador",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-nl-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/newfoundland-and-labrador-latest.osm.pbf",
+    outer: Bounds {
+        west: -68.371,
+        south: 43.564,
+        east: -42.083,
+        north: 61.009,
+    },
+    required_points: &[
+        (-55.227, 52.286),
+        (-65.342, 45.708),
+        (-45.112, 45.708),
+        (-65.342, 58.864),
+        (-45.112, 58.864),
+    ],
+    package_bytes: 519311360,
+    extras_bytes: 259415804,
+    terrain_bytes: 2280188344,
+    overlay_bytes: 0,
+};
+
 pub const US_NC: Region = Region {
     id: "us-nc",
     name: "North Carolina",
@@ -1278,6 +1428,56 @@ pub const US_ND: Region = Region {
     overlay_bytes: 93777920,
 };
 
+pub const CA_NT: Region = Region {
+    id: "ca-nt",
+    name: "Northwest Territories",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-nt-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/northwest-territories-latest.osm.pbf",
+    outer: Bounds {
+        west: -137.197,
+        south: 59.490,
+        east: -101.476,
+        north: 82.155,
+    },
+    required_points: &[
+        (-119.337, 70.822),
+        (-133.225, 62.156),
+        (-105.448, 62.156),
+        (-133.225, 79.488),
+        (-105.448, 79.488),
+    ],
+    package_bytes: 915312640,
+    extras_bytes: 410159759,
+    terrain_bytes: 8096357776,
+    overlay_bytes: 0,
+};
+
+pub const CA_NS: Region = Region {
+    id: "ca-ns",
+    name: "Nova Scotia",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-ns-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/nova-scotia-latest.osm.pbf",
+    outer: Bounds {
+        west: -68.013,
+        south: 41.519,
+        east: -57.726,
+        north: 48.398,
+    },
+    required_points: &[
+        (-62.869, 44.958),
+        (-66.584, 42.607),
+        (-59.155, 42.607),
+        (-66.584, 47.310),
+        (-59.155, 47.310),
+    ],
+    package_bytes: 106917888,
+    extras_bytes: 99571876,
+    terrain_bytes: 297304240,
+    overlay_bytes: 0,
+};
+
 pub const MX_NLE: Region = Region {
     id: "mx-nle",
     name: "Nuevo León",
@@ -1300,6 +1500,56 @@ pub const MX_NLE: Region = Region {
     package_bytes: 24350720,
     extras_bytes: 22629419,
     terrain_bytes: 189367482,
+    overlay_bytes: 0,
+};
+
+pub const CA_NU_E: Region = Region {
+    id: "ca-nu-e",
+    name: "Nunavut east of 90° W",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-nu-e-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/nunavut-latest.osm.pbf",
+    outer: Bounds {
+        west: -121.237,
+        south: 50.500,
+        east: -48.500,
+        north: 85.500,
+    },
+    required_points: &[
+        (-69.500, 68.000),
+        (-85.900, 54.400),
+        (-53.100, 54.400),
+        (-85.900, 81.600),
+        (-53.100, 81.600),
+    ],
+    package_bytes: 1328496640,
+    extras_bytes: 1512656773,
+    terrain_bytes: 15954089074,
+    overlay_bytes: 0,
+};
+
+pub const CA_NU_W: Region = Region {
+    id: "ca-nu-w",
+    name: "Nunavut west of 90° W",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-nu-w-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/nunavut-latest.osm.pbf",
+    outer: Bounds {
+        west: -121.500,
+        south: 50.500,
+        east: -48.660,
+        north: 85.500,
+    },
+    required_points: &[
+        (-105.500, 68.000),
+        (-117.900, 54.400),
+        (-93.100, 54.400),
+        (-117.900, 81.600),
+        (-93.100, 81.600),
+    ],
+    package_bytes: 1689812992,
+    extras_bytes: 1512656773,
+    terrain_bytes: 12137002836,
     overlay_bytes: 0,
 };
 
@@ -1378,6 +1628,31 @@ pub const US_OK: Region = Region {
     overlay_bytes: 90591232,
 };
 
+pub const CA_ON: Region = Region {
+    id: "ca-on",
+    name: "Ontario",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-on-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/ontario-latest.osm.pbf",
+    outer: Bounds {
+        west: -95.660,
+        south: 41.138,
+        east: -73.810,
+        north: 58.008,
+    },
+    required_points: &[
+        (-84.735, 49.573),
+        (-93.075, 43.225),
+        (-76.395, 43.225),
+        (-93.075, 55.921),
+        (-76.395, 55.921),
+    ],
+    package_bytes: 1071173632,
+    extras_bytes: 1026034355,
+    terrain_bytes: 4374554774,
+    overlay_bytes: 0,
+};
+
 pub const US_OR: Region = Region {
     id: "us-or",
     name: "Oregon",
@@ -1428,6 +1703,31 @@ pub const US_PA: Region = Region {
     overlay_bytes: 143863808,
 };
 
+pub const CA_PE: Region = Region {
+    id: "ca-pe",
+    name: "Prince Edward Island",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-pe-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/prince-edward-island-latest.osm.pbf",
+    outer: Bounds {
+        west: -65.102,
+        south: 45.325,
+        east: -60.749,
+        north: 48.186,
+    },
+    required_points: &[
+        (-62.926, 46.755),
+        (-64.267, 46.011),
+        (-61.584, 46.011),
+        (-64.267, 47.500),
+        (-61.584, 47.500),
+    ],
+    package_bytes: 14684160,
+    extras_bytes: 11589920,
+    terrain_bytes: 24661040,
+    overlay_bytes: 0,
+};
+
 pub const MX_PUE: Region = Region {
     id: "mx-pue",
     name: "Puebla",
@@ -1476,6 +1776,31 @@ pub const US_PR: Region = Region {
     extras_bytes: 74320225,
     terrain_bytes: 20834302,
     overlay_bytes: 5345280,
+};
+
+pub const CA_QC: Region = Region {
+    id: "ca-qc",
+    name: "Quebec",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-qc-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/quebec-latest.osm.pbf",
+    outer: Bounds {
+        west: -80.340,
+        south: 44.459,
+        east: -56.589,
+        north: 63.126,
+    },
+    required_points: &[
+        (-68.465, 53.793),
+        (-77.565, 46.726),
+        (-59.364, 46.726),
+        (-77.565, 60.859),
+        (-59.364, 60.859),
+    ],
+    package_bytes: 1715466240,
+    extras_bytes: 1166570375,
+    terrain_bytes: 5405428404,
+    overlay_bytes: 0,
 };
 
 pub const MX_QUE: Region = Region {
@@ -1575,6 +1900,31 @@ pub const MX_SLP: Region = Region {
     package_bytes: 17625088,
     extras_bytes: 12677778,
     terrain_bytes: 215969946,
+    overlay_bytes: 0,
+};
+
+pub const CA_SK: Region = Region {
+    id: "ca-sk",
+    name: "Saskatchewan",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-sk-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/saskatchewan-latest.osm.pbf",
+    outer: Bounds {
+        west: -110.507,
+        south: 47.826,
+        east: -100.860,
+        north: 60.501,
+    },
+    required_points: &[
+        (-105.683, 54.163),
+        (-109.142, 49.494),
+        (-102.225, 49.494),
+        (-109.142, 58.833),
+        (-102.225, 58.833),
+    ],
+    package_bytes: 218591232,
+    extras_bytes: 118164949,
+    terrain_bytes: 1649646862,
     overlay_bytes: 0,
 };
 
@@ -2078,6 +2428,31 @@ pub const MX_YUC: Region = Region {
     overlay_bytes: 0,
 };
 
+pub const CA_YT: Region = Region {
+    id: "ca-yt",
+    name: "Yukon",
+    source_page: "https://github.com/ianrastall/offline-us-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-us-maps/releases/download/regions/ca-yt-shortbread-1.0.mbtiles",
+    extras_url: "https://download.geofabrik.de/north-america/canada/yukon-latest.osm.pbf",
+    outer: Bounds {
+        west: -141.856,
+        south: 59.497,
+        east: -123.302,
+        north: 70.669,
+    },
+    required_points: &[
+        (-132.579, 65.083),
+        (-139.600, 61.015),
+        (-125.557, 61.015),
+        (-139.600, 69.152),
+        (-125.557, 69.152),
+    ],
+    package_bytes: 145244160,
+    extras_bytes: 70994368,
+    terrain_bytes: 4118445570,
+    overlay_bytes: 0,
+};
+
 pub const MX_ZAC: Region = Region {
     id: "mx-zac",
     name: "Zacatecas",
@@ -2104,14 +2479,17 @@ pub const MX_ZAC: Region = Region {
 };
 
 /// Every region that can be downloaded, by name.
-pub static ALL: [Region; 85] = [
+pub static ALL: [Region; 100] = [
     MX_AGU,
     US_AL,
+    US_AK,
+    CA_AB,
     MX,
     US_AZ,
     US_AR,
     MX_BCN,
     MX_BCS,
+    CA_BC,
     US_CA,
     MX_CAM,
     MX_CHP,
@@ -2138,6 +2516,7 @@ pub static ALL: [Region; 85] = [
     US_KY,
     US_LA,
     US_ME,
+    CA_MB,
     US_MD,
     US_MA,
     MX_CMX,
@@ -2151,24 +2530,34 @@ pub static ALL: [Region; 85] = [
     MX_NAY,
     US_NE,
     US_NV,
+    CA_NB,
     US_NH,
     US_NJ,
     US_NM,
     US_NY,
+    CA_NL,
     US_NC,
     US_ND,
+    CA_NT,
+    CA_NS,
     MX_NLE,
+    CA_NU_E,
+    CA_NU_W,
     MX_OAX,
     US_OH,
     US_OK,
+    CA_ON,
     US_OR,
     US_PA,
+    CA_PE,
     MX_PUE,
     US_PR,
+    CA_QC,
     MX_QUE,
     MX_ROO,
     US_RI,
     MX_SLP,
+    CA_SK,
     MX_SIN,
     MX_SON,
     US_SC,
@@ -2189,5 +2578,6 @@ pub static ALL: [Region; 85] = [
     US_WI,
     US_WY,
     MX_YUC,
+    CA_YT,
     MX_ZAC,
 ];

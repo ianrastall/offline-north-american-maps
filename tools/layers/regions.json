@@ -22,6 +22,28 @@
   ]
  },
  {
+  "id": "us-ak",
+  "name": "Alaska",
+  "slug": "us-ak",
+  "bbox": [
+   -180.0,
+   51.0,
+   -129.9,
+   71.6
+  ]
+ },
+ {
+  "id": "ca-ab",
+  "name": "Alberta",
+  "slug": "ca-ab",
+  "bbox": [
+   -120.0043,
+   48.311,
+   -110.0018,
+   60.00254
+  ]
+ },
+ {
   "id": "mx",
   "name": "All of Mexico",
   "slug": "mexico",
@@ -74,6 +96,17 @@
    22.87163,
    -109.41317,
    28.0
+  ]
+ },
+ {
+  "id": "ca-bc",
+  "name": "British Columbia",
+  "slug": "ca-bc",
+  "bbox": [
+   -142.8716,
+   45.385,
+   -114.049,
+   60.00678
   ]
  },
  {
@@ -363,6 +396,17 @@
   ]
  },
  {
+  "id": "ca-mb",
+  "name": "Manitoba",
+  "slug": "ca-mb",
+  "bbox": [
+   -102.014,
+   48.99056,
+   -88.12183,
+   60.00845
+  ]
+ },
+ {
   "id": "us-md",
   "name": "Maryland",
   "slug": "maryland",
@@ -506,6 +550,17 @@
   ]
  },
  {
+  "id": "ca-nb",
+  "name": "New Brunswick",
+  "slug": "ca-nb",
+  "bbox": [
+   -69.19022,
+   44.19205,
+   -62.88575,
+   48.38075
+  ]
+ },
+ {
   "id": "us-nh",
   "name": "New Hampshire",
   "slug": "new-hampshire",
@@ -550,6 +605,17 @@
   ]
  },
  {
+  "id": "ca-nl",
+  "name": "Newfoundland and Labrador",
+  "slug": "ca-nl",
+  "bbox": [
+   -67.87079,
+   44.06392,
+   -42.58305,
+   60.50864
+  ]
+ },
+ {
   "id": "us-nc",
   "name": "North Carolina",
   "slug": "north-carolina",
@@ -572,6 +638,28 @@
   ]
  },
  {
+  "id": "ca-nt",
+  "name": "Northwest Territories",
+  "slug": "ca-nt",
+  "bbox": [
+   -136.69739,
+   59.9896,
+   -101.976,
+   81.65483
+  ]
+ },
+ {
+  "id": "ca-ns",
+  "name": "Nova Scotia",
+  "slug": "ca-ns",
+  "bbox": [
+   -67.51297,
+   42.01893,
+   -58.22593,
+   47.89793
+  ]
+ },
+ {
   "id": "mx-nle",
   "name": "Nuevo Le\u00f3n",
   "slug": "mx-nle",
@@ -580,6 +668,28 @@
    23.16267,
    -98.42158,
    27.79914
+  ]
+ },
+ {
+  "id": "ca-nu-e",
+  "name": "Nunavut east of 90\u00b0 W",
+  "slug": "ca-nu-e",
+  "bbox": [
+   -90.0,
+   51.0,
+   -49.0,
+   85.0
+  ]
+ },
+ {
+  "id": "ca-nu-w",
+  "name": "Nunavut west of 90\u00b0 W",
+  "slug": "ca-nu-w",
+  "bbox": [
+   -121.0,
+   51.0,
+   -90.0,
+   85.0
   ]
  },
  {
@@ -616,6 +726,17 @@
   ]
  },
  {
+  "id": "ca-on",
+  "name": "Ontario",
+  "slug": "ca-on",
+  "bbox": [
+   -95.15965,
+   41.6377,
+   -74.30998,
+   57.50826
+  ]
+ },
+ {
   "id": "us-or",
   "name": "Oregon",
   "slug": "oregon",
@@ -638,6 +759,17 @@
   ]
  },
  {
+  "id": "ca-pe",
+  "name": "Prince Edward Island",
+  "slug": "ca-pe",
+  "bbox": [
+   -64.60236,
+   45.82497,
+   -61.24878,
+   47.68573
+  ]
+ },
+ {
   "id": "mx-pue",
   "name": "Puebla",
   "slug": "mx-pue",
@@ -657,6 +789,17 @@
    17.51573,
    -65.09262,
    18.81272
+  ]
+ },
+ {
+  "id": "ca-qc",
+  "name": "Quebec",
+  "slug": "ca-qc",
+  "bbox": [
+   -79.8404,
+   44.95897,
+   -57.08908,
+   62.6262
   ]
  },
  {
@@ -701,6 +844,17 @@
    21.15969,
    -98.32597,
    24.49152
+  ]
+ },
+ {
+  "id": "ca-sk",
+  "name": "Saskatchewan",
+  "slug": "ca-sk",
+  "bbox": [
+   -110.0069,
+   48.32644,
+   -101.3598,
+   60.00052
   ]
  },
  {
@@ -921,6 +1075,17 @@
    19.55117,
    -87.53315,
    22.52895
+  ]
+ },
+ {
+  "id": "ca-yt",
+  "name": "Yukon",
+  "slug": "ca-yt",
+  "bbox": [
+   -141.3557,
+   59.99739,
+   -123.8021,
+   70.16906
   ]
  },
  {

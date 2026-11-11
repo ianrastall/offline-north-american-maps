@@ -78,7 +78,7 @@ public sealed class PaneItem
         "address" => "Address",
         "place" => r.Category switch
         {
-            "state_capital" => "State capital",
+            "state_capital" => "State or provincial capital",
             "capital" => "Capital",
             _ => Format.Sentence(r.Category),
         },

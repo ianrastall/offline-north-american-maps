@@ -100,6 +100,28 @@ def country(region: str) -> str:
     return region.split("-")[0]
 
 
+# Nunavut is two catalog regions, split at 90 degrees W (one file would be over GitHub's
+# 2 GiB limit). The label stays on the half that holds Natural Earth's label point.
+NUNAVUT_SPLIT = -90.0
+
+
+def split_nunavut(df: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    row = df[df["region"] == "ca-nu"]
+    if row.empty:
+        return df
+    row = row.iloc[0]
+    parts = []
+    for suffix, area in (("w", box(-180, -90, NUNAVUT_SPLIT, 90)), ("e", box(NUNAVUT_SPLIT, -90, 180, 90))):
+        part = row.copy()
+        part["region"] = f"ca-nu-{suffix}"
+        part["geometry"] = row.geometry.intersection(area)
+        if not area.contains(Point(row["longitude"], row["latitude"])):
+            part["name"] = ""
+        parts.append(part)
+    rest = df[df["region"] != "ca-nu"]
+    return gpd.GeoDataFrame(pd.concat([rest, gpd.GeoDataFrame(parts, crs=df.crs)], ignore_index=True), geometry="geometry", crs=df.crs)
+
+
 def regions() -> gpd.GeoDataFrame:
     """One row per US state or territory, Canadian province or territory and Mexican state,
     with its catalog region."""
@@ -113,6 +135,7 @@ def regions() -> gpd.GeoDataFrame:
     # Puerto Rico and the Virgin Islands have many parts.
     df = df.dissolve(by="region", aggfunc="first", as_index=False)
     df["name"] = df["name"].fillna("")
+    df = split_nunavut(df)
     missing = REGIONS - set(df["region"]) - {"mx"}
     if missing:
         raise RuntimeError(f"no Natural Earth outline for {sorted(missing)}")
@@ -145,6 +168,8 @@ def state_borders(states: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         a, b = states.iloc[i], states.iloc[j]
         if country(a["region"]) != country(b["region"]):
             continue
+        if a["region"].startswith("ca-nu") and b["region"].startswith("ca-nu"):
+            continue  # the split is not a border
         shared = a.geometry.boundary.intersection(b.geometry.boundary)
         parts = [g for g in shapely.get_parts(shared) if g.geom_type in ("LineString", "MultiLineString")]
         if parts:

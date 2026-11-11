@@ -60,6 +60,8 @@ Stage 1 of [validation's next stages](validation.md#next-stages): download Illin
 - Decide a rebuild schedule (for example monthly). Update checks already compare server dates, so a rebuilt file shows as newer.
 - Add Inuktitut syllabics to the bundled glyphs.
 
+**Done for 0.9.0 (11 November 2026).** Built with VersaTiles' Planetiler profile (Ian's choice) and published in the [`regions` release](https://github.com/ianrastall/offline-us-maps/releases/tag/regions). Nunavut is two regions split at 90° W because one file would be 3.0 GB, over GitHub's 2 GiB limit; Quebec is the largest single file (1.7 GB). Rebuilds are by hand for now. Mexico is also split by state (Ian, 11 November): the states' maps are cut from Geofabrik's Mexico package and their extracts from its raw extract.
+
 ### 3. Canada and Alaska in the app
 
 - Catalog entries pointing at the published tiles; stations, addresses and outdoor places from Geofabrik's raw extract, as for US regions today.
@@ -67,6 +69,8 @@ Stage 1 of [validation's next stages](validation.md#next-stages): download Illin
 - Route shields: provincial highways and the Trans-Canada Highway.
 - Extend the overview north to cover Canada and Alaska.
 - Region identifiers from ISO 3166-2 (`ca-on`, `mx`, `us-ak`), as the US regions use.
+
+**Done for 0.9.0**, except provincial and Trans-Canada shields (plain markers) and Inuktitut syllabics (the bundled Noto Sans has none; most Nunavut places also have Latin names). French search words are in. The Regions window lists the United States, Canada and Mexico under their own headings.
 
 ### 4. Name
 

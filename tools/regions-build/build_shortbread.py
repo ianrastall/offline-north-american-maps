@@ -2,11 +2,12 @@
 Canadian provinces and territories, and Alaska. For publishing with the app's releases
 (tag `regions`) as <id>-shortbread-1.0.mbtiles.
 
-Each package is made from Geofabrik's raw extract of the region with Planetiler's bundled
-Shortbread profile (`planetiler.jar shortbread`, Planetiler 0.10.2, pinned in
-tools/layers): the same layers as Geofabrik's packages, from the same data. Ocean polygons
-come from osmdata.openstreetmap.de (water-polygons-split-3857), which Planetiler downloads
-once. Alaska is clipped at the 180th meridian (its outline crosses it, which made
+Each package is made from Geofabrik's raw extract of the region with VersaTiles' Planetiler
+Shortbread profile (versatiles-org/planetiler-shortbread v1.0.0-pre1, Apache-2.0; the release
+jar, pinned by its SHA-256, in data/layer-build/tools): the same layers as Geofabrik's
+packages, from the same data. Planetiler's bundled sample profile was not used: it writes no
+boundary lines. Ocean polygons come from osmdata.openstreetmap.de (water-polygons-split-3857),
+downloaded once. Alaska is clipped at the 180th meridian (its outline crosses it, which made
 Geofabrik's package span the world); the Near Islands west of it are left out.
 
 Stations, addresses and outdoor places for these regions come from Geofabrik's raw
@@ -28,8 +29,9 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PLANETILER = ROOT / "data" / "layer-build" / "tools" / "planetiler.jar"
-PLANETILER_SHA256 = "f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d"
+# https://github.com/versatiles-org/planetiler-shortbread/releases/download/v1.0.0-pre1/planetiler-shortbread.jar
+PLANETILER = ROOT / "data" / "layer-build" / "tools" / "planetiler-shortbread.jar"
+PLANETILER_SHA256 = "e3ce25a8166c77ce257c3320e03822ecf1168c586e931ac12de4719590fdddf9"
 WORK = ROOT / "data" / "regions-build"
 GEOFABRIK = "https://download.geofabrik.de/north-america"
 
@@ -42,7 +44,10 @@ REGIONS = {
     "ca-nl": ("Newfoundland and Labrador", "canada/newfoundland-and-labrador", None),
     "ca-ns": ("Nova Scotia", "canada/nova-scotia", None),
     "ca-nt": ("Northwest Territories", "canada/northwest-territories", None),
-    "ca-nu": ("Nunavut", "canada/nunavut", None),
+    # Nunavut whole is 3.0 GB, over GitHub's 2 GiB limit for a release file, so it is two
+    # regions split at 90 degrees W: Kitikmeot and Kivalliq; Qikiqtaaluk.
+    "ca-nu-w": ("Nunavut west of 90° W", "canada/nunavut", (-121.0, 51.0, -90.0, 85.0)),
+    "ca-nu-e": ("Nunavut east of 90° W", "canada/nunavut", (-90.0, 51.0, -49.0, 85.0)),
     "ca-on": ("Ontario", "canada/ontario", None),
     "ca-pe": ("Prince Edward Island", "canada/prince-edward-island", None),
     "ca-qc": ("Quebec", "canada/quebec", None),
@@ -82,9 +87,10 @@ def build(region_id: str, out: Path) -> dict:
     download(f"{GEOFABRIK}/{path}-latest.osm.pbf", pbf)
     target = out / f"{region_id}-shortbread-1.0.mbtiles"
     args = [
-        "java", "-Xmx24g", "-jar", str(PLANETILER), "shortbread",
+        "java", "-Xmx24g", "-jar", str(PLANETILER),
         f"--osm_path={pbf}", f"--output={target}", "--force",
-        "--download", f"--download_dir={sources / 'planetiler'}", f"--tmpdir={WORK / 'tmp'}",
+        f"--ocean_path={sources / 'water-polygons-split-3857.zip'}", "--download",
+        f"--tmpdir={WORK / 'tmp'}",
     ]
     if clip:
         args.append("--bounds=" + ",".join(str(v) for v in clip))
@@ -95,7 +101,7 @@ def build(region_id: str, out: Path) -> dict:
     meta = dict(db.execute("SELECT name, value FROM metadata"))
     updates = {
         "name": f"Shortbread {name}",
-        "description": f"{name}: Shortbread vector tiles built with Planetiler from Geofabrik's extract",
+        "description": f"{name}: Shortbread vector tiles built with Planetiler (VersaTiles profile) from Geofabrik's extract",
         "attribution": "© OpenStreetMap contributors (ODbL)",
         "license": "Open Database License 1.0",
         "author": "OpenStreetMap contributors; built for Offline US Maps",

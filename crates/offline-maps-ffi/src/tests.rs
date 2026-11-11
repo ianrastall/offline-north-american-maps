@@ -80,7 +80,7 @@ fn empty_store_reports_no_map_and_refuses_search() {
     let Some(pb::response::Result::Catalog(catalog)) = catalog.result else {
         panic!("{catalog:?}");
     };
-    assert_eq!(catalog.regions.len(), 85);
+    assert_eq!(catalog.regions.len(), 100);
     let mexico = catalog.regions.iter().find(|r| r.id == "mx").unwrap();
     assert_eq!(mexico.name, "All of Mexico");
     assert_eq!(mexico.overlay_bytes, 0);
@@ -146,7 +146,7 @@ fn empty_store_reports_no_map_and_refuses_search() {
         core,
         12,
         pb::request::Command::RemoveRegion(pb::RemoveRegion {
-            region_id: "us-ak".into(),
+            region_id: "us-zz".into(),
         }),
     );
     assert_eq!(
