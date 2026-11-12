@@ -80,11 +80,13 @@ Rename the app and repository for North America (the name is Ian's choice). The 
 
 ### 5. Android foundation
 
-- **Stack decision, recorded before code.** Jupiter has no Android standard. Proposed: Kotlin with Jetpack Compose for the interface, MapLibre Native for Android for the map and the existing Rust core through UniFFI or JNI. Record it in `_standards/` or in this project's exceptions.
+**Android only (decided by Ian, 11 November 2026).** There is no iPhone version. Building one needs Apple's tools, which run only on macOS; installing it on other people's iPhones needs Apple's paid developer account (in the US the App Store is the only way; an app installed with a free account stops working after 7 days and only on the builder's own phones); and testing needs an iPhone. Ian has none of these and carries an Android phone, which is the test device. A Microsoft phone platform no longer exists (Windows 10 Mobile support ended in 2019), and a web page saved for offline use on iPhone is not reliable for gigabytes of maps (Safari limits and can delete stored data). Because iPhone is ruled out, a toolkit that builds for both phones (.NET MAUI, Uno Platform, Flutter) gains nothing, so the phone app is a native Android app. The Rust core stays platform-neutral, so an iPhone version remains possible later without starting over.
+
+- **Stack decision, recorded before code.** Jupiter has no Android standard. Following the Android-only decision: Kotlin with Jetpack Compose for the interface, MapLibre Native for Android for the map and the existing Rust core through UniFFI or JNI. Still to be recorded in `_standards/` or in this project's exceptions before code is written.
 - **Renderer proof for Android**, as the [renderer proof](renderer-proof.md) did for Windows: MapLibre Native reading the same MBTiles and styles, compared with the existing map page (`web/`) inside Android's WebView. Contour lines are the main difference: maplibre-contour runs only in the browser engine, so MapLibre Native would need contour tiles built ahead of time. Hillshading works in both.
 - **Core port.** Build for `aarch64-linux-android` (and `x86_64` for the emulator). The core's HTTPS client uses SChannel, which is Windows-only; Android needs rustls or the platform's own client. Everything else (downloads, verification, store, tile merging, search, extras, terrain, saved places) is platform-neutral.
 - **GPS.** Show the current position and heading, follow it, and save it as a place. Satellite positioning works without data; the first fix is slower without network assistance.
-- **Distribution.** A signed APK on the GitHub releases; F-Droid later if wanted. Google Play is not required. The Windows installer rule in the workspace instructions does not apply to Android; the APK's install, upgrade with data kept, and uninstall are verified on a real phone.
+- **Distribution.** A signed APK on the GitHub releases; F-Droid later if wanted. Google Play is not required. Google has announced developer identity verification for apps installed outside Play on certified Android phones; check its terms and timing before relying on GitHub APKs. The Windows installer rule in the workspace instructions does not apply to Android; the APK's install, upgrade with data kept, and uninstall are verified on a real phone.
 
 ### 6. Desktop to phone
 
@@ -108,6 +110,7 @@ Downloading on the phone when it is online, with a Wi-Fi-only setting and a stor
 3. Whether the first Android version receives maps only from the desktop, or also downloads directly.
 4. Android distribution: GitHub APK only, or F-Droid too.
 5. Whether overlays outside the US are wanted.
+6. Phone platforms: decided 11 November 2026, Android only (see stage 5).
 
 ## Licensing
 
