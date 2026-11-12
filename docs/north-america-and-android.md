@@ -78,7 +78,36 @@ Rename the app and repository for North America (the name is Ian's choice). The 
 
 **Done in 0.10.0 (11 November 2026):** Offline North American Maps, repository `offline-north-american-maps` (Ian's choice of name). The install folder, data folder, Start identity and project names (`OfflineMaps.*`, `offline-maps-*`) are unchanged.
 
-### 5. Android foundation
+### 5. Prepared bundles on the release page
+
+Agreed by Ian on 11 November 2026. Each installed copy now downloads from free services run by others, and a thousand copies would multiply that. The region files are to be published, already processed, in this project's GitHub releases, as the Canadian, Alaskan and Mexican state maps and the overlays already are.
+
+**Where the downloads come from now** (all 100 regions with every optional download, from the catalog on 11 November 2026):
+
+| Data | Total | Source |
+| --- | --- | --- |
+| Terrain | 109 GB | Mapterhorn, every region |
+| Maps | 27 GB | Geofabrik 16 GB (US regions, All of Mexico); this project's releases 11 GB (Canada, Alaska, Mexican states) |
+| Raw extracts for stations, addresses and outdoor places | 21 GB | Geofabrik 20.5 GB; this project's releases 0.7 GB (Mexican states) |
+| Flood zones and public lands | 5 GB | This project's releases |
+
+The search index is built on the user's computer from the map, so it is not downloaded.
+
+**Usage terms, read 11 November 2026.** Geofabrik's download pages state no rate limits, per-address limits or rules for apps; the service is "offered free of charge". Mapterhorn's pages state none either; Cloudflare donates its storage and bandwidth, and it is funded by an NLnet grant (EU Next Generation Internet). GitHub's releases documentation says "There is no limit on the total size of a release, nor bandwidth usage"; each file must be under 2 GiB and a release holds up to 1,000 files. GitHub's acceptable-use policies were not read and are checked before this stage relies on them. The app names itself in every request (`OfflineMaps/<version>`), which is courteous but also lets a server block every copy at once.
+
+**Plan:**
+
+- **Maps.** Publish a map file for every region: Geofabrik's Shortbread packages republished for the US regions and All of Mexico (ODbL allows this with attribution), beside the ones already built.
+- **Stations, addresses and outdoor places, processed.** Publish each region's extras database (what the app now makes from the raw extract) instead of having every copy download the raw extract: Illinois's raw extract is 363 MB and its extras database 37 MB. The phone needs these prepared files too (stages 7 and 8).
+- **Terrain stays with Mapterhorn for now.** It is 109 GB; 11 regions are over GitHub's 2 GiB limit and would need splitting; and Mapterhorn's list of sources and their licences (its attribution page) was not readable on 11 November, so the right to republish is not confirmed. Its hosting is built for this kind of access.
+- **Search** stays built on the user's computer from the map.
+- **Checks.** A published manifest gives each file's SHA-256, size and data date. The app verifies them, then runs the existing structural checks (Shortbread layers and coverage for maps; a new check for extras databases, as overlays have). Update checks read the manifest instead of Geofabrik's dates.
+- **Maintainer build.** One script downloads from Geofabrik, processes every region with the core's own extractor, writes the manifest and uploads: about 40 GB per refresh. Data ages between refreshes (Geofabrik updates daily); the app already shows each region's data date.
+- **Fallback.** Whether the app falls back to Geofabrik when a release file is missing or unreachable is decided when this stage is built.
+
+
+
+### 6. Android foundation
 
 **Android only (decided by Ian, 11 November 2026).** There is no iPhone version. Building one needs Apple's tools, which run only on macOS; installing it on other people's iPhones needs Apple's paid developer account (in the US the App Store is the only way; an app installed with a free account stops working after 7 days and only on the builder's own phones); and testing needs an iPhone. Ian has none of these and carries an Android phone, which is the test device. A Microsoft phone platform no longer exists (Windows 10 Mobile support ended in 2019), and a web page saved for offline use on iPhone is not reliable for gigabytes of maps (Safari limits and can delete stored data). Because iPhone is ruled out, a toolkit that builds for both phones (.NET MAUI, Uno Platform, Flutter) gains nothing, so the phone app is a native Android app. The Rust core stays platform-neutral, so an iPhone version remains possible later without starting over.
 
@@ -88,17 +117,17 @@ Rename the app and repository for North America (the name is Ian's choice). The 
 - **GPS.** Show the current position and heading, follow it, and save it as a place. Satellite positioning works without data; the first fix is slower without network assistance.
 - **Distribution.** A signed APK on the GitHub releases; F-Droid later if wanted. Google Play is not required. Google has announced developer identity verification for apps installed outside Play on certified Android phones; check its terms and timing before relying on GitHub APKs. The Windows installer rule in the workspace instructions does not apply to Android; the APK's install, upgrade with data kept, and uninstall are verified on a real phone.
 
-### 6. Desktop to phone
+### 7. Desktop to phone
 
 - The desktop exports chosen regions (map, search index, extras, terrain, overlays) as a bundle the phone can import: over USB to the phone's storage, or on an SD card. No internet is involved.
 - The phone verifies each file with the same SHA-256 and structural checks before activating it, and keeps the previous working copy until then, as the desktop does.
 - Saved places travel both ways.
 
-### 7. Phone downloads directly (optional)
+### 8. Phone downloads directly (optional)
 
-Downloading on the phone when it is online, with a Wi-Fi-only setting and a storage check. Reading the raw extracts for stations and addresses is slow and drains the battery on a phone, so the phone either skips it, uses files prepared on the desktop, or downloads prebuilt extras (which would mean publishing OSM-derived files; see licensing).
+Downloading on the phone when it is online, with a Wi-Fi-only setting and a storage check. Reading the raw extracts for stations and addresses is slow and drains the battery on a phone, so the phone downloads the prepared bundles from stage 5 instead.
 
-### 8. Later
+### 9. Later
 
 - **Routing** on both platforms. A separate decision: it needs a routing graph per region (a large derived file) and an engine such as Valhalla, GraphHopper or OSRM.
 - **Overlays outside the US.** Canada: the Canadian Protected and Conserved Areas Database and provincial flood maps (coverage and licences vary by province). Mexico: protected areas from CONANP. Each source's licence is checked before use.
@@ -110,11 +139,12 @@ Downloading on the phone when it is online, with a Wi-Fi-only setting and a stor
 3. Whether the first Android version receives maps only from the desktop, or also downloads directly.
 4. Android distribution: GitHub APK only, or F-Droid too.
 5. Whether overlays outside the US are wanted.
-6. Phone platforms: decided 11 November 2026, Android only (see stage 5).
+6. Phone platforms: decided 11 November 2026, Android only (see stage 6).
+7. How often the prepared bundles are rebuilt (stage 5); monthly is proposed.
 
 ## Licensing
 
-- **OpenStreetMap (ODbL 1.0).** Publishing tiles built from OSM data makes this project a distributor of an ODbL-derived database. That is allowed with attribution ("© OpenStreetMap contributors") and with the tiles offered under ODbL. It reverses the current rule that map data stays out of this project's releases ([sources](sources-and-architecture.md#licensing-obligations)). Prebuilt extras for phones would be the same.
+- **OpenStreetMap (ODbL 1.0).** Publishing tiles built from OSM data makes this project a distributor of an ODbL-derived database. That is allowed with attribution ("© OpenStreetMap contributors") and with the tiles offered under ODbL. It reverses the current rule that map data stays out of this project's releases ([sources](sources-and-architecture.md#licensing-obligations)). The prepared bundles (stage 5) are the same.
 - **Tile build tools.** On 10 November 2026 GitHub reported no licence for `shortbread-tiles/shortbread-tilemaker` and "other" for `systemed/tilemaker`. Both are build tools, not shipped, but their terms are confirmed before use.
 - **MapLibre Native** is BSD-2-Clause; its notice ships with the Android app.
 - **Terrain outside the US** comes from Copernicus GLO-30, already credited in the app.

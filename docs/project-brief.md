@@ -32,11 +32,11 @@ Map workspace with a traditional menu bar, compact map controls, a regions/searc
 Ian reviewed the purpose: a survival tool for a serious national or world crisis, when electricity is available but internet is not. Two conclusions follow, and they replace the US-only scope above and the brief's earlier note that mobile applications are a separate decision.
 
 - **North America, not the US alone.** People in a crisis cross borders, and Alaska is reachable by land only through Canada. Coverage extends to Canada and Mexico, and Alaska is added.
-- **A phone app as well as the desktop app.** An Android phone is the more useful tool in a crisis, mainly because its GPS works without internet. The desktop is the "guy in the chair": it downloads over a good connection, does the heavy processing, shows everything on a large screen and copies prepared regions to the phone over USB, which needs no internet. The phone carries the regions and shows where you are. Android only: an iPhone version would need a Mac, Apple's paid developer account and an iPhone to test on (decided 11 November 2026; see the plan, stage 5).
+- **A phone app as well as the desktop app.** An Android phone is the more useful tool in a crisis, mainly because its GPS works without internet. The desktop is the "guy in the chair": it downloads over a good connection, does the heavy processing, shows everything on a large screen and copies prepared regions to the phone over USB, which needs no internet. The phone carries the regions and shows where you are. Android only: an iPhone version would need a Mac, Apple's paid developer account and an iPhone to test on (decided 11 November 2026; see the plan, stage 6).
 
 Phone capacity is not the limit: the map engine reads only the tiles on screen, and Illinois with every optional download takes about 0.9 GB. What does not port is the WinUI shell and the WebView2 map page; the Rust core does.
 
-The stages, facts checked and open decisions are in [North America and Android plan](north-america-and-android.md). Stage 0, the networking-disabled acceptance test of the existing app, passed on 11 November 2026 ([validation](validation.md#offline-acceptance-test)).
+Region files are to be published already processed in this project's releases, so that installed copies do not each download and process raw data from Geofabrik (agreed 11 November 2026; stage 5 of the plan). The stages, facts checked and open decisions are in [North America and Android plan](north-america-and-android.md). Stage 0, the networking-disabled acceptance test of the existing app, passed on 11 November 2026 ([validation](validation.md#offline-acceptance-test)).
 
 ## Acceptance conditions
 
