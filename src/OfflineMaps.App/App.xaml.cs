@@ -26,6 +26,10 @@ public partial class App : Application
         Directory.CreateDirectory(AppPaths.SettingsDir);
         AppLog.Open(AppPaths.SettingsDir);
         Settings = AppSettings.Load(AppPaths.SettingsDir);
+        if (AppPaths.StoreOverride is null && Settings.MapFolder is { } mapFolder)
+        {
+            AppPaths.StoreDir = mapFolder;
+        }
         Themes = new ThemeService(Settings);
         Accent = new AccentService(Settings);
         _window = new MainWindow();

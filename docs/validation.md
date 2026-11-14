@@ -341,6 +341,20 @@ Completed 9 November 2026. The labels with missing letters were public-land name
 
 Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple Park", "Philbrick Park" and "Lunt Park" draw whole where 0.7.0 cut them, in the development build and in the installed 0.7.1 started from Start. Released as [v0.7.1](https://github.com/ianrastall/offline-north-american-maps/releases/tag/v0.7.1), built from 8748bff; the installer's SHA-256 (06906734…e6d0581) matches GitHub's digest, and Settings > Apps lists 0.7.1.
 
+## 0.11.0: Choosing and moving the map folder
+
+Completed 14 November 2026, at Ian's request: maps had to live on G:, and Settings could not change the map folder.
+
+- **Setting.** Settings > Map folder has a Change button (a folder picker). The chosen folder is kept in `settings.json` (`MapFolder`; absent or null means `%LOCALAPPDATA%\Jupiter\OfflineMaps\Maps`). With `--store`, the button is disabled and the caption says why.
+- **Move or use as is.** After choosing, a dialog offers Move maps, Use without moving, or Cancel. Moving needs no restart: the core closes its packages and moves only its own entries (catalog region folders and saved-places files; other files in either folder stay). On one drive they are renamed; across drives they are copied into `<new>\.offline-maps-moving`, each file flushed to disk, then renamed into place, after a free-space check. The shell records the new folder, the core then removes the originals (only those now present in the new folder) and the old folder if it is empty, and the shell reopens the core on the new folder and reloads the map. Progress shows in the update bar ("Copied X MB of Y MB") with Cancel; cancelling, a failure, or closing the window during the copy removes the partial copy and reopens the original folder. Saved-place changes and downloads are refused while a move runs.
+- **Refused destinations.** The same folder, a folder inside the current one or around it, and a folder that already holds a region folder or saved places of the same name (the message names them and suggests Use without moving).
+- **Protocol.** `MoveStore` and `RemoveMovedSource` requests, `MoveStoreResult`, progress phase `Moving`. The ABI is unchanged.
+- **Tests.** 77 core (6 new in `relocate.rs`: copying only the store's entries, renaming on one volume, conflicts and nested folders, an empty source, cancelling a copy, never removing an original missing from the destination), 2 HTTP and 7 ABI tests (new: a move through the C ABI that keeps saved places, refuses changes afterwards and reopens on the new folder) and 9 interop tests.
+
+Verified on Ian's machine with the installed 0.11.0 (installed silently over 0.10.0; Settings > Apps lists 0.11.0, the Start entry launches the installed exe). Through Settings > Map folder > Change… and Move maps, the 10 installed regions (Iowa, Illinois, Indiana, Kentucky, Michigan, Missouri, Ohio, Wisconsin, Ontario, Quebec) and saved places moved from `%LOCALAPPDATA%\Jupiter\OfflineMaps\Maps` on C: (about 3.5 GB free) to `G:\Maps`: 10,595 MB copied in about 2 minutes, the originals and the empty `Maps` folder removed, `MapFolder` set to `G:\Maps`. The status bar then read "Moved the maps to G:\Maps" with no error. Closed and restarted from Start, the app listed all 10 regions with stations and addresses and showed no error or "No map is installed" bar. The dialog was driven through UI Automation. The script stopped with an error at the picker's folder box, yet the move to `G:\Maps` started; whether the picker took the script's value or was completed by hand is not known, and the confirmation dialog's text was not captured.
+
+Not covered: cancelling a real cross-drive move, a destination drive that runs out of space part-way, a removable drive missing at startup (the app then reports that the map folder could not be opened, and Settings can choose another).
+
 ## 0.10.0: Offline North American Maps
 
 Completed 11 November 2026: stage 4 of the [North America and Android plan](north-america-and-android.md), with the name Ian chose.

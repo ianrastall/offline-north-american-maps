@@ -170,6 +170,17 @@ public sealed class MapCore : IDisposable
     }
 
     /// <summary>The regions that can be downloaded, by name.</summary>
+    /// <summary>
+    /// Moves the maps and saved places to <paramref name="destination"/> (MoveStore in the proto). Afterwards this
+    /// core serves no maps: call <see cref="RemoveMovedSource"/> if the result says they were copied, then
+    /// dispose it and open a core on the new folder. On failure the maps stay where they were.
+    /// </summary>
+    public MoveStoreResult MoveStore(string destination) =>
+        Call(new Request { MoveStore = new MoveStore { Destination = destination } }).MoveStore;
+
+    /// <summary>After a move that copied to another drive, removes the originals.</summary>
+    public void RemoveMovedSource() => Call(new Request { RemoveMovedSource = new RemoveMovedSource() });
+
     public IReadOnlyList<CatalogRegion> Catalog() => Call(new Request { GetCatalog = new GetCatalog() }).Catalog.Regions;
 
     public void PrepareSearch() => Call(new Request { PrepareSearch = new PrepareSearch() });

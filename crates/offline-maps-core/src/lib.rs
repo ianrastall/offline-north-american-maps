@@ -11,6 +11,7 @@ pub mod package;
 pub mod places;
 pub mod pmtiles;
 pub mod regions;
+pub mod relocate;
 pub mod search;
 pub mod store;
 pub mod terrain;

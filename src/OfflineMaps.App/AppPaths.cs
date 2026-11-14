@@ -1,8 +1,9 @@
 namespace OfflineMaps.App;
 
 /// <summary>
-/// Where Offline North American Maps keeps things. Everything is under %LOCALAPPDATA%\Jupiter\OfflineMaps, outside
-/// the install folder, so maps, saved places and settings survive upgrades and uninstalling.
+/// Where Offline North American Maps keeps things. Settings are under %LOCALAPPDATA%\Jupiter\OfflineMaps, and maps
+/// and saved places are in its Maps folder unless another map folder is chosen in Settings. Both are outside the
+/// install folder, so they survive upgrades and uninstalling.
 /// </summary>
 internal static class AppPaths
 {
@@ -10,8 +11,21 @@ internal static class AppPaths
     public static string SettingsDir { get; } = Option("--settings") ??
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Jupiter", "OfflineMaps");
 
-    /// <summary>Map packages, stations and addresses, and saved places (owned by the Rust core).</summary>
-    public static string StoreDir { get; } = Option("--store") ?? Path.Combine(SettingsDir, "Maps");
+    /// <summary>The map folder when none is chosen in Settings.</summary>
+    public static string DefaultStoreDir { get; } = Path.Combine(SettingsDir, "Maps");
+
+    /// <summary>A map folder given with --store; while set, Settings cannot change it.</summary>
+    public static string? StoreOverride { get; } = Option("--store");
+
+    /// <summary>
+    /// Map packages, stations and addresses, and saved places (owned by the Rust core): --store, else the
+    /// folder chosen in Settings (set at startup and when it changes), else the default.
+    /// </summary>
+    public static string StoreDir { get; set; } = StoreOverride ?? DefaultStoreDir;
+
+    /// <summary>Whether two folder paths name the same folder, ignoring case and a trailing separator.</summary>
+    public static bool SameFolder(string a, string b) =>
+        string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(a)), Path.TrimEndingDirectorySeparator(Path.GetFullPath(b)), StringComparison.OrdinalIgnoreCase);
 
     public static string WebViewDataDir { get; } = Path.Combine(SettingsDir, "WebView2");
 

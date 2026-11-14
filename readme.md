@@ -4,7 +4,7 @@ A Windows app for downloading road maps before an emergency and using them witho
 
 ## Install
 
-Download `OfflineNorthAmericanMaps-<version>-win-x64-setup.exe` from [Releases](https://github.com/ianrastall/offline-north-american-maps/releases) and run it. It installs for the current user without administrator rights, adds Offline North American Maps to the Start Menu and registers an uninstaller. Requires Windows 11 24H2 or later, x64. Maps, saved places and settings (in `%LOCALAPPDATA%\Jupiter\OfflineMaps`) are kept through upgrades and uninstalling.
+Download `OfflineNorthAmericanMaps-<version>-win-x64-setup.exe` from [Releases](https://github.com/ianrastall/offline-north-american-maps/releases) and run it. It installs for the current user without administrator rights, adds Offline North American Maps to the Start Menu and registers an uninstaller. Requires Windows 11 24H2 or later, x64. Maps, saved places and settings (in `%LOCALAPPDATA%\Jupiter\OfflineMaps`, or the map folder chosen in Settings) are kept through upgrades and uninstalling.
 
 Then open Map > Regions, choose regions and download them while you have a connection.
 
@@ -29,7 +29,7 @@ The built-in overview is made from [Natural Earth](https://www.naturalearthdata.
 - Terrain: [Mapterhorn](https://mapterhorn.com/attribution) (USGS 3DEP, public domain; Copernicus GLO-30).
 - Flood zones: FEMA National Flood Hazard Layer; public lands: USGS PAD-US. Both are US Government works in the public domain. The flood data's effective date is shown in Map > Regions.
 
-Status (11 November 2026): version 0.10.0, with 100 regions: the US (Alaska included), Canada and Mexico by state. All 52 US regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. On 11 November 2026 the installed app passed the offline acceptance test: with no network, it showed the Illinois map and found places, addresses, stations, outdoor places and saved places ([validation](docs/validation.md#offline-acceptance-test)).
+Status (14 November 2026): version 0.11.0, with 100 regions: the US (Alaska included), Canada and Mexico by state. All 52 US regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. On 11 November 2026 the installed app passed the offline acceptance test: with no network, it showed the Illinois map and found places, addresses, stations, outdoor places and saved places ([validation](docs/validation.md#offline-acceptance-test)).
 
 Planned: region maps and processed stations and addresses published in this repository's releases (11 November 2026), and an Android app with GPS that receives maps from the desktop (10 November 2026). See the [North America and Android plan](docs/north-america-and-android.md).
 
@@ -91,7 +91,7 @@ dotnet build src/OfflineMaps.App -c Release
 The app's data lives in `%LOCALAPPDATA%\Jupiter\OfflineMaps`:
 
 - `settings.json`, the log and the WebView2 profile;
-- `Maps\` for map packages, stations and addresses, and saved places.
+- `Maps\` for map packages, stations and addresses, and saved places, unless another map folder is chosen in Settings > Map folder > Change. Changing it offers to move the maps and saved places there (renamed on the same drive, copied and then removed on another; cancelling or a failure leaves them where they were) or to use the new folder as it is. Only the app's own region folders and saved-places files are moved; other files in either folder are left alone.
 
 For testing, these command-line options and environment variables change where data is kept and downloaded from:
 

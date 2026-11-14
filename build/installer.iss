@@ -4,7 +4,8 @@
 ; Per-user install: no administrator rights, files under %LOCALAPPDATA%\Programs\Offline North American Maps,
 ; a Start entry under the app's name and an uninstaller in Settings > Apps. A later version
 ; installs over this one (same AppId). Maps, stations and addresses, saved places and settings
-; (%LOCALAPPDATA%\Jupiter\OfflineMaps) are never touched by install, upgrade or uninstall.
+; (%LOCALAPPDATA%\Jupiter\OfflineMaps, and a map folder chosen in Settings) are never touched by install,
+; upgrade or uninstall.
 ;
 ; The Microsoft Edge WebView2 Runtime (which draws the map) is part of Windows 11; the offline
 ; runtime installer is bundled and run only if it is missing, so setup works without a

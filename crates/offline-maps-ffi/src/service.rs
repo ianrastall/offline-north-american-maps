@@ -26,6 +26,7 @@ use offline_maps_core::overlays::{
 use offline_maps_core::package::{ILLINOIS, Region};
 use offline_maps_core::places::{PlacesError, SavedPlace, SavedPlaces};
 use offline_maps_core::regions;
+use offline_maps_core::relocate::{self, MoveError, MoveOutcome, MoveProgress};
 use offline_maps_core::search::{SearchIndex, open_or_build, search_all};
 use offline_maps_core::store::{ActivePackage, PackageStore};
 use offline_maps_core::terrain::{
@@ -93,7 +94,16 @@ pub struct Service {
     progress: Mutex<pb::ProgressEvent>,
     cancel: AtomicBool,
     busy: AtomicBool,
+    /// Set while the store is being moved and after it has moved: no maps are
+    /// open and nothing may change the old folder.
+    closed: AtomicBool,
+    /// Bytes copied by a running move (read by `progress`).
+    moving: MoveProgress,
+    /// Where the store went, and whether the originals are still to be removed.
+    moved: Mutex<Option<(PathBuf, bool)>>,
 }
+
+const MOVED: &str = "The maps have moved to another folder. Restart Offline North American Maps.";
 
 /// Clears the busy flag and the progress state when an operation ends.
 struct BusyGuard<'a>(&'a Service);
@@ -111,6 +121,15 @@ fn http_date_to_iso(value: Option<&str>) -> String {
         .and_then(offline_maps_core::time::parse_http_date)
         .map(|(y, m, d, ..)| format!("{y:04}-{m:02}-{d:02}"))
         .unwrap_or_default()
+}
+
+fn move_error(e: MoveError) -> pb::Error {
+    let kind = match e {
+        MoveError::Destination(_) | MoveError::Conflict(_) => ErrorKind::InvalidArgument,
+        MoveError::NoSpace { .. } | MoveError::Io(_) => ErrorKind::Storage,
+        MoveError::Cancelled => ErrorKind::Cancelled,
+    };
+    error(kind, e.to_string())
 }
 
 fn covered(place: &SavedPlace, bounds: &[Bounds]) -> bool {
@@ -344,6 +363,9 @@ impl Service {
             progress: Mutex::new(pb::ProgressEvent::default()),
             cancel: AtomicBool::new(false),
             busy: AtomicBool::new(false),
+            closed: AtomicBool::new(false),
+            moving: MoveProgress::default(),
+            moved: Mutex::new(None),
         };
         service.reload();
         Ok(service)
@@ -799,7 +821,9 @@ impl Service {
     }
 
     fn with_places<T>(&self, f: impl FnOnce(&mut SavedPlaces) -> Outcome<T>) -> Outcome<T> {
-        match &mut *lock(&self.places) {
+        let mut guard = lock(&self.places);
+        self.check_open()?;
+        match &mut *guard {
             Places::Ready(places) => f(places),
             Places::Unreadable(problem) => Err(error(ErrorKind::InvalidData, problem.clone())),
         }
@@ -837,6 +861,7 @@ impl Service {
     /// Keeps the unreadable file under a new name and starts an empty list.
     pub fn reset_places(&self) -> Outcome<()> {
         let mut guard = lock(&self.places);
+        self.check_open()?;
         if let Places::Unreadable(_) = &*guard {
             SavedPlaces::move_aside_unreadable(self.store.root())
                 .map_err(|e| error(ErrorKind::Storage, e.to_string()))?;
@@ -846,12 +871,31 @@ impl Service {
         Ok(())
     }
 
+    /// Refuses changes while the store is moving and after it has moved.
+    fn check_open(&self) -> Outcome<()> {
+        if !self.closed.load(Ordering::Acquire) {
+            return Ok(());
+        }
+        Err(if lock(&self.moved).is_some() {
+            error(ErrorKind::Unavailable, MOVED)
+        } else {
+            error(
+                ErrorKind::Busy,
+                "The maps are being moved to another folder.",
+            )
+        })
+    }
+
     fn begin(&self, target: pb::UpdateTarget, region: Option<&Region>) -> Outcome<BusyGuard<'_>> {
         if self.busy.swap(true, Ordering::AcqRel) {
             return Err(error(
                 ErrorKind::Busy,
                 "Another map update is already running.",
             ));
+        }
+        if let Err(e) = self.check_open() {
+            self.busy.store(false, Ordering::Release);
+            return Err(e);
         }
         self.cancel.store(false, Ordering::Release);
         *lock(&self.progress) = pb::ProgressEvent {
@@ -882,7 +926,72 @@ impl Service {
     }
 
     pub fn progress(&self) -> pb::ProgressEvent {
-        lock(&self.progress).clone()
+        let mut progress = lock(&self.progress).clone();
+        if progress.phase == "Moving" {
+            progress.done = self.moving.done.load(Ordering::Relaxed);
+            progress.total = self.moving.total.load(Ordering::Relaxed);
+        }
+        progress
+    }
+
+    /// Moves the store to `request.destination`; see `MoveStore` in the proto.
+    pub fn move_store(&self, request: &pb::MoveStore) -> Outcome<pb::MoveStoreResult> {
+        let destination = PathBuf::from(&request.destination);
+        relocate::check_destination(self.store.root(), &destination).map_err(move_error)?;
+        let _busy = self.begin(pb::UpdateTarget::Unspecified, None)?;
+        lock(&self.progress).phase = "Moving".into();
+        self.moving.done.store(0, Ordering::Relaxed);
+        self.moving.total.store(0, Ordering::Relaxed);
+        {
+            // Taken so a saved-place change in progress finishes first.
+            let _places = lock(&self.places);
+            self.closed.store(true, Ordering::Release);
+        }
+        // Closes every package; tile reads find nothing until the move ends.
+        self.set_slots(Vec::new());
+        match relocate::move_store(self.store.root(), &destination, &self.moving, &self.cancel) {
+            Ok(outcome) => {
+                let (copied, bytes) = match outcome {
+                    MoveOutcome::Empty => (false, 0),
+                    MoveOutcome::Renamed { bytes } => (false, bytes),
+                    MoveOutcome::Copied { bytes } => (true, bytes),
+                };
+                *lock(&self.moved) = Some((destination, copied));
+                Ok(pb::MoveStoreResult { copied, bytes })
+            }
+            Err(e) => {
+                self.closed.store(false, Ordering::Release);
+                self.reload();
+                Err(move_error(e))
+            }
+        }
+    }
+
+    /// After a move that copied: removes the originals from the old folder.
+    pub fn remove_moved_source(&self) -> Outcome<()> {
+        let Some((destination, true)) = lock(&self.moved).clone() else {
+            return Err(error(
+                ErrorKind::InvalidArgument,
+                "No copied maps are waiting to be removed.",
+            ));
+        };
+        let failed = relocate::remove_moved(self.store.root(), &destination);
+        *lock(&self.moved) = Some((destination, false));
+        if failed.is_empty() {
+            return Ok(());
+        }
+        Err(error(
+            ErrorKind::Storage,
+            format!(
+                "The maps were moved, but some of the originals could not be removed from {}: {}.",
+                self.store.root().display(),
+                failed
+                    .iter()
+                    .map(|(name, e)| format!("{name} ({e})"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        ))
     }
 
     pub fn cancel(&self) {

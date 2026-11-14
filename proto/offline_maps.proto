@@ -51,6 +51,8 @@ message Request {
     GetTerrainTile get_terrain_tile = 13;
     GetOverlayTile get_overlay_tile = 14;
     GetOverviewTile get_overview_tile = 15;
+    MoveStore move_store = 16;
+    RemoveMovedSource remove_moved_source = 17;
   }
 }
 
@@ -141,6 +143,21 @@ message PrepareSearch {}
 // Moves an unreadable saved-places file aside so a new list can be started.
 message ResetPlaces {}
 
+// Moves the installed maps and saved places to another folder (created if
+// missing). Only the store's own entries move; other files in either folder
+// are left alone. Runs like an update: one at a time, progress through
+// om_progress (phase "Moving"), stopped by om_cancel. While it runs, and after
+// it succeeds, this core shows no maps and refuses changes. On success the
+// caller records the new folder, sends RemoveMovedSource when the result says
+// the maps were copied, then closes this core and opens one on the new folder.
+// On failure the maps stay where they were and this core serves them again.
+message MoveStore {
+  string destination = 1;
+}
+
+// After a MoveStore that copied: removes the originals from the old folder.
+message RemoveMovedSource {}
+
 enum ErrorKind {
   ERROR_KIND_UNSPECIFIED = 0;
   ERROR_KIND_INVALID_ARGUMENT = 1;
@@ -174,6 +191,7 @@ message Response {
     TerrainTile terrain_tile = 9;
     OverlayTile overlay_tile = 10;
     OverviewTile overview_tile = 11;
+    MoveStoreResult move_store = 12;
   }
 }
 
@@ -370,11 +388,19 @@ message Stations {
   string geojson = 1;
 }
 
+message MoveStoreResult {
+  // The maps were copied to another drive and the originals are still in the
+  // old folder until RemoveMovedSource.
+  bool copied = 1;
+  // Bytes moved; 0 when there was nothing to move.
+  uint64 bytes = 2;
+}
+
 // Returned by om_progress.
 message ProgressEvent {
   bool active = 1;
   UpdateTarget target = 2;
-  // Checking, Downloading, Verifying, Preparing, Activating.
+  // Checking, Downloading, Verifying, Preparing, Activating, Removing, Moving.
   string phase = 3;
   uint64 done = 4;
   // 0 when unknown.

@@ -30,6 +30,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBox
                             x:Name="FolderBox"
@@ -37,14 +38,21 @@
                             IsReadOnly="True"
                             TextWrapping="Wrap" />
                         <Button
+                            x:Name="ChangeFolderButton"
                             Grid.Column="1"
+                            VerticalAlignment="Bottom"
+                            Click="ChangeFolder_Click"
+                            Content="Change…" />
+                        <Button
+                            Grid.Column="2"
                             VerticalAlignment="Bottom"
                             Click="OpenFolder_Click"
                             Content="Open folder" />
                     </Grid>
                     <TextBlock
+                        x:Name="FolderCaption"
                         Style="{StaticResource JupiterCaptionTextStyle}"
-                        Text="Maps, stations and addresses, and saved places. Kept when Offline North American Maps is updated or uninstalled."
+                        Text="Maps, stations and addresses, and saved places. Kept when Offline North American Maps is updated or uninstalled. Changing the folder can move them to the new one."
                         TextWrapping="Wrap" />
                 </StackPanel>
             </StackPanel>

@@ -431,7 +431,7 @@ public sealed partial class MainWindow
     }
 
     /// <summary>Runs one job with the progress bar shown. Returns the result message, or null when cancelled or failed.</summary>
-    private async Task<string?> RunAsync(Job? job, string title, Func<Task<string>> start)
+    private async Task<string?> RunAsync(Job? job, string title, Func<Task<string>> start, string? failure = null)
     {
         _current = job;
         ErrorBar.IsOpen = false;
@@ -462,7 +462,7 @@ public sealed partial class MainWindow
         {
             AppLog.Write($"{title} failed: {ex.Kind} {ex.Message}");
             _queue.Clear();
-            ShowError(job is null ? "Search could not be prepared" : $"{Format.Sentence(Subject(job))} could not be updated", ex.Message);
+            ShowError(failure ?? (job is null ? "Search could not be prepared" : $"{Format.Sentence(Subject(job))} could not be updated"), ex.Message);
             return null;
         }
         finally
@@ -521,13 +521,15 @@ public sealed partial class MainWindow
             "Preparing" => "Preparing search",
             "Activating" => "Installing",
             "Removing" => "Removing",
+            "Moving" when progress.Total > 0 => $"Copied {Format.Megabytes(progress.Done)} of {Format.Megabytes(progress.Total)}",
+            "Moving" => "Starting",
             _ => "Running",
         };
         if (progress.Cancelling)
         {
             text = "Cancelling";
         }
-        bool determinate = progress.Total > 0 && progress.Phase is "Downloading" or "Preparing" && !progress.Cancelling;
+        bool determinate = progress.Total > 0 && progress.Phase is "Downloading" or "Preparing" or "Moving" && !progress.Cancelling;
         UpdateProgress.IsIndeterminate = !determinate;
         if (determinate)
         {

@@ -161,6 +161,10 @@ fn dispatch(service: &Service, request: pb::Request) -> pb::Response {
         Some(Command::GetOverviewTile(tile)) => service
             .overview_tile(&tile)
             .map(|t| Some(R::OverviewTile(t))),
+        Some(Command::MoveStore(request)) => {
+            service.move_store(&request).map(|r| Some(R::MoveStore(r)))
+        }
+        Some(Command::RemoveMovedSource(_)) => service.remove_moved_source().map(|()| None),
     };
     match result {
         Ok(result) => pb::Response {

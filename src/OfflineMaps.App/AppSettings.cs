@@ -21,6 +21,9 @@ public sealed class AppSettings : Jupiter.UI.IAccentPreferences, Jupiter.UI.IThe
 
     public string? CustomAccent { get; set; }
 
+    /// <summary>The map folder chosen in Settings; null for the default (AppPaths.DefaultStoreDir).</summary>
+    public string? MapFolder { get; set; }
+
     /// <summary>"miles" (the default) or "kilometres".</summary>
     public string Distances { get; set; } = "miles";
 
@@ -87,6 +90,10 @@ public sealed class AppSettings : Jupiter.UI.IAccentPreferences, Jupiter.UI.IThe
         settings._file = file;
         settings.Version = CurrentVersion;
         settings.SearchPaneWidth = Math.Clamp(settings.SearchPaneWidth, 240, 900);
+        if (settings.MapFolder is { } folder && !Path.IsPathFullyQualified(folder))
+        {
+            settings.MapFolder = null;
+        }
         if (settings.Distances is not ("miles" or "kilometres"))
         {
             settings.Distances = "miles";

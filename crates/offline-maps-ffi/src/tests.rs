@@ -486,3 +486,81 @@ fn real_store_when_available() {
     assert_eq!(results.results[0].kind, "place");
     unsafe { om_destroy(core) };
 }
+
+#[test]
+fn move_store_moves_places_and_retires_the_core() {
+    let dir = TempDir::new();
+    let source = dir.0.join("from");
+    let destination = dir.0.join("to");
+    let core = create(&source);
+    let place = |name: &str| {
+        pb::request::Command::AddPlace(pb::AddPlace {
+            name: name.into(),
+            position: Some(pb::Position {
+                latitude: 40.0,
+                longitude: -89.0,
+            }),
+            ..Default::default()
+        })
+    };
+    assert!(call(core, 1, place("Home")).error.is_none());
+    std::fs::write(source.join("notes.txt"), b"kept").unwrap();
+
+    let nested = call(
+        core,
+        2,
+        pb::request::Command::MoveStore(pb::MoveStore {
+            destination: source.join("inner").display().to_string(),
+        }),
+    );
+    assert_eq!(
+        nested.error.unwrap().kind,
+        ErrorKind::InvalidArgument as i32
+    );
+    // A refused move leaves the core working.
+    assert!(call(core, 3, place("Work")).error.is_none());
+
+    let moved = call(
+        core,
+        4,
+        pb::request::Command::MoveStore(pb::MoveStore {
+            destination: destination.display().to_string(),
+        }),
+    );
+    let Some(pb::response::Result::MoveStore(result)) = moved.result else {
+        panic!("{moved:?}");
+    };
+    // One volume: renamed, nothing left to remove.
+    assert!(!result.copied && result.bytes > 0);
+    assert_eq!(
+        call(core, 5, place("Late")).error.unwrap().kind,
+        ErrorKind::Unavailable as i32
+    );
+    assert_eq!(
+        call(
+            core,
+            6,
+            pb::request::Command::RemoveMovedSource(pb::RemoveMovedSource {})
+        )
+        .error
+        .unwrap()
+        .kind,
+        ErrorKind::InvalidArgument as i32
+    );
+    unsafe { om_destroy(core) };
+    assert!(source.join("notes.txt").exists());
+    assert!(!source.join(offline_maps_core::places::PLACES_FILE).exists());
+
+    let reopened = create(&destination);
+    let status = call(
+        reopened,
+        7,
+        pb::request::Command::GetStatus(pb::GetStatus {}),
+    );
+    let Some(pb::response::Result::Status(status)) = status.result else {
+        panic!("{status:?}");
+    };
+    let names: Vec<_> = status.places.iter().map(|p| p.name.as_str()).collect();
+    assert_eq!(names, ["Home", "Work"]);
+    unsafe { om_destroy(reopened) };
+}

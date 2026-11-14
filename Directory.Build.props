@@ -3,7 +3,7 @@
     <LangVersion>14</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.10.0</Version>
+    <Version>0.11.0</Version>
     <Authors>Ian Rastall</Authors>
     <Product>Offline North American Maps</Product>
     <Platforms>x64</Platforms>

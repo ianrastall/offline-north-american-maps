@@ -533,8 +533,10 @@ public sealed partial class MainWindow : Window
             {
                 var answer = await ShowDialogAsync(new ContentDialog
                 {
-                    Title = "Stop the download and close?",
-                    Content = Text("What has been downloaded is kept, and the download continues from there next time."),
+                    Title = _movingFrom is null ? "Stop the download and close?" : "Stop moving the maps and close?",
+                    Content = Text(_movingFrom is null
+                        ? "What has been downloaded is kept, and the download continues from there next time."
+                        : $"The maps stay in {_movingFrom}, and what was copied so far is removed."),
                     PrimaryButtonText = "Stop and close",
                     CloseButtonText = "Cancel",
                     DefaultButton = ContentDialogButton.Primary,
