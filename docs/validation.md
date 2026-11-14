@@ -353,6 +353,8 @@ Completed 14 November 2026, at Ian's request: maps had to live on G:, and Settin
 
 Verified on Ian's machine with the installed 0.11.0 (installed silently over 0.10.0; Settings > Apps lists 0.11.0, the Start entry launches the installed exe). Through Settings > Map folder > Change… and Move maps, the 10 installed regions (Iowa, Illinois, Indiana, Kentucky, Michigan, Missouri, Ohio, Wisconsin, Ontario, Quebec) and saved places moved from `%LOCALAPPDATA%\Jupiter\OfflineMaps\Maps` on C: (about 3.5 GB free) to `G:\Maps`: 10,595 MB copied in about 2 minutes, the originals and the empty `Maps` folder removed, `MapFolder` set to `G:\Maps`. The status bar then read "Moved the maps to G:\Maps" with no error. Closed and restarted from Start, the app listed all 10 regions with stations and addresses and showed no error or "No map is installed" bar. The dialog was driven through UI Automation. The script stopped with an error at the picker's folder box, yet the move to `G:\Maps` started; whether the picker took the script's value or was completed by hand is not known, and the confirmation dialog's text was not captured.
 
+Released 14 November 2026 as [v0.11.0](https://github.com/ianrastall/offline-north-american-maps/releases/tag/v0.11.0), built from 52cf053; the installer's SHA-256 (36759266…2dd62e8f) matches GitHub's digest. That build installed silently over the first 0.11.0 build, kept `MapFolder` (`G:\Maps`), and, started from Start, listed all 10 regions with no error.
+
 Not covered: cancelling a real cross-drive move, a destination drive that runs out of space part-way, a removable drive missing at startup (the app then reports that the map folder could not be opened, and Settings can choose another).
 
 ## 0.10.0: Offline North American Maps
