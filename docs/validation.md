@@ -354,6 +354,8 @@ Completed 14 November 2026: stage W1 of the [worldwide plan](worldwide.md), star
 
 Verified with the installed 0.12.0 on Ian's machine, upgraded over 0.11.0: Start lists only "Offline Maps", Settings > Apps lists Offline Maps 0.12.0, the program folder has only `world-overview.mbtiles`, and the map folder setting (`G:\Maps`) was kept. Through WebView2's DevTools port on loopback (as the acceptance script uses it): zoomed out, the map draws Iceland, Senegal, Cuba, Central America and Venezuela; panned to the Balkans, every country's borders, names and capitals. Over central New York (not installed) the pointer hand and the accent outline appear, and near Keene the highlight is New Hampshire. A single click shows the two menu items above the pointer, not covering it; Show opened the Regions window with New York in the detail pane. A double-click zoomed in with no menu.
 
+Released 14 November 2026 as [v0.12.0](https://github.com/ianrastall/offline-maps/releases/tag/v0.12.0), built from 8532c7e; the installer's SHA-256 (636a00b0…ef76d9ff) matches GitHub's digest. That build installed over the test builds, and started from Start it listed all 10 regions with no error.
+
 During testing Ian was using the same running app. He downloaded New York's map and its flood zones and public lands while scripted clicks were being sent; the map download was taken for one the script had started and was cancelled twice, then stopped by a reinstall. The flood zones and public lands were installed; the map is kept at 693 of 846 MB to resume. Scripted checks now wait until the app is not in use.
 
 ## 0.11.0: Choosing and moving the map folder
