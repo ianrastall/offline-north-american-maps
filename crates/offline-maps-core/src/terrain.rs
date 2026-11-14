@@ -43,9 +43,10 @@ const RECORD_SCHEMA: u32 = 1;
 const MAX_GAP: u64 = 512 << 10;
 /// Largest single request.
 const MAX_SPAN: u64 = 16 << 20;
-/// Hard cap on one region's terrain (Texas is about 1.9 GB, Mexico 4.6 GB; Canadian
-/// provinces will be larger).
-const MAX_BYTES: u64 = 16 << 30;
+/// Hard cap on one region's terrain (Texas is about 1.9 GB, Mexico 4.6 GB, Greenland
+/// 18.7 GB, Russia's Siberian Federal District 37.9 GB on 14 November 2026). The free
+/// space is checked separately before each download.
+const MAX_BYTES: u64 = 40 << 30;
 
 /// The store ID under which a region's terrain is kept (`us-il/terrain`).
 pub fn terrain_id(region_id: &str) -> String {

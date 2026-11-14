@@ -266,6 +266,11 @@ message CatalogRegion {
   // project's releases for regions it builds).
   string package_url = 8;
   string extras_url = 9;
+  // Where the region is listed: its country and continent.
+  string country = 10;
+  string continent = 11;
+  // A limitation to show with the region, or empty.
+  string note = 12;
 }
 
 message Catalog {

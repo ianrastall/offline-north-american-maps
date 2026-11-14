@@ -74,6 +74,8 @@ The package total is inflated by regions that cross the 180th meridian. Geofabri
 
 ### W2. Catalog and builds for every region
 
+**First part done in 0.13.0 (14 November 2026)**: the 286 regions Geofabrik publishes a Shortbread package for (outside North America, Greenland included), with their country and continent, the Regions window's continent filter and country groups, and their outlines in the overview; regions in other scripts are offered with a note (Ian's choice: offer them now). Left for the rest of W2: the regions with no package (China's provinces, Central America, Australia's states, England's counties and others, 177 in all), the seven that cross the 180th meridian (Fiji, Kiribati, New Zealand, Tuvalu, American Oceania, Antarctica, Russia's Far East) and stage 5's publishing.
+
 - Generate the catalog from Geofabrik's index for all regions with no subregions, skipping the grouping regions. Use ISO 3166 identifiers where they exist (`de-by`, `jp`) and Geofabrik's otherwise.
 - Choose one source for map tiles, after measuring a few countries both ways:
   - cut from the VersaTiles planet (one 66.6 GB download, one schema), or
@@ -109,7 +111,7 @@ No separate work: the Android stages (6–9 of the North America plan) take regi
 2. Order: W1 before or after the Android foundation (stage 6 of the North America plan). W1 is independent of it; W2 depends on stage 5.
 3. The tile source for regions without a Geofabrik package: the VersaTiles planet, or builds from raw extracts (decided after measuring, W2).
 4. Fonts: bundled in the installer, or downloaded per script (W4).
-5. Whether regions whose labels cannot draw properly (complex scripts) are offered with a note, or held back.
+5. Whether regions whose labels cannot draw properly (complex scripts) are offered with a note, or held back: decided 14 November 2026, offered with a note.
 6. Rebuild frequency for several hundred regions (stage 5 proposes monthly).
 
 ## Licensing

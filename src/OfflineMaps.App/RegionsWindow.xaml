@@ -27,19 +27,31 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <AutoSuggestBox
-                    x:Name="FilterBox"
-                    AutomationProperties.Name="Filter regions"
-                    PlaceholderText="Filter regions"
-                    QueryIcon="Find"
-                    TextChanged="FilterBox_TextChanged" />
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox
+                        x:Name="ContinentChoice"
+                        MinWidth="180"
+                        AutomationProperties.Name="Continent"
+                        SelectionChanged="ContinentChoice_SelectionChanged" />
+                    <AutoSuggestBox
+                        x:Name="FilterBox"
+                        Grid.Column="1"
+                        AutomationProperties.Name="Filter regions"
+                        PlaceholderText="Filter regions or countries"
+                        QueryIcon="Find"
+                        TextChanged="FilterBox_TextChanged" />
+                </Grid>
                 <ListView
                     x:Name="RegionList"
                     Grid.Row="1"
                     AutomationProperties.Name="Regions"
                     SelectionChanged="RegionList_SelectionChanged"
                     SelectionMode="Single">
-                    <!--  One group per country: United States, Canada, Mexico  -->
+                    <!--  One group per country, by continent (North America first)  -->
                     <ListView.GroupStyle>
                         <GroupStyle>
                             <GroupStyle.HeaderTemplate>

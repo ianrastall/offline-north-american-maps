@@ -37,10 +37,9 @@ public sealed class RegionItem : INotifyPropertyChanged
 
     public string AutomationName => $"{Name}. {Caption}";
 
-    /// <summary>The country the region belongs to, by its ID: us-il, ca-on, mx.</summary>
-    public string Country => Id.StartsWith("us-", StringComparison.Ordinal) ? RegionGroup.UnitedStates
-        : Id.StartsWith("ca-", StringComparison.Ordinal) ? RegionGroup.Canada
-        : RegionGroup.Mexico;
+    public string Country => Region.Country;
+
+    public string Continent => Region.Continent;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 }
@@ -48,12 +47,22 @@ public sealed class RegionItem : INotifyPropertyChanged
 /// <summary>The regions of one country, under its name in the region list.</summary>
 public sealed class RegionGroup : ObservableCollection<RegionItem>
 {
-    public const string UnitedStates = "United States";
-    public const string Canada = "Canada";
-    public const string Mexico = "Mexico";
+    public const string AllContinents = "All continents";
 
-    /// <summary>Countries in list order; a country without regions is not shown.</summary>
-    public static readonly string[] Order = [UnitedStates, Canada, Mexico];
+    /// <summary>North America, and its countries, come first; the rest are alphabetical.</summary>
+    private static readonly string[] FirstContinents = ["North America"];
+    private static readonly string[] FirstCountries = ["United States", "Canada", "Mexico"];
+
+    public static int Rank(string value, string[] first) =>
+        Array.IndexOf(first, value) is int i and >= 0 ? i : first.Length;
+
+    public static IEnumerable<string> ContinentOrder(IEnumerable<string> continents) =>
+        continents.Distinct().OrderBy(c => Rank(c, FirstContinents)).ThenBy(c => c, StringComparer.CurrentCulture);
+
+    public static IEnumerable<(string Continent, string Country)> CountryOrder(IEnumerable<RegionItem> items) =>
+        items.Select(i => (i.Continent, i.Country)).Distinct()
+            .OrderBy(p => Rank(p.Continent, FirstContinents)).ThenBy(p => p.Continent, StringComparer.CurrentCulture)
+            .ThenBy(p => Rank(p.Country, FirstCountries)).ThenBy(p => p.Country, StringComparer.CurrentCulture);
 
     public required string Key { get; init; }
 
@@ -82,6 +91,12 @@ public sealed partial class RegionsWindow : Window
         App.Current.Accent.Attach(Root);
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
         _all = main.Catalog.Select(r => new RegionItem { Region = r }).ToList();
+        ContinentChoice.Items.Add(RegionGroup.AllContinents);
+        foreach (string continent in RegionGroup.ContinentOrder(_all.Select(i => i.Continent)))
+        {
+            ContinentChoice.Items.Add(continent);
+        }
+        ContinentChoice.SelectedIndex = 0;
         RegionList.ItemsSource = new CollectionViewSource { IsSourceGrouped = true, Source = _groups }.View;
         ApplyFilter();
         Refresh();
@@ -118,9 +133,10 @@ public sealed partial class RegionsWindow : Window
         {
             return;
         }
-        if (!Shown.Any(i => i.Id == regionId) && FilterBox.Text.Length > 0)
+        if (!Shown.Any(i => i.Id == regionId) && (FilterBox.Text.Length > 0 || ContinentChoice.SelectedIndex > 0))
         {
             FilterBox.Text = "";
+            ContinentChoice.SelectedIndex = 0;
             ApplyFilter();
         }
         RegionList.SelectedItem = Shown.FirstOrDefault(i => i.Id == regionId);
@@ -204,21 +220,20 @@ public sealed partial class RegionsWindow : Window
         string filter = FilterBox.Text.Trim();
         var selected = RegionList.SelectedItem;
         _groups.Clear();
-        // A filter matches a region's name or its country's ("canada" lists every province).
-        var matching = _all.Where(i => filter.Length == 0
+        string? continent = ContinentChoice.SelectedIndex > 0 ? ContinentChoice.SelectedItem as string : null;
+        // A filter matches a region's name, its country's or its continent's ("canada" lists every province).
+        var matching = _all.Where(i => (continent is null || i.Continent == continent) && (filter.Length == 0
             || i.Name.Contains(filter, StringComparison.CurrentCultureIgnoreCase)
-            || i.Country.Contains(filter, StringComparison.CurrentCultureIgnoreCase));
-        foreach (string country in RegionGroup.Order)
+            || i.Country.Contains(filter, StringComparison.CurrentCultureIgnoreCase)
+            || i.Continent.Contains(filter, StringComparison.CurrentCultureIgnoreCase))).ToList();
+        foreach (var (_, country) in RegionGroup.CountryOrder(matching))
         {
             var group = new RegionGroup { Key = country };
-            foreach (var item in matching.Where(i => i.Country == country))
+            foreach (var item in matching.Where(i => i.Country == country).OrderBy(i => i.Name, StringComparer.CurrentCulture))
             {
                 group.Add(item);
             }
-            if (group.Count > 0)
-            {
-                _groups.Add(group);
-            }
+            _groups.Add(group);
         }
         if (selected is RegionItem s && Shown.Contains(s))
         {
@@ -229,6 +244,14 @@ public sealed partial class RegionsWindow : Window
     private void FilterBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
         if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+        {
+            ApplyFilter();
+        }
+    }
+
+    private void ContinentChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_all is not null)
         {
             ApplyFilter();
         }
@@ -261,6 +284,10 @@ public sealed partial class RegionsWindow : Window
         bool hasOverlays = installed?.Overlays is not null;
         DetailHeading.Text = r.Name;
         var lines = new List<string>();
+        if (r.Note.Length > 0)
+        {
+            lines.Add(r.Note);
+        }
         if (installed?.Map is { } map)
         {
             lines.Add((map.DataDate.Length > 0
@@ -328,7 +355,7 @@ public sealed partial class RegionsWindow : Window
         }
         Command(OverlaysButton, hasOverlays, item.Id, UpdateTarget.Overlays, "flood zones and public lands", !overlaysQueued && (hasOverlays || r.OverlayBytes > 0));
         // Flood zones and public lands are US data; elsewhere there is nothing to offer.
-        if (item.Country != RegionGroup.UnitedStates && !hasOverlays)
+        if (!item.Id.StartsWith("us-", StringComparison.Ordinal) && !hasOverlays)
         {
             OverlaysButton.Visibility = Visibility.Collapsed;
         }
@@ -346,7 +373,7 @@ public sealed partial class RegionsWindow : Window
             (true, false) => $"Map built for Offline Maps from Geofabrik's OpenStreetMap extract and published with its releases ({r.SourcePage}); stations and addresses from Geofabrik",
             _ => $"Map, stations and addresses from Geofabrik ({r.SourcePage})",
         };
-        SourceText.Text = $"{source}; map data © OpenStreetMap contributors (ODbL). Terrain from Mapterhorn (download.mapterhorn.com): USGS 3DEP and Copernicus GLO-30. Sizes are as of November 2026.";
+        SourceText.Text = $"{source}; map data © OpenStreetMap contributors (ODbL). Terrain from Mapterhorn (download.mapterhorn.com), from national elevation models and Copernicus GLO-30 (sources at mapterhorn.com/attribution). Sizes are as of November 2026.";
     }
 
     /// <summary>

@@ -9,7 +9,7 @@
 #                expressway (1/0), ref, region
 #   places       name, rank (lower is more important), capital (country, state, none), region
 #   labels       kind (state, country), name, abbrev, region
-#   regions      region, name: each catalog region's outline
+#   regions      region, name, rank (1 is the smallest): each catalog region's outline
 schema_name: Offline Maps overview
 schema_description: World overview from Natural Earth (public domain)
 attribution: Natural Earth
@@ -100,3 +100,4 @@ layers:
     attributes:
     - key: region
     - key: name
+    - key: rank

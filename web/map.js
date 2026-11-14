@@ -446,6 +446,14 @@ const OVERVIEW_LAYERS = [
   'overview-regions', 'overview-region-hover', 'overview-region-outline',
 ];
 let hoveredRegion = '';
+
+// Whether a feature's `region` names the installed region `id`: one of its IDs is
+// `id`, or starts with `id` and a dash (the whole of Mexico, mx, covers mx-que).
+// Whole words only, so India (in) does not cover Indiana (us-in).
+function covers(id) {
+  const padded = ['concat', ' ', ['get', 'region'], ' '];
+  return ['any', ['in', ` ${id} `, padded], ['in', ` ${id}-`, padded]];
+}
 const OVERVIEW_ONLY_BELOW = 6;
 
 function applyOverview() {
@@ -471,10 +479,11 @@ function applyOverview() {
   const text = paint('label-place-city', 'text-color', '#333344');
   const halo = paint('label-place-city', 'text-halo-color', 'rgba(255,255,255,0.8)');
   const stateText = paint('label-boundary-state', 'text-color', '#3d3d4d');
-  // `region` holds one region ID, or two for the border between them.
+  // `region` holds the IDs of the regions a feature lies in, separated by spaces
+  // (two for the border between them, several where outlines overlap).
   const installed = metadata.regions ?? [];
   const outside = ['any', ['<', ['zoom'], OVERVIEW_ONLY_BELOW],
-    ['all', ...installed.map((id) => ['!', ['in', id, ['get', 'region']]])]];
+    ['all', ...installed.map((id) => ['!', covers(id)])]];
   // State and country names come from the overview alone, at every zoom.
   for (const layer of map.getStyle().layers) {
     if (layer.id.startsWith('label-boundary-')) map.setLayoutProperty(layer.id, 'visibility', 'none');
@@ -571,7 +580,7 @@ function applyOverview() {
   });
   // Regions with no map installed: an invisible fill to point at, and the
   // pointed-at region drawn in the accent color.
-  const notInstalled = ['all', ...installed.map((id) => ['!', ['in', id, ['get', 'region']]])];
+  const notInstalled = ['all', ...installed.map((id) => ['!', covers(id)])];
   add({
     id: 'overview-regions',
     type: 'fill',
@@ -597,7 +606,9 @@ function applyOverview() {
 
 function regionAt(point) {
   if (!map.getLayer('overview-regions')) return null;
-  return map.queryRenderedFeatures(point, { layers: ['overview-regions'] })[0]?.properties ?? null;
+  // Where outlines overlap (Berlin inside Brandenburg's), the smallest region.
+  const found = map.queryRenderedFeatures(point, { layers: ['overview-regions'] });
+  return found.reduce((best, f) => (!best || f.properties.rank < best.rank ? f.properties : best), null);
 }
 
 function hoverRegion(id) {

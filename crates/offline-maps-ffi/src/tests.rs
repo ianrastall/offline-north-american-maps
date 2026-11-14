@@ -80,7 +80,18 @@ fn empty_store_reports_no_map_and_refuses_search() {
     let Some(pb::response::Result::Catalog(catalog)) = catalog.result else {
         panic!("{catalog:?}");
     };
-    assert_eq!(catalog.regions.len(), 100);
+    assert_eq!(catalog.regions.len(), offline_maps_core::regions::ALL.len());
+    assert!(catalog.regions.len() > 300);
+    // Georgia the country is listed apart from the US state, with the script note.
+    let georgia = catalog.regions.iter().find(|r| r.id == "ge").unwrap();
+    assert_eq!(
+        (georgia.country.as_str(), georgia.continent.as_str()),
+        ("Georgia", "Europe")
+    );
+    assert!(!georgia.note.is_empty());
+    let state = catalog.regions.iter().find(|r| r.id == "us-ga").unwrap();
+    assert_eq!(state.country, "United States");
+    assert!(state.note.is_empty() && state.package_url.contains("/us/georgia-"));
     let mexico = catalog.regions.iter().find(|r| r.id == "mx").unwrap();
     assert_eq!(mexico.name, "All of Mexico");
     assert_eq!(mexico.overlay_bytes, 0);

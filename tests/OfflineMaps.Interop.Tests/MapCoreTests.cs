@@ -47,7 +47,10 @@ public class MapCoreTests
         Assert.Empty(core.TerrainTile(12, 1046, 1520));
         Assert.Equal(ErrorKind.NotFound, Assert.Throws<MapCoreException>(() => core.Update(UpdateTarget.Terrain, "us-il")).Kind);
         var catalog = core.Catalog();
-        Assert.Equal(100, catalog.Count);
+        Assert.True(catalog.Count > 300, $"{catalog.Count} regions");
+        // Every region says where it is listed; regions elsewhere carry their country and continent.
+        Assert.All(catalog, r => Assert.False(string.IsNullOrEmpty(r.Country) || string.IsNullOrEmpty(r.Continent), r.Id));
+        Assert.Equal(100, catalog.Count(r => r.Continent == "North America" && r.Country != "Greenland"));
         Assert.Contains(catalog, r => r.Id == "mx" && r.Name == "All of Mexico");
         Assert.Contains(catalog, r => r.Id == "us-il" && r.Name == "Illinois");
         core.RemoveRegion("us-in");

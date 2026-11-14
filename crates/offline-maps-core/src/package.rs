@@ -36,6 +36,11 @@ pub struct Region {
     pub outer: Bounds,
     /// Package bounds must cover each of these (longitude, latitude) points.
     pub required_points: &'static [(f64, f64)],
+    /// Where the region is listed: its country and continent (Geofabrik's top-level areas).
+    pub country: &'static str,
+    pub continent: &'static str,
+    /// A limitation to show with the region, or empty (labels in scripts not yet drawn).
+    pub note: &'static str,
     /// Approximate download sizes, for showing before a download (the files
     /// are rebuilt regularly; the server's figure is used while downloading).
     pub package_bytes: u64,
@@ -67,6 +72,9 @@ pub const ILLINOIS: Region = Region {
         (-89.176, 37.005),
         (-91.410, 39.936),
     ],
+    country: "United States",
+    continent: "North America",
+    note: "",
     package_bytes: 362_692_608,
     extras_bytes: 363_155_297,
     terrain_bytes: 365_559_838,

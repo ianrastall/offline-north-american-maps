@@ -1,5 +1,17 @@
 [
  {
+  "id": "af",
+  "name": "Afghanistan",
+  "slug": "w:afghanistan",
+  "bbox": [
+   60.48761,
+   29.36856,
+   74.90017,
+   38.50674
+  ],
+  "geofabrik": "afghanistan"
+ },
+ {
   "id": "mx-agu",
   "name": "Aguascalientes",
   "slug": "mx-agu",
@@ -33,6 +45,18 @@
   ]
  },
  {
+  "id": "al",
+  "name": "Albania",
+  "slug": "w:albania",
+  "bbox": [
+   18.89648,
+   39.62738,
+   21.06285,
+   42.66313
+  ],
+  "geofabrik": "albania"
+ },
+ {
   "id": "ca-ab",
   "name": "Alberta",
   "slug": "ca-ab",
@@ -44,6 +68,18 @@
   ]
  },
  {
+  "id": "dz",
+  "name": "Algeria",
+  "slug": "w:algeria",
+  "bbox": [
+   -8.7049,
+   18.92874,
+   12.03598,
+   37.77284
+  ],
+  "geofabrik": "algeria"
+ },
+ {
   "id": "mx",
   "name": "All of Mexico",
   "slug": "mexico",
@@ -53,6 +89,90 @@
    -85.49087,
    32.72067
   ]
+ },
+ {
+  "id": "fr-alsace",
+  "name": "Alsace",
+  "slug": "w:alsace",
+  "bbox": [
+   6.83892,
+   47.41798,
+   8.23546,
+   49.07898
+  ],
+  "geofabrik": "alsace"
+ },
+ {
+  "id": "es-andalucia",
+  "name": "Andaluc\u00eda",
+  "slug": "w:andalucia",
+  "bbox": [
+   -7.52466,
+   35.70638,
+   -1.3321,
+   38.73347
+  ],
+  "geofabrik": "andalucia"
+ },
+ {
+  "id": "ad",
+  "name": "Andorra",
+  "slug": "w:andorra",
+  "bbox": [
+   1.41237,
+   42.4276,
+   1.78748,
+   42.65717
+  ],
+  "geofabrik": "andorra"
+ },
+ {
+  "id": "ao",
+  "name": "Angola",
+  "slug": "w:angola",
+  "bbox": [
+   10.53848,
+   -18.06508,
+   24.10297,
+   -4.32792
+  ],
+  "geofabrik": "angola"
+ },
+ {
+  "id": "fr-aquitaine",
+  "name": "Aquitaine",
+  "slug": "w:aquitaine",
+  "bbox": [
+   -1.84277,
+   42.77334,
+   1.45058,
+   45.71724
+  ],
+  "geofabrik": "aquitaine"
+ },
+ {
+  "id": "es-aragon",
+  "name": "Arag\u00f3n",
+  "slug": "w:aragon",
+  "bbox": [
+   -2.17907,
+   39.83833,
+   0.77256,
+   42.92677
+  ],
+  "geofabrik": "aragon"
+ },
+ {
+  "id": "ar",
+  "name": "Argentina",
+  "slug": "w:argentina",
+  "bbox": [
+   -73.61453,
+   -55.68296,
+   -53.63534,
+   -21.72575
+  ],
+  "geofabrik": "argentina"
  },
  {
   "id": "us-az",
@@ -77,6 +197,78 @@
   ]
  },
  {
+  "id": "am",
+  "name": "Armenia",
+  "slug": "w:armenia",
+  "bbox": [
+   43.43821,
+   38.83743,
+   46.64262,
+   41.31029
+  ],
+  "geofabrik": "armenia"
+ },
+ {
+  "id": "es-asturias",
+  "name": "Asturias",
+  "slug": "w:asturias",
+  "bbox": [
+   -7.18858,
+   42.87886,
+   -4.39956,
+   44.01101
+  ],
+  "geofabrik": "asturias"
+ },
+ {
+  "id": "at",
+  "name": "Austria",
+  "slug": "w:austria",
+  "bbox": [
+   9.52678,
+   46.36979,
+   17.16408,
+   49.02403
+  ],
+  "geofabrik": "austria"
+ },
+ {
+  "id": "fr-auvergne",
+  "name": "Auvergne",
+  "slug": "w:auvergne",
+  "bbox": [
+   2.06052,
+   44.6146,
+   4.49291,
+   46.80668
+  ],
+  "geofabrik": "auvergne"
+ },
+ {
+  "id": "az",
+  "name": "Azerbaijan",
+  "slug": "w:azerbaijan",
+  "bbox": [
+   44.75006,
+   38.24727,
+   51.7231,
+   42.67437
+  ],
+  "geofabrik": "azerbaijan"
+ },
+ {
+  "id": "azores",
+  "name": "Azores",
+  "slug": "w:azores",
+  "bbox": [
+   -31.57293,
+   35.67791,
+   -23.71814,
+   40.0757
+  ],
+  "geofabrik": "azores"
+ },
+ {
   "id": "mx-bcn",
   "name": "Baja California",
   "slug": "mx-bcn",
@@ -99,6 +291,174 @@
   ]
  },
  {
+  "id": "bd",
+  "name": "Bangladesh",
+  "slug": "w:bangladesh",
+  "bbox": [
+   87.99765,
+   18.58403,
+   92.69714,
+   26.64677
+  ],
+  "geofabrik": "bangladesh"
+ },
+ {
+  "id": "fr-basse-normandie",
+  "name": "Basse-Normandie",
+  "slug": "w:basse-normandie",
+  "bbox": [
+   -2.08753,
+   48.17802,
+   0.97907,
+   49.88523
+  ],
+  "geofabrik": "basse-normandie"
+ },
+ {
+  "id": "by",
+  "name": "Belarus",
+  "slug": "w:belarus",
+  "bbox": [
+   23.1748,
+   51.23441,
+   32.76947,
+   56.17385
+  ],
+  "geofabrik": "belarus"
+ },
+ {
+  "id": "be",
+  "name": "Belgium",
+  "slug": "w:belgium",
+  "bbox": [
+   2.34072,
+   49.49489,
+   6.41026,
+   51.59839
+  ],
+  "geofabrik": "belgium"
+ },
+ {
+  "id": "bj",
+  "name": "Benin",
+  "slug": "w:benin",
+  "bbox": [
+   0.76149,
+   5.98482,
+   3.86169,
+   12.43658
+  ],
+  "geofabrik": "benin"
+ },
+ {
+  "id": "de-berlin",
+  "name": "Berlin",
+  "slug": "w:berlin",
+  "bbox": [
+   13.08283,
+   52.33446,
+   13.76225,
+   52.6783
+  ],
+  "geofabrik": "berlin"
+ },
+ {
+  "id": "bt",
+  "name": "Bhutan",
+  "slug": "w:bhutan",
+  "bbox": [
+   88.73917,
+   26.6948,
+   92.13159,
+   28.25372
+  ],
+  "geofabrik": "bhutan"
+ },
+ {
+  "id": "bo",
+  "name": "Bolivia",
+  "slug": "w:bolivia",
+  "bbox": [
+   -69.65675,
+   -22.92551,
+   -57.43481,
+   -9.63866
+  ],
+  "geofabrik": "bolivia"
+ },
+ {
+  "id": "ba",
+  "name": "Bosnia-Herzegovina",
+  "slug": "w:bosnia-herzegovina",
+  "bbox": [
+   15.7156,
+   42.55239,
+   19.62639,
+   45.27803
+  ],
+  "geofabrik": "bosnia-herzegovina"
+ },
+ {
+  "id": "bw",
+  "name": "Botswana",
+  "slug": "w:botswana",
+  "bbox": [
+   19.98745,
+   -26.91539,
+   29.38549,
+   -17.77403
+  ],
+  "geofabrik": "botswana"
+ },
+ {
+  "id": "fr-bourgogne",
+  "name": "Bourgogne",
+  "slug": "w:bourgogne",
+  "bbox": [
+   2.84328,
+   46.15484,
+   5.51997,
+   48.40136
+  ],
+  "geofabrik": "bourgogne"
+ },
+ {
+  "id": "de-brandenburg",
+  "name": "Brandenburg (mit Berlin)",
+  "slug": "w:brandenburg",
+  "bbox": [
+   11.26064,
+   51.35613,
+   14.77495,
+   53.56295
+  ],
+  "geofabrik": "brandenburg"
+ },
+ {
+  "id": "de-bremen",
+  "name": "Bremen",
+  "slug": "w:bremen",
+  "bbox": [
+   8.48096,
+   53.01034,
+   8.99127,
+   53.61063
+  ],
+  "geofabrik": "bremen"
+ },
+ {
+  "id": "fr-bretagne",
+  "name": "Bretagne",
+  "slug": "w:bretagne",
+  "bbox": [
+   -5.84885,
+   47.07722,
+   -1.01454,
+   49.40025
+  ],
+  "geofabrik": "bretagne"
+ },
+ {
   "id": "ca-bc",
   "name": "British Columbia",
   "slug": "ca-bc",
@@ -108,6 +468,42 @@
    -114.049,
    60.00678
   ]
+ },
+ {
+  "id": "bg",
+  "name": "Bulgaria",
+  "slug": "w:bulgaria",
+  "bbox": [
+   22.34875,
+   41.22681,
+   29.18819,
+   44.21777
+  ],
+  "geofabrik": "bulgaria"
+ },
+ {
+  "id": "bf",
+  "name": "Burkina Faso",
+  "slug": "w:burkina-faso",
+  "bbox": [
+   -5.52741,
+   9.38411,
+   2.41253,
+   15.09271
+  ],
+  "geofabrik": "burkina-faso"
+ },
+ {
+  "id": "bi",
+  "name": "Burundi",
+  "slug": "w:burundi",
+  "bbox": [
+   29.00018,
+   -4.48133,
+   30.85115,
+   -2.30789
+  ],
+  "geofabrik": "burundi"
  },
  {
   "id": "us-ca",
@@ -121,6 +517,30 @@
   ]
  },
  {
+  "id": "kh",
+  "name": "Cambodia",
+  "slug": "w:cambodia",
+  "bbox": [
+   101.8522,
+   8.85809,
+   107.6397,
+   14.71875
+  ],
+  "geofabrik": "cambodia"
+ },
+ {
+  "id": "cm",
+  "name": "Cameroon",
+  "slug": "w:cameroon",
+  "bbox": [
+   8.33,
+   1.64566,
+   16.20312,
+   13.09278
+  ],
+  "geofabrik": "cameroon"
+ },
+ {
   "id": "mx-cam",
   "name": "Campeche",
   "slug": "mx-cam",
@@ -130,6 +550,186 @@
    -89.12123,
    20.84833
   ]
+ },
+ {
+  "id": "canary-islands",
+  "name": "Canary Islands",
+  "slug": "w:canary-islands",
+  "bbox": [
+   -18.92352,
+   26.36117,
+   -12.47875,
+   30.25648
+  ],
+  "geofabrik": "canary-islands"
+ },
+ {
+  "id": "es-cantabria",
+  "name": "Cantabria",
+  "slug": "w:cantabria",
+  "bbox": [
+   -4.86162,
+   42.75458,
+   -3.14498,
+   43.86548
+  ],
+  "geofabrik": "cantabria"
+ },
+ {
+  "id": "cv",
+  "name": "Cape Verde",
+  "slug": "w:cape-verde",
+  "bbox": [
+   -26.32379,
+   14.00485,
+   -21.39096,
+   18.005
+  ],
+  "geofabrik": "cape-verde"
+ },
+ {
+  "id": "es-castilla-y-leon",
+  "name": "Castilla y Le\u00f3n",
+  "slug": "w:castilla-y-leon",
+  "bbox": [
+   -7.08052,
+   40.08044,
+   -1.76605,
+   43.24095
+  ],
+  "geofabrik": "castilla-y-leon"
+ },
+ {
+  "id": "es-castilla-la-mancha",
+  "name": "Castilla-La Mancha",
+  "slug": "w:castilla-la-mancha",
+  "bbox": [
+   -5.41111,
+   38.0201,
+   -0.91255,
+   41.33223
+  ],
+  "geofabrik": "castilla-la-mancha"
+ },
+ {
+  "id": "es-cataluna",
+  "name": "Catalu\u00f1a",
+  "slug": "w:cataluna",
+  "bbox": [
+   0.15638,
+   40.21245,
+   4.17479,
+   42.8632
+  ],
+  "geofabrik": "cataluna"
+ },
+ {
+  "id": "cf",
+  "name": "Central African Republic",
+  "slug": "w:central-african-republic",
+  "bbox": [
+   14.40908,
+   2.20873,
+   27.47578,
+   11.03264
+  ],
+  "geofabrik": "central-african-republic"
+ },
+ {
+  "id": "central-fed-district",
+  "name": "Central Federal District",
+  "slug": "w:central-fed-district",
+  "bbox": [
+   30.69976,
+   49.50446,
+   47.67023,
+   59.6533
+  ],
+  "geofabrik": "central-fed-district"
+ },
+ {
+  "id": "in-central-zone",
+  "name": "Central Zone",
+  "slug": "w:central-zone",
+  "bbox": [
+   74.01489,
+   17.77092,
+   84.64657,
+   31.49075
+  ],
+  "geofabrik": "central-zone"
+ },
+ {
+  "id": "fr-centre",
+  "name": "Centre",
+  "slug": "w:centre",
+  "bbox": [
+   0.05154,
+   46.34591,
+   3.12993,
+   48.9423
+  ],
+  "geofabrik": "centre"
+ },
+ {
+  "id": "it-centro",
+  "name": "Centro",
+  "slug": "w:centro",
+  "bbox": [
+   9.30646,
+   40.21443,
+   14.66855,
+   44.4797
+  ],
+  "geofabrik": "centro"
+ },
+ {
+  "id": "br-centro-oeste",
+  "name": "Centro-Oeste",
+  "slug": "w:centro-oeste",
+  "bbox": [
+   -61.66496,
+   -24.18381,
+   -45.87758,
+   -7.31733
+  ],
+  "geofabrik": "centro-oeste"
+ },
+ {
+  "id": "es-ceuta",
+  "name": "Ceuta",
+  "slug": "w:ceuta",
+  "bbox": [
+   -5.39102,
+   35.86702,
+   -5.25662,
+   35.95869
+  ],
+  "geofabrik": "ceuta"
+ },
+ {
+  "id": "td",
+  "name": "Chad",
+  "slug": "w:chad",
+  "bbox": [
+   13.40129,
+   7.42852,
+   24.02527,
+   23.53793
+  ],
+  "geofabrik": "chad"
+ },
+ {
+  "id": "fr-champagne-ardenne",
+  "name": "Champagne Ardenne",
+  "slug": "w:champagne-ardenne",
+  "bbox": [
+   3.38242,
+   47.57553,
+   5.89218,
+   50.17007
+  ],
+  "geofabrik": "champagne-ardenne"
  },
  {
   "id": "mx-chp",
@@ -154,6 +754,42 @@
   ]
  },
  {
+  "id": "cl",
+  "name": "Chile",
+  "slug": "w:chile",
+  "bbox": [
+   -113.2233,
+   -58.45195,
+   -65.5141,
+   -17.45743
+  ],
+  "geofabrik": "chile"
+ },
+ {
+  "id": "jp-chubu",
+  "name": "Ch\u016bbu region",
+  "slug": "w:chubu",
+  "bbox": [
+   135.4393,
+   34.26649,
+   139.909,
+   38.90717
+  ],
+  "geofabrik": "chubu"
+ },
+ {
+  "id": "jp-chugoku",
+  "name": "Ch\u016bgoku region",
+  "slug": "w:chugoku",
+  "bbox": [
+   129.8975,
+   33.54225,
+   134.5244,
+   36.9681
+  ],
+  "geofabrik": "chugoku"
+ },
+ {
   "id": "mx-coa",
   "name": "Coahuila",
   "slug": "mx-coa",
@@ -176,6 +812,18 @@
   ]
  },
  {
+  "id": "co",
+  "name": "Colombia",
+  "slug": "w:colombia",
+  "bbox": [
+   -83.23104,
+   -4.25732,
+   -66.81472,
+   16.41924
+  ],
+  "geofabrik": "colombia"
+ },
+ {
   "id": "us-co",
   "name": "Colorado",
   "slug": "colorado",
@@ -185,6 +833,42 @@
    -102.0355,
    41.00388
   ]
+ },
+ {
+  "id": "comores",
+  "name": "Comores",
+  "slug": "w:comores",
+  "bbox": [
+   42.74981,
+   -12.969,
+   45.59661,
+   -10.74181
+  ],
+  "geofabrik": "comores"
+ },
+ {
+  "id": "cd",
+  "name": "Congo (Democratic Republic/Kinshasa)",
+  "slug": "w:congo-democratic-republic",
+  "bbox": [
+   11.88343,
+   -13.5006,
+   31.33569,
+   5.4014
+  ],
+  "geofabrik": "congo-democratic-republic"
+ },
+ {
+  "id": "cg",
+  "name": "Congo (Republic/Brazzaville)",
+  "slug": "w:congo-brazzaville",
+  "bbox": [
+   10.94417,
+   -5.19588,
+   18.66783,
+   3.74093
+  ],
+  "geofabrik": "congo-brazzaville"
  },
  {
   "id": "us-ct",
@@ -198,6 +882,66 @@
   ]
  },
  {
+  "id": "ck",
+  "name": "Cook Islands",
+  "slug": "w:cook-islands",
+  "bbox": [
+   -168.4661,
+   -25.28867,
+   -154.8056,
+   -5.80051
+  ],
+  "geofabrik": "cook-islands"
+ },
+ {
+  "id": "fr-corse",
+  "name": "Corse",
+  "slug": "w:corse",
+  "bbox": [
+   8.31788,
+   41.31103,
+   9.75124,
+   43.16589
+  ],
+  "geofabrik": "corse"
+ },
+ {
+  "id": "ua-43",
+  "name": "Crimean Federal District",
+  "slug": "w:crimean-fed-district",
+  "bbox": [
+   32.15053,
+   44.13411,
+   36.68355,
+   46.28118
+  ],
+  "geofabrik": "crimean-fed-district"
+ },
+ {
+  "id": "hr",
+  "name": "Croatia",
+  "slug": "w:croatia",
+  "bbox": [
+   13.08916,
+   42.16483,
+   19.45997,
+   46.55756
+  ],
+  "geofabrik": "croatia"
+ },
+ {
+  "id": "cy",
+  "name": "Cyprus",
+  "slug": "w:cyprus",
+  "bbox": [
+   31.95244,
+   34.23374,
+   34.96147,
+   36.00323
+  ],
+  "geofabrik": "cyprus"
+ },
+ {
   "id": "us-de",
   "name": "Delaware",
   "slug": "delaware",
@@ -207,6 +951,18 @@
    -74.98401,
    39.84262
   ]
+ },
+ {
+  "id": "dk",
+  "name": "Denmark",
+  "slug": "w:denmark",
+  "bbox": [
+   7.7011,
+   54.44065,
+   15.65449,
+   58.06239
+  ],
+  "geofabrik": "denmark"
  },
  {
   "id": "us-dc",
@@ -220,6 +976,30 @@
   ]
  },
  {
+  "id": "dj",
+  "name": "Djibouti",
+  "slug": "w:djibouti",
+  "bbox": [
+   41.76177,
+   10.88824,
+   43.84569,
+   12.82615
+  ],
+  "geofabrik": "djibouti"
+ },
+ {
+  "id": "nl-drenthe",
+  "name": "Drenthe",
+  "slug": "w:drenthe",
+  "bbox": [
+   6.11859,
+   52.61093,
+   7.09541,
+   53.20513
+  ],
+  "geofabrik": "drenthe"
+ },
+ {
   "id": "mx-dur",
   "name": "Durango",
   "slug": "mx-dur",
@@ -229,6 +1009,150 @@
    -102.4727,
    26.84479
   ]
+ },
+ {
+  "id": "tl",
+  "name": "East Timor",
+  "slug": "w:east-timor",
+  "bbox": [
+   123.7912,
+   -9.6901,
+   127.5911,
+   -8.05787
+  ],
+  "geofabrik": "east-timor"
+ },
+ {
+  "id": "in-eastern-zone",
+  "name": "Eastern Zone",
+  "slug": "w:eastern-zone",
+  "bbox": [
+   81.36749,
+   17.78056,
+   89.91829,
+   27.52837
+  ],
+  "geofabrik": "eastern-zone"
+ },
+ {
+  "id": "ec",
+  "name": "Ecuador",
+  "slug": "w:ecuador",
+  "bbox": [
+   -93.56487,
+   -5.02417,
+   -75.16149,
+   2.84349
+  ],
+  "geofabrik": "ecuador"
+ },
+ {
+  "id": "eg",
+  "name": "Egypt",
+  "slug": "w:egypt",
+  "bbox": [
+   24.62628,
+   21.9838,
+   37.16263,
+   32.52518
+  ],
+  "geofabrik": "egypt"
+ },
+ {
+  "id": "gq",
+  "name": "Equatorial Guinea",
+  "slug": "w:equatorial-guinea",
+  "bbox": [
+   5.16563,
+   -1.79267,
+   11.42338,
+   4.14713
+  ],
+  "geofabrik": "equatorial-guinea"
+ },
+ {
+  "id": "er",
+  "name": "Eritrea",
+  "slug": "w:eritrea",
+  "bbox": [
+   36.4207,
+   12.34385,
+   43.33233,
+   18.32962
+  ],
+  "geofabrik": "eritrea"
+ },
+ {
+  "id": "ee",
+  "name": "Estonia",
+  "slug": "w:estonia",
+  "bbox": [
+   20.85166,
+   57.49764,
+   28.21426,
+   59.99705
+  ],
+  "geofabrik": "estonia"
+ },
+ {
+  "id": "et",
+  "name": "Ethiopia",
+  "slug": "w:ethiopia",
+  "bbox": [
+   32.96722,
+   3.38919,
+   48.00545,
+   14.91626
+  ],
+  "geofabrik": "ethiopia"
+ },
+ {
+  "id": "es-extremadura",
+  "name": "Extremadura",
+  "slug": "w:extremadura",
+  "bbox": [
+   -7.54369,
+   37.93851,
+   -4.64241,
+   40.48913
+  ],
+  "geofabrik": "extremadura"
+ },
+ {
+  "id": "fo",
+  "name": "Faroe Islands",
+  "slug": "w:faroe-islands",
+  "bbox": [
+   -8.6902,
+   60.86632,
+   -5.51515,
+   62.90523
+  ],
+  "geofabrik": "faroe-islands"
+ },
+ {
+  "id": "fi",
+  "name": "Finland",
+  "slug": "w:finland",
+  "bbox": [
+   19.02427,
+   59.28783,
+   31.6159,
+   70.09959
+  ],
+  "geofabrik": "finland"
+ },
+ {
+  "id": "nl-flevoland",
+  "name": "Flevoland",
+  "slug": "w:flevoland",
+  "bbox": [
+   5.05959,
+   52.24826,
+   6.01828,
+   52.84516
+  ],
+  "geofabrik": "flevoland"
  },
  {
   "id": "us-fl",
@@ -242,6 +1166,78 @@
   ]
  },
  {
+  "id": "fr-franche-comte",
+  "name": "Franche Comte",
+  "slug": "w:franche-comte",
+  "bbox": [
+   5.25076,
+   46.25975,
+   7.14439,
+   48.02537
+  ],
+  "geofabrik": "franche-comte"
+ },
+ {
+  "id": "nl-friesland",
+  "name": "Friesland",
+  "slug": "w:friesland",
+  "bbox": [
+   4.59729,
+   52.76362,
+   6.42836,
+   53.68089
+  ],
+  "geofabrik": "friesland"
+ },
+ {
+  "id": "gcc-states",
+  "name": "GCC States",
+  "slug": "w:gcc-states",
+  "bbox": [
+   34.43489,
+   15.24752,
+   60.94748,
+   32.19653
+  ],
+  "geofabrik": "gcc-states"
+ },
+ {
+  "id": "ga",
+  "name": "Gabon",
+  "slug": "w:gabon",
+  "bbox": [
+   7.38973,
+   -5.9958,
+   14.55139,
+   2.32572
+  ],
+  "geofabrik": "gabon"
+ },
+ {
+  "id": "es-galicia",
+  "name": "Galicia",
+  "slug": "w:galicia",
+  "bbox": [
+   -9.77901,
+   41.80443,
+   -6.72707,
+   44.14855
+  ],
+  "geofabrik": "galicia"
+ },
+ {
+  "id": "nl-gelderland",
+  "name": "Gelderland",
+  "slug": "w:gelderland",
+  "bbox": [
+   4.99265,
+   51.73231,
+   6.83575,
+   52.52322
+  ],
+  "geofabrik": "gelderland"
+ },
+ {
   "id": "us-ga",
   "name": "Georgia",
   "slug": "georgia",
@@ -251,6 +1247,78 @@
    -80.74313,
    35.00356
   ]
+ },
+ {
+  "id": "ge",
+  "name": "Georgia",
+  "slug": "w:georgia",
+  "bbox": [
+   39.88093,
+   41.05117,
+   46.73959,
+   43.5899
+  ],
+  "geofabrik": "georgia"
+ },
+ {
+  "id": "gh",
+  "name": "Ghana",
+  "slug": "w:ghana",
+  "bbox": [
+   -3.8074,
+   3.70406,
+   1.39404,
+   11.17772
+  ],
+  "geofabrik": "ghana"
+ },
+ {
+  "id": "gr",
+  "name": "Greece",
+  "slug": "w:greece",
+  "bbox": [
+   18.97064,
+   34.59111,
+   29.65683,
+   41.74954
+  ],
+  "geofabrik": "greece"
+ },
+ {
+  "id": "gl",
+  "name": "Greenland",
+  "slug": "w:greenland",
+  "bbox": [
+   -75.3894,
+   58.67169,
+   -9.45438,
+   84.44358
+  ],
+  "geofabrik": "greenland"
+ },
+ {
+  "id": "nl-groningen",
+  "name": "Groningen",
+  "slug": "w:groningen",
+  "bbox": [
+   6.16646,
+   52.83734,
+   7.23046,
+   53.65732
+  ],
+  "geofabrik": "groningen"
+ },
+ {
+  "id": "fr-guadeloupe",
+  "name": "Guadeloupe",
+  "slug": "w:guadeloupe",
+  "bbox": [
+   -62.15241,
+   15.49074,
+   -60.60471,
+   16.82426
+  ],
+  "geofabrik": "guadeloupe"
  },
  {
   "id": "mx-gua",
@@ -264,6 +1332,18 @@
   ]
  },
  {
+  "id": "guernsey-jersey",
+  "name": "Guernsey and Jersey",
+  "slug": "w:guernsey-jersey",
+  "bbox": [
+   -3.57331,
+   49.00381,
+   -1.79157,
+   50.06948
+  ],
+  "geofabrik": "guernsey-jersey"
+ },
+ {
   "id": "mx-gro",
   "name": "Guerrero",
   "slug": "mx-gro",
@@ -273,6 +1353,78 @@
    -98.00728,
    18.88785
   ]
+ },
+ {
+  "id": "gn",
+  "name": "Guinea",
+  "slug": "w:guinea",
+  "bbox": [
+   -16.85708,
+   7.18333,
+   -7.62726,
+   12.68322
+  ],
+  "geofabrik": "guinea"
+ },
+ {
+  "id": "gw",
+  "name": "Guinea-Bissau",
+  "slug": "w:guinea-bissau",
+  "bbox": [
+   -16.96427,
+   10.14494,
+   -13.62923,
+   12.6936
+  ],
+  "geofabrik": "guinea-bissau"
+ },
+ {
+  "id": "gy",
+  "name": "Guyana",
+  "slug": "w:guyana",
+  "bbox": [
+   -61.42101,
+   1.14937,
+   -56.42321,
+   9.18254
+  ],
+  "geofabrik": "guyana"
+ },
+ {
+  "id": "fr-gf",
+  "name": "Guyane",
+  "slug": "w:guyane",
+  "bbox": [
+   -54.62299,
+   2.09312,
+   -50.8667,
+   6.37029
+  ],
+  "geofabrik": "guyane"
+ },
+ {
+  "id": "de-hamburg",
+  "name": "Hamburg",
+  "slug": "w:hamburg",
+  "bbox": [
+   7.96783,
+   53.39183,
+   10.33196,
+   54.06261
+  ],
+  "geofabrik": "hamburg"
+ },
+ {
+  "id": "fr-haute-normandie",
+  "name": "Haute-Normandie",
+  "slug": "w:haute-normandie",
+  "bbox": [
+   0.00948,
+   48.66574,
+   1.80396,
+   50.08769
+  ],
+  "geofabrik": "haute-normandie"
  },
  {
   "id": "us-hi",
@@ -286,6 +1438,18 @@
   ]
  },
  {
+  "id": "de-hessen",
+  "name": "Hessen",
+  "slug": "w:hessen",
+  "bbox": [
+   7.76802,
+   49.39321,
+   10.24595,
+   51.65916
+  ],
+  "geofabrik": "hessen"
+ },
+ {
   "id": "mx-hid",
   "name": "Hidalgo",
   "slug": "mx-hid",
@@ -297,6 +1461,42 @@
   ]
  },
  {
+  "id": "jp-hokkaido",
+  "name": "Hokkaid\u014d",
+  "slug": "w:hokkaido",
+  "bbox": [
+   137.9346,
+   41.15098,
+   146.2476,
+   45.8154
+  ],
+  "geofabrik": "hokkaido"
+ },
+ {
+  "id": "hu",
+  "name": "Hungary",
+  "slug": "w:hungary",
+  "bbox": [
+   16.10845,
+   45.73207,
+   22.90649,
+   48.58921
+  ],
+  "geofabrik": "hungary"
+ },
+ {
+  "id": "is",
+  "name": "Iceland",
+  "slug": "w:iceland",
+  "bbox": [
+   -25.7,
+   62.84553,
+   -12.41708,
+   67.50085
+  ],
+  "geofabrik": "iceland"
+ },
+ {
   "id": "us-id",
   "name": "Idaho",
   "slug": "idaho",
@@ -306,6 +1506,18 @@
    -111.0431,
    49.00819
   ]
+ },
+ {
+  "id": "fr-ile-de-france",
+  "name": "Ile-de-France",
+  "slug": "w:ile-de-france",
+  "bbox": [
+   1.4451,
+   48.11918,
+   3.56041,
+   49.24271
+  ],
+  "geofabrik": "ile-de-france"
  },
  {
   "id": "us-il",
@@ -341,6 +1553,102 @@
   ]
  },
  {
+  "id": "ir",
+  "name": "Iran",
+  "slug": "w:iran",
+  "bbox": [
+   44.02303,
+   24.03947,
+   63.35413,
+   39.79045
+  ],
+  "geofabrik": "iran"
+ },
+ {
+  "id": "iq",
+  "name": "Iraq",
+  "slug": "w:iraq",
+  "bbox": [
+   38.784,
+   29.01775,
+   49.55108,
+   37.39063
+  ],
+  "geofabrik": "iraq"
+ },
+ {
+  "id": "ie",
+  "name": "Ireland and Northern Ireland",
+  "slug": "w:ireland-and-northern-ireland",
+  "bbox": [
+   -14.40224,
+   49.60002,
+   -5.05926,
+   56.86553
+  ],
+  "geofabrik": "ireland-and-northern-ireland"
+ },
+ {
+  "id": "es-islas-baleares",
+  "name": "Islas Baleares",
+  "slug": "w:islas-baleares",
+  "bbox": [
+   0.61523,
+   38.05675,
+   4.93835,
+   40.7098
+  ],
+  "geofabrik": "islas-baleares"
+ },
+ {
+  "id": "isle-of-man",
+  "name": "Isle of Man",
+  "slug": "w:isle-of-man",
+  "bbox": [
+   -5.43455,
+   53.73236,
+   -3.68872,
+   54.6706
+  ],
+  "geofabrik": "isle-of-man"
+ },
+ {
+  "id": "it-isole",
+  "name": "Isole",
+  "slug": "w:isole",
+  "bbox": [
+   7.71845,
+   35.07638,
+   15.70887,
+   41.51893
+  ],
+  "geofabrik": "isole"
+ },
+ {
+  "id": "israel-and-palestine",
+  "name": "Israel and Palestine",
+  "slug": "w:israel-and-palestine",
+  "bbox": [
+   33.99994,
+   29.4396,
+   35.91531,
+   33.45436
+  ],
+  "geofabrik": "israel-and-palestine"
+ },
+ {
+  "id": "ci",
+  "name": "Ivory Coast",
+  "slug": "w:ivory-coast",
+  "bbox": [
+   -8.63388,
+   4.14192,
+   -2.47621,
+   10.75034
+  ],
+  "geofabrik": "ivory-coast"
+ },
+ {
   "id": "mx-jal",
   "name": "Jalisco",
   "slug": "mx-jal",
@@ -350,6 +1658,66 @@
    -101.51054,
    22.75025
   ]
+ },
+ {
+  "id": "id-java",
+  "name": "Java",
+  "slug": "w:java",
+  "bbox": [
+   104.1394,
+   -9.54115,
+   116.5814,
+   -3.95194
+  ],
+  "geofabrik": "java"
+ },
+ {
+  "id": "jo",
+  "name": "Jordan",
+  "slug": "w:jordan",
+  "bbox": [
+   34.86886,
+   29.18213,
+   39.31022,
+   33.37922
+  ],
+  "geofabrik": "jordan"
+ },
+ {
+  "id": "id-kalimantan",
+  "name": "Kalimantan",
+  "slug": "w:kalimantan",
+  "bbox": [
+   104.9606,
+   -5.59958,
+   119.9267,
+   4.40417
+  ],
+  "geofabrik": "kalimantan"
+ },
+ {
+  "id": "kaliningrad",
+  "name": "Kaliningrad",
+  "slug": "w:kaliningrad",
+  "bbox": [
+   19.40837,
+   54.31723,
+   22.88747,
+   55.3899
+  ],
+  "geofabrik": "kaliningrad"
+ },
+ {
+  "id": "jp-kansai",
+  "name": "Kansai region (a.k.a. Kinki region)",
+  "slug": "w:kansai",
+  "bbox": [
+   133.9644,
+   33.07898,
+   137.6573,
+   36.4582
+  ],
+  "geofabrik": "kansai"
  },
  {
   "id": "us-ks",
@@ -363,6 +1731,30 @@
   ]
  },
  {
+  "id": "jp-kanto",
+  "name": "Kant\u014d region",
+  "slug": "w:kanto",
+  "bbox": [
+   134.5757,
+   20.08228,
+   154.4709,
+   37.15988
+  ],
+  "geofabrik": "kanto"
+ },
+ {
+  "id": "kz",
+  "name": "Kazakhstan",
+  "slug": "w:kazakhstan",
+  "bbox": [
+   46.42304,
+   40.55346,
+   87.35359,
+   55.50799
+  ],
+  "geofabrik": "kazakhstan"
+ },
+ {
   "id": "us-ky",
   "name": "Kentucky",
   "slug": "kentucky",
@@ -372,6 +1764,210 @@
    -81.95512,
    39.14831
   ]
+ },
+ {
+  "id": "ke",
+  "name": "Kenya",
+  "slug": "w:kenya",
+  "bbox": [
+   33.8679,
+   -4.81628,
+   41.97685,
+   4.62993
+  ],
+  "geofabrik": "kenya"
+ },
+ {
+  "id": "rs-km",
+  "name": "Kosovo",
+  "slug": "w:kosovo",
+  "bbox": [
+   20.01357,
+   41.85408,
+   21.79327,
+   43.27753
+  ],
+  "geofabrik": "kosovo"
+ },
+ {
+  "id": "kg",
+  "name": "Kyrgyzstan",
+  "slug": "w:kyrgyzstan",
+  "bbox": [
+   69.25507,
+   39.15136,
+   80.2771,
+   43.2812
+  ],
+  "geofabrik": "kyrgyzstan"
+ },
+ {
+  "id": "jp-kyushu",
+  "name": "Ky\u016bsh\u016b",
+  "slug": "w:kyushu",
+  "bbox": [
+   122.5814,
+   21.38691,
+   132.8044,
+   35.09724
+  ],
+  "geofabrik": "kyushu"
+ },
+ {
+  "id": "es-la-rioja",
+  "name": "La Rioja",
+  "slug": "w:la-rioja",
+  "bbox": [
+   -3.1402,
+   41.91403,
+   -1.67301,
+   42.64621
+  ],
+  "geofabrik": "la-rioja"
+ },
+ {
+  "id": "fr-languedoc-roussillon",
+  "name": "Languedoc-Roussillon",
+  "slug": "w:languedoc-roussillon",
+  "bbox": [
+   1.68626,
+   42.32755,
+   4.84798,
+   44.97821
+  ],
+  "geofabrik": "languedoc-roussillon"
+ },
+ {
+  "id": "la",
+  "name": "Laos",
+  "slug": "w:laos",
+  "bbox": [
+   100.0828,
+   13.90159,
+   107.6503,
+   22.52825
+  ],
+  "geofabrik": "laos"
+ },
+ {
+  "id": "lv",
+  "name": "Latvia",
+  "slug": "w:latvia",
+  "bbox": [
+   19.73348,
+   55.66109,
+   28.25501,
+   58.0947
+  ],
+  "geofabrik": "latvia"
+ },
+ {
+  "id": "lb",
+  "name": "Lebanon",
+  "slug": "w:lebanon",
+  "bbox": [
+   34.76799,
+   33.05299,
+   36.63666,
+   34.80253
+  ],
+  "geofabrik": "lebanon"
+ },
+ {
+  "id": "ls",
+  "name": "Lesotho",
+  "slug": "w:lesotho",
+  "bbox": [
+   27.0092,
+   -30.68472,
+   29.46393,
+   -28.56734
+  ],
+  "geofabrik": "lesotho"
+ },
+ {
+  "id": "lr",
+  "name": "Liberia",
+  "slug": "w:liberia",
+  "bbox": [
+   -14.95454,
+   -0.681,
+   -7.24572,
+   8.57016
+  ],
+  "geofabrik": "liberia"
+ },
+ {
+  "id": "ly",
+  "name": "Libya",
+  "slug": "w:libya",
+  "bbox": [
+   9.3744,
+   19.45087,
+   25.40726,
+   33.57972
+  ],
+  "geofabrik": "libya"
+ },
+ {
+  "id": "li",
+  "name": "Liechtenstein",
+  "slug": "w:liechtenstein",
+  "bbox": [
+   9.47108,
+   47.04774,
+   9.63622,
+   47.27128
+  ],
+  "geofabrik": "liechtenstein"
+ },
+ {
+  "id": "nl-limburg",
+  "name": "Limburg",
+  "slug": "w:limburg",
+  "bbox": [
+   5.5633,
+   50.74753,
+   6.22939,
+   51.77992
+  ],
+  "geofabrik": "limburg"
+ },
+ {
+  "id": "fr-limousin",
+  "name": "Limousin",
+  "slug": "w:limousin",
+  "bbox": [
+   0.6271,
+   44.91842,
+   2.61384,
+   46.45781
+  ],
+  "geofabrik": "limousin"
+ },
+ {
+  "id": "lt",
+  "name": "Lithuania",
+  "slug": "w:lithuania",
+  "bbox": [
+   20.61859,
+   53.89221,
+   26.83873,
+   56.45329
+  ],
+  "geofabrik": "lithuania"
+ },
+ {
+  "id": "fr-lorraine",
+  "name": "Lorraine",
+  "slug": "w:lorraine",
+  "bbox": [
+   4.88602,
+   47.81188,
+   7.64011,
+   49.61946
+  ],
+  "geofabrik": "lorraine"
  },
  {
   "id": "us-la",
@@ -385,6 +1981,54 @@
   ]
  },
  {
+  "id": "lu",
+  "name": "Luxembourg",
+  "slug": "w:luxembourg",
+  "bbox": [
+   5.73303,
+   49.44553,
+   6.53225,
+   50.18496
+  ],
+  "geofabrik": "luxembourg"
+ },
+ {
+  "id": "mk",
+  "name": "Macedonia",
+  "slug": "w:macedonia",
+  "bbox": [
+   20.44671,
+   40.84759,
+   23.04012,
+   42.37969
+  ],
+  "geofabrik": "macedonia"
+ },
+ {
+  "id": "mg",
+  "name": "Madagascar",
+  "slug": "w:madagascar",
+  "bbox": [
+   42.30124,
+   -26.5823,
+   51.14843,
+   -11.02746
+  ],
+  "geofabrik": "madagascar"
+ },
+ {
+  "id": "es-madrid",
+  "name": "Madrid",
+  "slug": "w:madrid",
+  "bbox": [
+   -4.58954,
+   39.88116,
+   -3.05042,
+   41.16864
+  ],
+  "geofabrik": "madrid"
+ },
+ {
   "id": "us-me",
   "name": "Maine",
   "slug": "maine",
@@ -396,6 +2040,78 @@
   ]
  },
  {
+  "id": "mw",
+  "name": "Malawi",
+  "slug": "w:malawi",
+  "bbox": [
+   32.66441,
+   -17.13324,
+   35.92941,
+   -9.36269
+  ],
+  "geofabrik": "malawi"
+ },
+ {
+  "id": "malaysia-singapore-brunei",
+  "name": "Malaysia, Singapore, and Brunei",
+  "slug": "w:malaysia-singapore-brunei",
+  "bbox": [
+   99.25611,
+   0.83081,
+   119.6683,
+   7.73685
+  ],
+  "geofabrik": "malaysia-singapore-brunei"
+ },
+ {
+  "id": "mv",
+  "name": "Maldives",
+  "slug": "w:maldives",
+  "bbox": [
+   71.7,
+   -1.36,
+   74.5,
+   7.69
+  ],
+  "geofabrik": "maldives"
+ },
+ {
+  "id": "ml",
+  "name": "Mali",
+  "slug": "w:mali",
+  "bbox": [
+   -12.24701,
+   10.1176,
+   4.33026,
+   25.09499
+  ],
+  "geofabrik": "mali"
+ },
+ {
+  "id": "mt",
+  "name": "Malta",
+  "slug": "w:malta",
+  "bbox": [
+   14.0,
+   35.51985,
+   14.8561,
+   36.33296
+  ],
+  "geofabrik": "malta"
+ },
+ {
+  "id": "id-maluku",
+  "name": "Maluku",
+  "slug": "w:maluku",
+  "bbox": [
+   123.8928,
+   -9.5249,
+   135.412,
+   3.72723
+  ],
+  "geofabrik": "maluku"
+ },
+ {
   "id": "ca-mb",
   "name": "Manitoba",
   "slug": "ca-mb",
@@ -405,6 +2121,30 @@
    -88.12183,
    60.00845
   ]
+ },
+ {
+  "id": "mh",
+  "name": "Marshall Islands",
+  "slug": "w:marshall-islands",
+  "bbox": [
+   156.8453,
+   1.77731,
+   175.5118,
+   17.94606
+  ],
+  "geofabrik": "marshall-islands"
+ },
+ {
+  "id": "fr-martinique",
+  "name": "Martinique",
+  "slug": "w:martinique",
+  "bbox": [
+   -61.63056,
+   14.13392,
+   -60.42755,
+   15.15167
+  ],
+  "geofabrik": "martinique"
  },
  {
   "id": "us-md",
@@ -427,6 +2167,66 @@
    -68.73438,
    42.88768
   ]
+ },
+ {
+  "id": "mr",
+  "name": "Mauritania",
+  "slug": "w:mauritania",
+  "bbox": [
+   -17.35016,
+   14.71578,
+   -4.81606,
+   27.33613
+  ],
+  "geofabrik": "mauritania"
+ },
+ {
+  "id": "mu",
+  "name": "Mauritius",
+  "slug": "w:mauritius",
+  "bbox": [
+   53.54727,
+   -22.2411,
+   64.66991,
+   -9.18362
+  ],
+  "geofabrik": "mauritius"
+ },
+ {
+  "id": "fr-mayotte",
+  "name": "Mayotte",
+  "slug": "w:mayotte",
+  "bbox": [
+   44.62646,
+   -13.47243,
+   45.6784,
+   -12.14406
+  ],
+  "geofabrik": "mayotte"
+ },
+ {
+  "id": "de-mecklenburg-vorpommern",
+  "name": "Mecklenburg-Vorpommern",
+  "slug": "w:mecklenburg-vorpommern",
+  "bbox": [
+   10.58807,
+   53.10619,
+   14.42292,
+   54.9837
+  ],
+  "geofabrik": "mecklenburg-vorpommern"
+ },
+ {
+  "id": "es-melilla",
+  "name": "Melilla",
+  "slug": "w:melilla",
+  "bbox": [
+   -2.97242,
+   35.26393,
+   -2.9082,
+   35.32393
+  ],
+  "geofabrik": "melilla"
  },
  {
   "id": "mx-cmx",
@@ -462,6 +2262,30 @@
   ]
  },
  {
+  "id": "fm",
+  "name": "Micronesia",
+  "slug": "w:micronesia",
+  "bbox": [
+   135.3124,
+   -1.14744,
+   165.6345,
+   13.21917
+  ],
+  "geofabrik": "micronesia"
+ },
+ {
+  "id": "fr-midi-pyrenees",
+  "name": "Midi-Pyrenees",
+  "slug": "w:midi-pyrenees",
+  "bbox": [
+   -0.32754,
+   42.56793,
+   3.45326,
+   45.04779
+  ],
+  "geofabrik": "midi-pyrenees"
+ },
+ {
   "id": "us-mn",
   "name": "Minnesota",
   "slug": "minnesota",
@@ -495,6 +2319,42 @@
   ]
  },
  {
+  "id": "md",
+  "name": "Moldova",
+  "slug": "w:moldova",
+  "bbox": [
+   26.61232,
+   45.46164,
+   30.19249,
+   48.49397
+  ],
+  "geofabrik": "moldova"
+ },
+ {
+  "id": "mc",
+  "name": "Monaco",
+  "slug": "w:monaco",
+  "bbox": [
+   7.40858,
+   43.48382,
+   7.59567,
+   43.75293
+  ],
+  "geofabrik": "monaco"
+ },
+ {
+  "id": "mn",
+  "name": "Mongolia",
+  "slug": "w:mongolia",
+  "bbox": [
+   87.70255,
+   41.50035,
+   120.0201,
+   52.19582
+  ],
+  "geofabrik": "mongolia"
+ },
+ {
   "id": "us-mt",
   "name": "Montana",
   "slug": "montana",
@@ -506,6 +2366,18 @@
   ]
  },
  {
+  "id": "me",
+  "name": "Montenegro",
+  "slug": "w:montenegro",
+  "bbox": [
+   18.17282,
+   41.61621,
+   20.35883,
+   43.56217
+  ],
+  "geofabrik": "montenegro"
+ },
+ {
   "id": "mx-mor",
   "name": "Morelos",
   "slug": "mx-mor",
@@ -515,6 +2387,90 @@
    -98.63295,
    19.1317
   ]
+ },
+ {
+  "id": "ma",
+  "name": "Morocco",
+  "slug": "w:morocco",
+  "bbox": [
+   -18.1835,
+   20.40373,
+   -0.99358,
+   36.06077
+  ],
+  "geofabrik": "morocco"
+ },
+ {
+  "id": "mz",
+  "name": "Mozambique",
+  "slug": "w:mozambique",
+  "bbox": [
+   30.20742,
+   -26.93837,
+   42.53489,
+   -9.98621
+  ],
+  "geofabrik": "mozambique"
+ },
+ {
+  "id": "es-murcia",
+  "name": "Murcia",
+  "slug": "w:murcia",
+  "bbox": [
+   -2.35125,
+   37.11215,
+   -0.24719,
+   38.76024
+  ],
+  "geofabrik": "murcia"
+ },
+ {
+  "id": "mm",
+  "name": "Myanmar (a.k.a. Burma)",
+  "slug": "w:myanmar",
+  "bbox": [
+   90.65133,
+   9.51021,
+   101.1971,
+   28.57476
+  ],
+  "geofabrik": "myanmar"
+ },
+ {
+  "id": "na",
+  "name": "Namibia",
+  "slug": "w:namibia",
+  "bbox": [
+   9.78462,
+   -30.20686,
+   25.26589,
+   -16.91682
+  ],
+  "geofabrik": "namibia"
+ },
+ {
+  "id": "nr",
+  "name": "Nauru",
+  "slug": "w:nauru",
+  "bbox": [
+   163.7052,
+   -3.7712,
+   168.5599,
+   2.69385
+  ],
+  "geofabrik": "nauru"
+ },
+ {
+  "id": "es-navarra",
+  "name": "Navarra",
+  "slug": "w:navarra",
+  "bbox": [
+   -2.50231,
+   41.90611,
+   -0.71652,
+   43.31655
+  ],
+  "geofabrik": "navarra"
  },
  {
   "id": "mx-nay",
@@ -539,6 +2495,18 @@
   ]
  },
  {
+  "id": "np",
+  "name": "Nepal",
+  "slug": "w:nepal",
+  "bbox": [
+   80.04913,
+   26.3445,
+   88.22213,
+   30.47822
+  ],
+  "geofabrik": "nepal"
+ },
+ {
   "id": "us-nv",
   "name": "Nevada",
   "slug": "nevada",
@@ -559,6 +2527,18 @@
    -62.88575,
    48.38075
   ]
+ },
+ {
+  "id": "fr-nc",
+  "name": "New Caledonia",
+  "slug": "w:new-caledonia",
+  "bbox": [
+   157.9,
+   -25.0,
+   174.1,
+   -16.9
+  ],
+  "geofabrik": "new-caledonia"
  },
  {
   "id": "us-nh",
@@ -616,6 +2596,138 @@
   ]
  },
  {
+  "id": "de-niedersachsen",
+  "name": "Niedersachsen (mit Bremen)",
+  "slug": "w:niedersachsen",
+  "bbox": [
+   6.29534,
+   51.29348,
+   11.60731,
+   54.23955
+  ],
+  "geofabrik": "niedersachsen"
+ },
+ {
+  "id": "ne",
+  "name": "Niger",
+  "slug": "w:niger",
+  "bbox": [
+   0.11972,
+   11.68684,
+   16.05605,
+   23.56864
+  ],
+  "geofabrik": "niger"
+ },
+ {
+  "id": "ng",
+  "name": "Nigeria",
+  "slug": "w:nigeria",
+  "bbox": [
+   2.66453,
+   2.67402,
+   14.68057,
+   13.89874
+  ],
+  "geofabrik": "nigeria"
+ },
+ {
+  "id": "nu",
+  "name": "Niue",
+  "slug": "w:niue",
+  "bbox": [
+   -172.027,
+   -22.47347,
+   -166.2989,
+   -16.63667
+  ],
+  "geofabrik": "niue"
+ },
+ {
+  "id": "nl-noord-brabant",
+  "name": "Noord-Brabant",
+  "slug": "w:noord-brabant",
+  "bbox": [
+   4.18915,
+   51.21808,
+   6.04935,
+   51.83181
+  ],
+  "geofabrik": "noord-brabant"
+ },
+ {
+  "id": "nl-noord-holland",
+  "name": "Noord-Holland",
+  "slug": "w:noord-holland",
+  "bbox": [
+   3.89691,
+   52.16497,
+   5.37848,
+   53.28945
+  ],
+  "geofabrik": "noord-holland"
+ },
+ {
+  "id": "it-nord-est",
+  "name": "Nord-Est",
+  "slug": "w:nord-est",
+  "bbox": [
+   9.19546,
+   43.72977,
+   13.92878,
+   47.10005
+  ],
+  "geofabrik": "nord-est"
+ },
+ {
+  "id": "it-nord-ovest",
+  "name": "Nord-Ovest",
+  "slug": "w:nord-ovest",
+  "bbox": [
+   6.6027,
+   43.48099,
+   11.43336,
+   46.64119
+  ],
+  "geofabrik": "nord-ovest"
+ },
+ {
+  "id": "fr-nord-pas-de-calais",
+  "name": "Nord-Pas-de-Calais",
+  "slug": "w:nord-pas-de-calais",
+  "bbox": [
+   1.27831,
+   49.96764,
+   4.23662,
+   51.28121
+  ],
+  "geofabrik": "nord-pas-de-calais"
+ },
+ {
+  "id": "br-nordeste",
+  "name": "Nordeste",
+  "slug": "w:nordeste",
+  "bbox": [
+   -48.77554,
+   -18.59514,
+   -28.42028,
+   2.67301
+  ],
+  "geofabrik": "nordeste"
+ },
+ {
+  "id": "br-norte",
+  "name": "Norte",
+  "slug": "w:norte",
+  "bbox": [
+   -74.02313,
+   -13.73407,
+   -42.87915,
+   5.5229
+  ],
+  "geofabrik": "norte"
+ },
+ {
   "id": "us-nc",
   "name": "North Carolina",
   "slug": "north-carolina",
@@ -625,6 +2737,18 @@
    -73.7396,
    36.58979
   ]
+ },
+ {
+  "id": "north-caucasus-fed-district",
+  "name": "North Caucasus Federal District",
+  "slug": "w:north-caucasus-fed-district",
+  "bbox": [
+   40.67265,
+   41.1355,
+   48.86453,
+   46.23914
+  ],
+  "geofabrik": "north-caucasus-fed-district"
  },
  {
   "id": "us-nd",
@@ -638,6 +2762,42 @@
   ]
  },
  {
+  "id": "kp",
+  "name": "North Korea",
+  "slug": "w:north-korea",
+  "bbox": [
+   123.697,
+   37.61103,
+   131.6447,
+   43.02043
+  ],
+  "geofabrik": "north-korea"
+ },
+ {
+  "id": "in-north-eastern-zone",
+  "name": "North-Eastern Zone",
+  "slug": "w:north-eastern-zone",
+  "bbox": [
+   88.00852,
+   21.92712,
+   97.41989,
+   29.42883
+  ],
+  "geofabrik": "north-eastern-zone"
+ },
+ {
+  "id": "in-northern-zone",
+  "name": "Northern Zone",
+  "slug": "w:northern-zone",
+  "bbox": [
+   69.43908,
+   23.04688,
+   79.48883,
+   35.73091
+  ],
+  "geofabrik": "northern-zone"
+ },
+ {
   "id": "ca-nt",
   "name": "Northwest Territories",
   "slug": "ca-nt",
@@ -647,6 +2807,18 @@
    -101.976,
    81.65483
   ]
+ },
+ {
+  "id": "northwestern-fed-district",
+  "name": "Northwestern Federal District",
+  "slug": "w:northwestern-fed-district",
+  "bbox": [
+   19.40837,
+   54.31282,
+   72.62481,
+   82.54561
+  ],
+  "geofabrik": "northwestern-fed-district"
  },
  {
   "id": "ca-ns",
@@ -691,6 +2863,18 @@
    -90.0,
    85.0
   ]
+ },
+ {
+  "id": "id-nusa-tenggara",
+  "name": "Nusa-Tenggara",
+  "slug": "w:nusa-tenggara",
+  "bbox": [
+   114.4089,
+   -11.60655,
+   128.408,
+   -6.67551
+  ],
+  "geofabrik": "nusa-tenggara"
  },
  {
   "id": "mx-oax",
@@ -748,6 +2932,102 @@
   ]
  },
  {
+  "id": "nl-overijssel",
+  "name": "Overijssel",
+  "slug": "w:overijssel",
+  "bbox": [
+   5.77679,
+   52.11349,
+   7.07507,
+   52.85539
+  ],
+  "geofabrik": "overijssel"
+ },
+ {
+  "id": "pk",
+  "name": "Pakistan",
+  "slug": "w:pakistan",
+  "bbox": [
+   60.82168,
+   23.3763,
+   77.22427,
+   37.10667
+  ],
+  "geofabrik": "pakistan"
+ },
+ {
+  "id": "pw",
+  "name": "Palau",
+  "slug": "w:palau",
+  "bbox": [
+   130.1034,
+   1.62141,
+   136.9541,
+   11.48818
+  ],
+  "geofabrik": "palau"
+ },
+ {
+  "id": "id-papua",
+  "name": "Papua",
+  "slug": "w:papua",
+  "bbox": [
+   128.2819,
+   -9.49512,
+   141.0217,
+   2.07597
+  ],
+  "geofabrik": "papua"
+ },
+ {
+  "id": "pg",
+  "name": "Papua New Guinea",
+  "slug": "w:papua-new-guinea",
+  "bbox": [
+   139.2014,
+   -14.74845,
+   162.8034,
+   2.58781
+  ],
+  "geofabrik": "papua-new-guinea"
+ },
+ {
+  "id": "py",
+  "name": "Paraguay",
+  "slug": "w:paraguay",
+  "bbox": [
+   -62.69475,
+   -27.65675,
+   -54.20176,
+   -19.24012
+  ],
+  "geofabrik": "paraguay"
+ },
+ {
+  "id": "fr-pays-de-la-loire",
+  "name": "Pays de la Loire",
+  "slug": "w:pays-de-la-loire",
+  "bbox": [
+   -2.67467,
+   46.21875,
+   0.919,
+   48.57002
+  ],
+  "geofabrik": "pays-de-la-loire"
+ },
+ {
+  "id": "es-pais-vasco",
+  "name": "Pa\u00eds Vasco",
+  "slug": "w:pais-vasco",
+  "bbox": [
+   -3.45434,
+   42.46919,
+   -1.66628,
+   43.74729
+  ],
+  "geofabrik": "pais-vasco"
+ },
+ {
   "id": "us-pa",
   "name": "Pennsylvania",
   "slug": "pennsylvania",
@@ -759,6 +3039,90 @@
   ]
  },
  {
+  "id": "pe",
+  "name": "Peru",
+  "slug": "w:peru",
+  "bbox": [
+   -86.02509,
+   -20.30552,
+   -68.55439,
+   0.06005
+  ],
+  "geofabrik": "peru"
+ },
+ {
+  "id": "ph",
+  "name": "Philippines",
+  "slug": "w:philippines",
+  "bbox": [
+   112.1661,
+   4.3827,
+   127.0742,
+   21.53021
+  ],
+  "geofabrik": "philippines"
+ },
+ {
+  "id": "fr-picardie",
+  "name": "Picardie",
+  "slug": "w:picardie",
+  "bbox": [
+   1.36008,
+   48.83599,
+   4.25674,
+   50.37125
+  ],
+  "geofabrik": "picardie"
+ },
+ {
+  "id": "pn",
+  "name": "Pitcairn Islands",
+  "slug": "w:pitcairn-islands",
+  "bbox": [
+   -133.0664,
+   -27.66403,
+   -118.3448,
+   -21.59613
+  ],
+  "geofabrik": "pitcairn-islands"
+ },
+ {
+  "id": "fr-poitou-charentes",
+  "name": "Poitou-Charentes",
+  "slug": "w:poitou-charentes",
+  "bbox": [
+   -1.89857,
+   45.0868,
+   1.21499,
+   47.17837
+  ],
+  "geofabrik": "poitou-charentes"
+ },
+ {
+  "id": "pf",
+  "name": "Polyn\u00e9sie fran\u00e7aise (French Polynesia)",
+  "slug": "w:polynesie-francaise",
+  "bbox": [
+   -158.5547,
+   -31.54105,
+   -132.5391,
+   -4.91579
+  ],
+  "geofabrik": "polynesie-francaise"
+ },
+ {
+  "id": "pt",
+  "name": "Portugal",
+  "slug": "w:portugal",
+  "bbox": [
+   -31.6,
+   29.7,
+   -6.17951,
+   42.1639
+  ],
+  "geofabrik": "portugal"
+ },
+ {
   "id": "ca-pe",
   "name": "Prince Edward Island",
   "slug": "ca-pe",
@@ -768,6 +3132,18 @@
    -61.24878,
    47.68573
   ]
+ },
+ {
+  "id": "fr-provence-alpes-cote-d-azur",
+  "name": "Provence Alpes-Cote-d'Azur",
+  "slug": "w:provence-alpes-cote-d-azur",
+  "bbox": [
+   4.14475,
+   42.31539,
+   7.74853,
+   45.12887
+  ],
+  "geofabrik": "provence-alpes-cote-d-azur"
  },
  {
   "id": "mx-pue",
@@ -825,6 +3201,30 @@
   ]
  },
  {
+  "id": "fr-reunion",
+  "name": "Reunion",
+  "slug": "w:reunion",
+  "bbox": [
+   54.94688,
+   -21.72922,
+   56.11999,
+   -20.58589
+  ],
+  "geofabrik": "reunion"
+ },
+ {
+  "id": "de-rheinland-pfalz",
+  "name": "Rheinland-Pfalz",
+  "slug": "w:rheinland-pfalz",
+  "bbox": [
+   6.10913,
+   48.96377,
+   8.51123,
+   50.94404
+  ],
+  "geofabrik": "rheinland-pfalz"
+ },
+ {
   "id": "us-ri",
   "name": "Rhode Island",
   "slug": "rhode-island",
@@ -834,6 +3234,102 @@
    -71.06369,
    42.01938
   ]
+ },
+ {
+  "id": "fr-rhone-alpes",
+  "name": "Rhone-Alpes",
+  "slug": "w:rhone-alpes",
+  "bbox": [
+   3.68608,
+   44.11274,
+   7.19206,
+   46.52248
+  ],
+  "geofabrik": "rhone-alpes"
+ },
+ {
+  "id": "ro",
+  "name": "Romania",
+  "slug": "w:romania",
+  "bbox": [
+   20.24181,
+   43.61247,
+   30.27896,
+   48.26948
+  ],
+  "geofabrik": "romania"
+ },
+ {
+  "id": "rw",
+  "name": "Rwanda",
+  "slug": "w:rwanda",
+  "bbox": [
+   28.8593,
+   -2.84875,
+   30.90864,
+   -1.03831
+  ],
+  "geofabrik": "rwanda"
+ },
+ {
+  "id": "de-saarland",
+  "name": "Saarland",
+  "slug": "w:saarland",
+  "bbox": [
+   6.35447,
+   49.10807,
+   7.40629,
+   49.64146
+  ],
+  "geofabrik": "saarland"
+ },
+ {
+  "id": "de-sachsen",
+  "name": "Sachsen",
+  "slug": "w:sachsen",
+  "bbox": [
+   11.86685,
+   50.16658,
+   15.05078,
+   51.68735
+  ],
+  "geofabrik": "sachsen"
+ },
+ {
+  "id": "de-sachsen-anhalt",
+  "name": "Sachsen-Anhalt",
+  "slug": "w:sachsen-anhalt",
+  "bbox": [
+   10.54725,
+   50.92887,
+   13.21268,
+   53.0566
+  ],
+  "geofabrik": "sachsen-anhalt"
+ },
+ {
+  "id": "sh",
+  "name": "Saint Helena, Ascension, and Tristan da Cunha",
+  "slug": "w:saint-helena-ascension-and-tristan-da-cunha",
+  "bbox": [
+   -15.57026,
+   -43.83245,
+   -2.78128,
+   -4.59122
+  ],
+  "geofabrik": "saint-helena-ascension-and-tristan-da-cunha"
+ },
+ {
+  "id": "ws",
+  "name": "Samoa",
+  "slug": "w:samoa",
+  "bbox": [
+   -174.5114,
+   -15.87838,
+   -170.5427,
+   -10.96083
+  ],
+  "geofabrik": "samoa"
  },
  {
   "id": "mx-slp",
@@ -847,6 +3343,18 @@
   ]
  },
  {
+  "id": "st",
+  "name": "Sao Tome and Principe",
+  "slug": "w:sao-tome-and-principe",
+  "bbox": [
+   5.27392,
+   -0.52556,
+   8.36699,
+   2.44029
+  ],
+  "geofabrik": "sao-tome-and-principe"
+ },
+ {
   "id": "ca-sk",
   "name": "Saskatchewan",
   "slug": "ca-sk",
@@ -856,6 +3364,102 @@
    -101.3598,
    60.00052
   ]
+ },
+ {
+  "id": "de-schleswig-holstein",
+  "name": "Schleswig-Holstein",
+  "slug": "w:schleswig-holstein",
+  "bbox": [
+   7.46458,
+   53.3569,
+   11.79931,
+   55.14634
+  ],
+  "geofabrik": "schleswig-holstein"
+ },
+ {
+  "id": "gb-scotland",
+  "name": "Scotland",
+  "slug": "w:scotland",
+  "bbox": [
+   -14.86155,
+   54.54001,
+   0.21605,
+   61.13564
+  ],
+  "geofabrik": "scotland"
+ },
+ {
+  "id": "senegal-and-gambia",
+  "name": "Senegal and Gambia",
+  "slug": "w:senegal-and-gambia",
+  "bbox": [
+   -19.85623,
+   12.01511,
+   -11.33595,
+   16.70088
+  ],
+  "geofabrik": "senegal-and-gambia"
+ },
+ {
+  "id": "rs",
+  "name": "Serbia",
+  "slug": "w:serbia",
+  "bbox": [
+   18.80894,
+   42.22979,
+   23.01035,
+   46.19207
+  ],
+  "geofabrik": "serbia"
+ },
+ {
+  "id": "sc",
+  "name": "Seychelles",
+  "slug": "w:seychelles",
+  "bbox": [
+   45.68495,
+   -12.55844,
+   57.57433,
+   -3.17239
+  ],
+  "geofabrik": "seychelles"
+ },
+ {
+  "id": "jp-shikoku",
+  "name": "Shikoku",
+  "slug": "w:shikoku",
+  "bbox": [
+   131.7698,
+   32.22959,
+   135.1794,
+   34.65151
+  ],
+  "geofabrik": "shikoku"
+ },
+ {
+  "id": "siberian-fed-district",
+  "name": "Siberian Federal District",
+  "slug": "w:siberian-fed-district",
+  "bbox": [
+   70.27478,
+   49.02101,
+   147.7133,
+   81.88747
+  ],
+  "geofabrik": "siberian-fed-district"
+ },
+ {
+  "id": "sl",
+  "name": "Sierra Leone",
+  "slug": "w:sierra-leone",
+  "bbox": [
+   -14.76451,
+   5.39162,
+   -10.2558,
+   10.00571
+  ],
+  "geofabrik": "sierra-leone"
  },
  {
   "id": "mx-sin",
@@ -869,6 +3473,54 @@
   ]
  },
  {
+  "id": "sk",
+  "name": "Slovakia",
+  "slug": "w:slovakia",
+  "bbox": [
+   16.83071,
+   47.72646,
+   22.57051,
+   49.6186
+  ],
+  "geofabrik": "slovakia"
+ },
+ {
+  "id": "si",
+  "name": "Slovenia",
+  "slug": "w:slovenia",
+  "bbox": [
+   13.30509,
+   45.42081,
+   16.60034,
+   46.87956
+  ],
+  "geofabrik": "slovenia"
+ },
+ {
+  "id": "sb",
+  "name": "Solomon Islands",
+  "slug": "w:solomon-islands",
+  "bbox": [
+   154.5856,
+   -16.12694,
+   173.5934,
+   -4.13994
+  ],
+  "geofabrik": "solomon-islands"
+ },
+ {
+  "id": "so",
+  "name": "Somalia",
+  "slug": "w:somalia",
+  "bbox": [
+   40.97489,
+   -1.81675,
+   52.44871,
+   12.51177
+  ],
+  "geofabrik": "somalia"
+ },
+ {
   "id": "mx-son",
   "name": "Sonora",
   "slug": "mx-son",
@@ -878,6 +3530,18 @@
    -108.42427,
    32.49404
   ]
+ },
+ {
+  "id": "south-africa-and-lesotho",
+  "name": "South Africa (includes Lesotho)",
+  "slug": "w:south-africa-and-lesotho",
+  "bbox": [
+   15.99606,
+   -47.58493,
+   39.24259,
+   -22.11736
+  ],
+  "geofabrik": "south-africa-and-lesotho"
  },
  {
   "id": "us-sc",
@@ -902,6 +3566,66 @@
   ]
  },
  {
+  "id": "south-fed-district",
+  "name": "South Federal District",
+  "slug": "w:south-fed-district",
+  "bbox": [
+   36.52315,
+   43.18958,
+   49.93666,
+   51.2554
+  ],
+  "geofabrik": "south-fed-district"
+ },
+ {
+  "id": "kr",
+  "name": "South Korea",
+  "slug": "w:south-korea",
+  "bbox": [
+   124.3188,
+   32.36076,
+   132.3386,
+   38.64966
+  ],
+  "geofabrik": "south-korea"
+ },
+ {
+  "id": "ss",
+  "name": "South Sudan",
+  "slug": "w:south-sudan",
+  "bbox": [
+   23.42491,
+   3.46155,
+   35.96298,
+   12.23937
+  ],
+  "geofabrik": "south-sudan"
+ },
+ {
+  "id": "in-southern-zone",
+  "name": "Southern Zone",
+  "slug": "w:southern-zone",
+  "bbox": [
+   70.20789,
+   5.94392,
+   95.51383,
+   19.92268
+  ],
+  "geofabrik": "southern-zone"
+ },
+ {
+  "id": "lk",
+  "name": "Sri Lanka",
+  "slug": "w:sri-lanka",
+  "bbox": [
+   79.16416,
+   5.62127,
+   82.64612,
+   10.07153
+  ],
+  "geofabrik": "sri-lanka"
+ },
+ {
   "id": "mx-mex",
   "name": "State of Mexico",
   "slug": "mx-mex",
@@ -911,6 +3635,138 @@
    -98.59687,
    20.28587
   ]
+ },
+ {
+  "id": "it-sud",
+  "name": "Sud",
+  "slug": "w:sud",
+  "bbox": [
+   13.00131,
+   37.80152,
+   19.12499,
+   42.91363
+  ],
+  "geofabrik": "sud"
+ },
+ {
+  "id": "sd",
+  "name": "Sudan",
+  "slug": "w:sudan",
+  "bbox": [
+   21.781,
+   8.65375,
+   39.62781,
+   22.34706
+  ],
+  "geofabrik": "sudan"
+ },
+ {
+  "id": "br-sudeste",
+  "name": "Sudeste",
+  "slug": "w:sudeste",
+  "bbox": [
+   -53.1189,
+   -25.4993,
+   -28.19195,
+   -14.22445
+  ],
+  "geofabrik": "sudeste"
+ },
+ {
+  "id": "br-sul",
+  "name": "Sul",
+  "slug": "w:sul",
+  "bbox": [
+   -57.67273,
+   -34.86424,
+   -44.2463,
+   -22.51383
+  ],
+  "geofabrik": "sul"
+ },
+ {
+  "id": "id-sulawesi",
+  "name": "Sulawesi",
+  "slug": "w:sulawesi",
+  "bbox": [
+   116.2518,
+   -8.02115,
+   127.9523,
+   5.94826
+  ],
+  "geofabrik": "sulawesi"
+ },
+ {
+  "id": "id-sumatra",
+  "name": "Sumatra",
+  "slug": "w:sumatra",
+  "bbox": [
+   92.76481,
+   -7.16993,
+   109.7524,
+   6.99933
+  ],
+  "geofabrik": "sumatra"
+ },
+ {
+  "id": "sr",
+  "name": "Suriname",
+  "slug": "w:suriname",
+  "bbox": [
+   -58.08461,
+   1.81677,
+   -53.32819,
+   7.7617
+  ],
+  "geofabrik": "suriname"
+ },
+ {
+  "id": "sz",
+  "name": "Swaziland",
+  "slug": "w:swaziland",
+  "bbox": [
+   30.78575,
+   -27.31826,
+   32.13698,
+   -25.71781
+  ],
+  "geofabrik": "swaziland"
+ },
+ {
+  "id": "se",
+  "name": "Sweden",
+  "slug": "w:sweden",
+  "bbox": [
+   10.54138,
+   55.02652,
+   24.22472,
+   69.06643
+  ],
+  "geofabrik": "sweden"
+ },
+ {
+  "id": "ch",
+  "name": "Switzerland",
+  "slug": "w:switzerland",
+  "bbox": [
+   5.95442,
+   45.81642,
+   10.49584,
+   47.81126
+  ],
+  "geofabrik": "switzerland"
+ },
+ {
+  "id": "sy",
+  "name": "Syria",
+  "slug": "w:syria",
+  "bbox": [
+   35.28548,
+   32.3066,
+   42.38383,
+   37.32239
+  ],
+  "geofabrik": "syria"
  },
  {
   "id": "mx-tab",
@@ -924,6 +3780,30 @@
   ]
  },
  {
+  "id": "cn-tw",
+  "name": "Taiwan",
+  "slug": "w:taiwan",
+  "bbox": [
+   118.1036,
+   20.72799,
+   122.9312,
+   26.60305
+  ],
+  "geofabrik": "taiwan"
+ },
+ {
+  "id": "tj",
+  "name": "Tajikistan",
+  "slug": "w:tajikistan",
+  "bbox": [
+   67.3201,
+   36.66374,
+   75.16571,
+   41.05502
+  ],
+  "geofabrik": "tajikistan"
+ },
+ {
   "id": "mx-tam",
   "name": "Tamaulipas",
   "slug": "mx-tam",
@@ -933,6 +3813,18 @@
    -97.14497,
    27.67913
   ]
+ },
+ {
+  "id": "tz",
+  "name": "Tanzania",
+  "slug": "w:tanzania",
+  "bbox": [
+   29.24395,
+   -11.77595,
+   40.69487,
+   -0.97499
+  ],
+  "geofabrik": "tanzania"
  },
  {
   "id": "us-tn",
@@ -957,6 +3849,30 @@
   ]
  },
  {
+  "id": "th",
+  "name": "Thailand",
+  "slug": "w:thailand",
+  "bbox": [
+   97.13562,
+   5.59788,
+   105.6392,
+   20.46875
+  ],
+  "geofabrik": "thailand"
+ },
+ {
+  "id": "de-thueringen",
+  "name": "Th\u00fcringen",
+  "slug": "w:thueringen",
+  "bbox": [
+   9.86318,
+   50.19971,
+   12.66106,
+   51.65237
+  ],
+  "geofabrik": "thueringen"
+ },
+ {
   "id": "mx-tla",
   "name": "Tlaxcala",
   "slug": "mx-tla",
@@ -966,6 +3882,90 @@
    -97.62544,
    19.72892
   ]
+ },
+ {
+  "id": "tg",
+  "name": "Togo",
+  "slug": "w:togo",
+  "bbox": [
+   -0.14834,
+   5.89254,
+   1.81094,
+   11.14395
+  ],
+  "geofabrik": "togo"
+ },
+ {
+  "id": "tk",
+  "name": "Tokelau",
+  "slug": "w:tokelau",
+  "bbox": [
+   -176.8579,
+   -11.08137,
+   -167.4097,
+   -6.66459
+  ],
+  "geofabrik": "tokelau"
+ },
+ {
+  "id": "to",
+  "name": "Tonga",
+  "slug": "w:tonga",
+  "bbox": [
+   -178.6487,
+   -25.68413,
+   -171.3053,
+   -14.15464
+  ],
+  "geofabrik": "tonga"
+ },
+ {
+  "id": "tn",
+  "name": "Tunisia",
+  "slug": "w:tunisia",
+  "bbox": [
+   7.51396,
+   30.20864,
+   12.068,
+   37.77474
+  ],
+  "geofabrik": "tunisia"
+ },
+ {
+  "id": "tr",
+  "name": "Turkey",
+  "slug": "w:turkey",
+  "bbox": [
+   25.52398,
+   35.717,
+   44.85992,
+   43.07481
+  ],
+  "geofabrik": "turkey"
+ },
+ {
+  "id": "tm",
+  "name": "Turkmenistan",
+  "slug": "w:turkmenistan",
+  "bbox": [
+   51.83271,
+   35.12355,
+   66.72272,
+   42.81253
+  ],
+  "geofabrik": "turkmenistan"
+ },
+ {
+  "id": "jp-tohoku",
+  "name": "T\u014dhoku region",
+  "slug": "w:tohoku",
+  "bbox": [
+   138.9325,
+   36.52861,
+   142.8782,
+   41.64179
+  ],
+  "geofabrik": "tohoku"
  },
  {
   "id": "us-vi",
@@ -979,6 +3979,54 @@
   ]
  },
  {
+  "id": "ug",
+  "name": "Uganda",
+  "slug": "w:uganda",
+  "bbox": [
+   29.57056,
+   -1.48731,
+   35.01031,
+   4.25055
+  ],
+  "geofabrik": "uganda"
+ },
+ {
+  "id": "ua",
+  "name": "Ukraine (with Crimea)",
+  "slug": "w:ukraine",
+  "bbox": [
+   22.13264,
+   44.00862,
+   40.23811,
+   52.3865
+  ],
+  "geofabrik": "ukraine"
+ },
+ {
+  "id": "ural-fed-district",
+  "name": "Ural Federal District",
+  "slug": "w:ural-fed-district",
+  "bbox": [
+   57.04259,
+   51.8264,
+   86.0952,
+   75.011
+  ],
+  "geofabrik": "ural-fed-district"
+ },
+ {
+  "id": "uy",
+  "name": "Uruguay",
+  "slug": "w:uruguay",
+  "bbox": [
+   -58.52589,
+   -36.2487,
+   -52.7723,
+   -30.07355
+  ],
+  "geofabrik": "uruguay"
+ },
+ {
   "id": "us-ut",
   "name": "Utah",
   "slug": "utah",
@@ -988,6 +4036,66 @@
    -109.0394,
    42.00323
   ]
+ },
+ {
+  "id": "nl-utrecht",
+  "name": "Utrecht",
+  "slug": "w:utrecht",
+  "bbox": [
+   4.79085,
+   51.85615,
+   5.62829,
+   52.30494
+  ],
+  "geofabrik": "utrecht"
+ },
+ {
+  "id": "uz",
+  "name": "Uzbekistan",
+  "slug": "w:uzbekistan",
+  "bbox": [
+   55.97708,
+   37.16636,
+   73.17463,
+   45.61884
+  ],
+  "geofabrik": "uzbekistan"
+ },
+ {
+  "id": "es-valencia",
+  "name": "Valencia",
+  "slug": "w:valencia",
+  "bbox": [
+   -1.53165,
+   37.84341,
+   1.6864,
+   40.79328
+  ],
+  "geofabrik": "valencia"
+ },
+ {
+  "id": "vu",
+  "name": "Vanuatu",
+  "slug": "w:vanuatu",
+  "bbox": [
+   163.3086,
+   -21.64288,
+   173.6089,
+   -12.29626
+  ],
+  "geofabrik": "vanuatu"
+ },
+ {
+  "id": "ve",
+  "name": "Venezuela",
+  "slug": "w:venezuela",
+  "bbox": [
+   -73.38098,
+   0.62173,
+   -59.51474,
+   15.96134
+  ],
+  "geofabrik": "venezuela"
  },
  {
   "id": "mx-ver",
@@ -1012,6 +4120,18 @@
   ]
  },
  {
+  "id": "vn",
+  "name": "Vietnam",
+  "slug": "w:vietnam",
+  "bbox": [
+   102.0959,
+   7.38224,
+   114.6423,
+   23.40214
+  ],
+  "geofabrik": "vietnam"
+ },
+ {
   "id": "us-va",
   "name": "Virginia",
   "slug": "virginia",
@@ -1021,6 +4141,42 @@
    -74.29751,
    39.46901
   ]
+ },
+ {
+  "id": "volga-fed-district",
+  "name": "Volga Federal District",
+  "slug": "w:volga-fed-district",
+  "bbox": [
+   41.72107,
+   49.75097,
+   61.73371,
+   61.71971
+  ],
+  "geofabrik": "volga-fed-district"
+ },
+ {
+  "id": "gb-wales",
+  "name": "Wales",
+  "slug": "w:wales",
+  "bbox": [
+   -6.18324,
+   51.03997,
+   -2.64804,
+   53.76632
+  ],
+  "geofabrik": "wales"
+ },
+ {
+  "id": "wf",
+  "name": "Wallis et Futuna",
+  "slug": "w:wallis-et-futuna",
+  "bbox": [
+   -179.978,
+   -16.25685,
+   -174.1553,
+   -9.05868
+  ],
+  "geofabrik": "wallis-et-futuna"
  },
  {
   "id": "us-wa",
@@ -1045,6 +4201,18 @@
   ]
  },
  {
+  "id": "in-western-zone",
+  "name": "Western Zone",
+  "slug": "w:western-zone",
+  "bbox": [
+   67.67457,
+   14.38929,
+   80.91362,
+   24.71756
+  ],
+  "geofabrik": "western-zone"
+ },
+ {
   "id": "us-wi",
   "name": "Wisconsin",
   "slug": "wisconsin",
@@ -1056,6 +4224,198 @@
   ]
  },
  {
+  "id": "pl-dolnoslaskie",
+  "name": "Wojew\u00f3dztwo dolno\u015bl\u0105skie<br />(Lower Silesian Voivodeship)",
+  "slug": "w:dolnoslaskie",
+  "bbox": [
+   14.80839,
+   50.08251,
+   17.80584,
+   51.81417
+  ],
+  "geofabrik": "dolnoslaskie"
+ },
+ {
+  "id": "pl-kujawsko-pomorskie",
+  "name": "Wojew\u00f3dztwo kujawsko-pomorskie<br />(Kuyavian-Pomeranian Voivodeship)",
+  "slug": "w:kujawsko-pomorskie",
+  "bbox": [
+   17.23935,
+   52.32112,
+   19.77239,
+   53.7917
+  ],
+  "geofabrik": "kujawsko-pomorskie"
+ },
+ {
+  "id": "pl-lubelskie",
+  "name": "Wojew\u00f3dztwo lubelskie<br />(Lublin Voivodeship)",
+  "slug": "w:lubelskie",
+  "bbox": [
+   21.60285,
+   50.23654,
+   24.16102,
+   52.30035
+  ],
+  "geofabrik": "lubelskie"
+ },
+ {
+  "id": "pl-lubuskie",
+  "name": "Wojew\u00f3dztwo lubuskie<br />(Lubusz Voivodeship)",
+  "slug": "w:lubuskie",
+  "bbox": [
+   14.49548,
+   51.34865,
+   16.42999,
+   53.12806
+  ],
+  "geofabrik": "lubuskie"
+ },
+ {
+  "id": "pl-mazowieckie",
+  "name": "Wojew\u00f3dztwo mazowieckie<br />(Mazovian Voivodeship)",
+  "slug": "w:mazowieckie",
+  "bbox": [
+   19.23355,
+   50.98451,
+   23.15637,
+   53.5116
+  ],
+  "geofabrik": "mazowieckie"
+ },
+ {
+  "id": "pl-malopolskie",
+  "name": "Wojew\u00f3dztwo ma\u0142opolskie<br />(Lesser Poland Voivodeship)",
+  "slug": "w:malopolskie",
+  "bbox": [
+   19.07492,
+   49.16487,
+   21.43328,
+   50.53221
+  ],
+  "geofabrik": "malopolskie"
+ },
+ {
+  "id": "pl-opolskie",
+  "name": "Wojew\u00f3dztwo opolskie<br />(Opole Voivodeship)",
+  "slug": "w:opolskie",
+  "bbox": [
+   16.9015,
+   49.95766,
+   18.70219,
+   51.2014
+  ],
+  "geofabrik": "opolskie"
+ },
+ {
+  "id": "pl-podkarpackie",
+  "name": "Wojew\u00f3dztwo podkarpackie<br />(Subcarpathian Voivodeship)",
+  "slug": "w:podkarpackie",
+  "bbox": [
+   21.13433,
+   48.98642,
+   23.5536,
+   50.82591
+  ],
+  "geofabrik": "podkarpackie"
+ },
+ {
+  "id": "pl-podlaskie",
+  "name": "Wojew\u00f3dztwo podlaskie<br />(Podlaskie Voivodeship)",
+  "slug": "w:podlaskie",
+  "bbox": [
+   21.58465,
+   52.27112,
+   23.96141,
+   54.4254
+  ],
+  "geofabrik": "podlaskie"
+ },
+ {
+  "id": "pl-pomorskie",
+  "name": "Wojew\u00f3dztwo pomorskie<br />(Pomeranian Voivodeship)",
+  "slug": "w:pomorskie",
+  "bbox": [
+   16.68699,
+   53.4806,
+   19.66069,
+   55.07949
+  ],
+  "geofabrik": "pomorskie"
+ },
+ {
+  "id": "pl-warminsko-mazurskie",
+  "name": "Wojew\u00f3dztwo warmi\u0144sko-mazurskie<br />(Warmian-Masurian Voivodeship)",
+  "slug": "w:warminsko-mazurskie",
+  "bbox": [
+   19.11666,
+   53.12575,
+   22.82058,
+   54.51456
+  ],
+  "geofabrik": "warminsko-mazurskie"
+ },
+ {
+  "id": "pl-wielkopolskie",
+  "name": "Wojew\u00f3dztwo wielkopolskie<br />(Greater Poland Voivodeship)",
+  "slug": "w:wielkopolskie",
+  "bbox": [
+   15.76036,
+   51.08403,
+   19.12931,
+   53.68105
+  ],
+  "geofabrik": "wielkopolskie"
+ },
+ {
+  "id": "pl-zachodniopomorskie",
+  "name": "Wojew\u00f3dztwo zachodniopomorskie<br />(West Pomeranian Voivodeship)",
+  "slug": "w:zachodniopomorskie",
+  "bbox": [
+   13.99022,
+   52.61742,
+   16.98847,
+   55.00664
+  ],
+  "geofabrik": "zachodniopomorskie"
+ },
+ {
+  "id": "pl-lodzkie",
+  "name": "Wojew\u00f3dztwo \u0142\u00f3dzkie<br />(\u0141\u00f3d\u017a Voivodeship)",
+  "slug": "w:lodzkie",
+  "bbox": [
+   18.06227,
+   50.83091,
+   20.6691,
+   52.40624
+  ],
+  "geofabrik": "lodzkie"
+ },
+ {
+  "id": "pl-slaskie",
+  "name": "Wojew\u00f3dztwo \u015bl\u0105skie<br />(Silesian Voivodeship)",
+  "slug": "w:slaskie",
+  "bbox": [
+   18.02213,
+   49.38,
+   19.98542,
+   51.1129
+  ],
+  "geofabrik": "slaskie"
+ },
+ {
+  "id": "pl-swietokrzyskie",
+  "name": "Wojew\u00f3dztwo \u015bwi\u0119tokrzyskie<br />(\u015awi\u0119tokrzyskie Voivodeship)",
+  "slug": "w:swietokrzyskie",
+  "bbox": [
+   19.69901,
+   50.17974,
+   21.8758,
+   51.34824
+  ],
+  "geofabrik": "swietokrzyskie"
+ },
+ {
   "id": "us-wy",
   "name": "Wyoming",
   "slug": "wyoming",
@@ -1065,6 +4425,18 @@
    -103.9413,
    45.01216
   ]
+ },
+ {
+  "id": "ye",
+  "name": "Yemen",
+  "slug": "w:yemen",
+  "bbox": [
+   41.06894,
+   11.36768,
+   55.51167,
+   19.03189
+  ],
+  "geofabrik": "yemen"
  },
  {
   "id": "mx-yuc",
@@ -1098,5 +4470,65 @@
    -100.74232,
    25.12523
   ]
+ },
+ {
+  "id": "zm",
+  "name": "Zambia",
+  "slug": "w:zambia",
+  "bbox": [
+   21.98982,
+   -18.08777,
+   33.71773,
+   -8.23948
+  ],
+  "geofabrik": "zambia"
+ },
+ {
+  "id": "nl-zeeland",
+  "name": "Zeeland",
+  "slug": "w:zeeland",
+  "bbox": [
+   3.23394,
+   51.19717,
+   4.27841,
+   51.87013
+  ],
+  "geofabrik": "zeeland"
+ },
+ {
+  "id": "zw",
+  "name": "Zimbabwe",
+  "slug": "w:zimbabwe",
+  "bbox": [
+   25.2229,
+   -22.44725,
+   33.08541,
+   -15.58707
+  ],
+  "geofabrik": "zimbabwe"
+ },
+ {
+  "id": "nl-zuid-holland",
+  "name": "Zuid-Holland",
+  "slug": "w:zuid-holland",
+  "bbox": [
+   3.34533,
+   51.64252,
+   5.03239,
+   52.47611
+  ],
+  "geofabrik": "zuid-holland"
+ },
+ {
+  "id": "pf-ile-de-clipperton",
+  "name": "\u00cele de Clipperton",
+  "slug": "w:ile-de-clipperton",
+  "bbox": [
+   -110.1215,
+   9.59534,
+   -108.3746,
+   11.15685
+  ],
+  "geofabrik": "ile-de-clipperton"
  }
 ]

@@ -525,6 +525,30 @@ pub(crate) fn insert_entries(
     Ok(())
 }
 
+/// Free space the system's temporary folder must have to build a database there.
+const SCRATCH_SPACE: u64 = 4 << 30;
+
+/// Where to build a database bound for `out`: the system's temporary folder when it has
+/// room, else beside `out`. SQLite writes pages all over the file while it builds;
+/// on a USB hard drive that took over an hour for New York's 210 MB index (14 November
+/// 2026), against 42 seconds on an internal disk. The finished file is then copied in
+/// one sequential write.
+fn scratch_for(out: &Path) -> Option<std::path::PathBuf> {
+    let folder = std::env::temp_dir();
+    if !fs4::available_space(&folder).is_ok_and(|free| free >= SCRATCH_SPACE) {
+        return None;
+    }
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let name = out.file_name()?.to_string_lossy().into_owned();
+    Some(folder.join(format!(
+        "offline-maps-{}-{stamp}-{name}",
+        std::process::id()
+    )))
+}
+
 /// Creates an index database at `out` through a temporary file and a
 /// rename, so `out` is either absent, the previous file, or complete.
 pub(crate) fn write_database(
@@ -535,14 +559,35 @@ pub(crate) fn write_database(
     temporary.push(".tmp");
     let temporary = std::path::PathBuf::from(temporary);
     let _ = std::fs::remove_file(&temporary);
-    {
-        let mut db = Connection::open(&temporary)?;
-        db.execute_batch("PRAGMA journal_mode = OFF; PRAGMA synchronous = OFF;")?;
+    let scratch = scratch_for(out);
+    let build = scratch.as_deref().unwrap_or(&temporary);
+    let built = (|| -> Result<(), PackageError> {
+        let mut db = Connection::open(build)?;
+        // No journal or syncing (the file is discarded unless complete), and a 128 MiB page
+        // cache so pages are written once rather than spilled and rewritten.
+        db.execute_batch(
+            "PRAGMA journal_mode = OFF; PRAGMA synchronous = OFF; PRAGMA cache_size = -131072;",
+        )?;
         db.execute_batch(ENTRY_TABLES)?;
         let tx = db.transaction()?;
         fill(&tx)?;
         tx.commit()?;
         db.execute_batch("INSERT INTO entries_fts (entries_fts) VALUES ('optimize');")?;
+        Ok(())
+    })();
+    if let Some(scratch) = &scratch {
+        let copied = built.and_then(|()| {
+            std::fs::copy(scratch, &temporary)
+                .map(|_| ())
+                .map_err(PackageError::from)
+        });
+        let _ = std::fs::remove_file(scratch);
+        if copied.is_err() {
+            let _ = std::fs::remove_file(&temporary);
+        }
+        copied?;
+    } else {
+        built?;
     }
     std::fs::rename(&temporary, out)?;
     Ok(())

@@ -436,6 +436,9 @@ impl Service {
                     overlay_bytes: r.overlay_bytes,
                     package_url: r.package_url.to_owned(),
                     extras_url: r.extras_url.to_owned(),
+                    country: r.country.to_owned(),
+                    continent: r.continent.to_owned(),
+                    note: r.note.to_owned(),
                 })
                 .collect(),
         }

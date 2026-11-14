@@ -40,7 +40,12 @@ PLANETILER = ROOT / "data" / "layer-build" / "tools" / "planetiler.jar"
 PLANETILER_SHA256 = "f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d"
 TEMPLATE = Path(__file__).with_name("overview.yml")
 OUT = ROOT / "assets" / "overview" / "world-overview.mbtiles"
-REGIONS = {r["id"] for r in json.loads((ROOT / "tools" / "layers" / "regions.json").read_text(encoding="utf-8"))}
+CATALOG = json.loads((ROOT / "tools" / "layers" / "regions.json").read_text(encoding="utf-8"))
+# North American regions take their outlines from Natural Earth; the others from Geofabrik's
+# index (data/catalog/world, written by tools/world-regions.py), by Geofabrik ID.
+REGIONS = {r["id"] for r in CATALOG if "geofabrik" not in r}
+WORLD = {r["geofabrik"]: r["id"] for r in CATALOG if "geofabrik" in r}
+GEOFABRIK_INDEX = ROOT / "data" / "catalog" / "world" / "index-v1.json"
 
 # West, south, east, north: the whole world, to the edges of the web map projection.
 BOUNDS = (-180.0, -85.0511, 180.0, 85.0511)
@@ -154,6 +159,34 @@ def frame(columns: dict, geometry) -> gpd.GeoDataFrame:
     return gpd.GeoDataFrame(data, geometry=geometry, crs=4326)
 
 
+def world_regions() -> gpd.GeoDataFrame:
+    """Each catalog region outside North America, with its outline from Geofabrik's index
+    (simplified to about 1 km, plenty for zoom 0-7)."""
+    index = json.loads(GEOFABRIK_INDEX.read_text(encoding="utf-8"))
+    rows = []
+    for feature in index["features"]:
+        gid = feature["properties"]["id"]
+        if gid in WORLD:
+            geometry = shapely.make_valid(shapely.geometry.shape(feature["geometry"])).simplify(0.01)
+            rows.append({"region": WORLD[gid], "name": feature["properties"]["name"], "geometry": geometry})
+    missing = set(WORLD) - {f["properties"]["id"] for f in index["features"]}
+    if missing:
+        raise RuntimeError(f"no Geofabrik outline for {sorted(missing)}")
+    return gpd.GeoDataFrame(rows, geometry="geometry", crs=4326)
+
+
+def partition(outlines: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """Non-overlapping pieces of the outlines, each with the IDs of every region it lies in,
+    separated by spaces (Berlin's piece is "de-be de-bb" where Brandenburg's outline holds it)."""
+    lines = shapely.union_all([shapely.boundary(g) for g in outlines.geometry])
+    pieces = gpd.GeoDataFrame(geometry=list(shapely.get_parts(shapely.polygonize(shapely.get_parts(lines)))), crs=4326)
+    points = gpd.GeoDataFrame(geometry=pieces.geometry.representative_point(), crs=4326)
+    hits = gpd.sjoin(points, outlines[["region", "geometry"]], how="inner", predicate="within")
+    ids = hits.groupby(level=0)["region"].apply(lambda r: " ".join(sorted(set(r))))
+    pieces = pieces.loc[ids.index].assign(region=ids.values)
+    return pieces.dissolve(by="region", as_index=False)[["region", "geometry"]]
+
+
 def tag(features: gpd.GeoDataFrame, states: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """Splits lines and areas at state borders and gives each piece its region (or none)."""
     pieces = gpd.overlay(features, states[["region", "geometry"]], how="identity", keep_geom_type=True)
@@ -186,6 +219,12 @@ def state_borders(states: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 def build() -> None:
     fetch()
     states = regions()
+    world = world_regions()
+    outlines = pd.concat([states[["region", "name", "geometry"]], world], ignore_index=True)
+    outlines = gpd.GeoDataFrame(outlines, geometry="geometry", crs=4326)
+    # Features are tagged by every catalog region they lie in.
+    pieces = partition(outlines)
+    print(f"regions: {len(outlines)} outlines, {len(pieces)} pieces")
     area = box(*BOUNDS)
     layers: dict[str, gpd.GeoDataFrame] = {}
 
@@ -194,13 +233,13 @@ def build() -> None:
     lakes = pd.concat([read("ne_10m_lakes"), read("ne_10m_lakes_north_america"), read("ne_10m_lakes_europe")], ignore_index=True)
     lakes = lakes[lakes["featurecla"].fillna("").str.contains("Lake|Reservoir", regex=True)]
     lakes = frame({"kind": "lake", "min_zoom": zoom(lakes["min_zoom"])}, lakes.geometry)
-    lakes = tag(lakes, states)
+    lakes = tag(lakes, pieces)
     layers["water"] = pd.concat([ocean, lakes], ignore_index=True)
 
     rivers = pd.concat([read("ne_10m_rivers_lake_centerlines"), read("ne_10m_rivers_north_america"), read("ne_10m_rivers_europe")], ignore_index=True)
     rivers = rivers[rivers["featurecla"].fillna("").str.startswith("River")]
     rivers = frame({"name": rivers["name"].fillna(""), "min_zoom": zoom(rivers["min_zoom"])}, rivers.geometry)
-    layers["rivers"] = tag(rivers, states)
+    layers["rivers"] = tag(rivers, pieces)
 
     countries = read("ne_10m_admin_0_boundary_lines_land")
     country_lines = frame({"kind": "country", "region": "", "min_zoom": 0}, countries.geometry)
@@ -224,22 +263,21 @@ def build() -> None:
     roads = frame({"kind": kind.values, "expressway": roads["expressway"].fillna(0).astype(int).values, "ref": ref, "min_zoom": zoom(roads["min_zoom"]).values}, roads.geometry)
     # Elsewhere Natural Earth classes roads by type, not level: expressways are drawn as
     # motorways, other major and secondary highways as main roads.
-    world = read("ne_10m_roads", where="sov_a3 NOT IN ('USA','MEX','CAN')")
-    world = world[world["type"].isin(["Major Highway", "Secondary Highway", "Beltway", "Bypass"])]
-    expressway = world["expressway"].fillna(0).astype(int)
-    world = frame({
+    other_roads = read("ne_10m_roads", where="sov_a3 NOT IN ('USA','MEX','CAN')")
+    other_roads = other_roads[other_roads["type"].isin(["Major Highway", "Secondary Highway", "Beltway", "Bypass"])]
+    expressway = other_roads["expressway"].fillna(0).astype(int)
+    other_roads = frame({
         "kind": ["motorway" if e else "main" for e in expressway],
         "expressway": expressway.values,
         "ref": "",
-        "region": "",
-        "min_zoom": zoom(world["min_zoom"]).values,
-    }, world.geometry)
-    layers["roads"] = pd.concat([tag(roads, states), world], ignore_index=True)
+        "min_zoom": zoom(other_roads["min_zoom"]).values,
+    }, other_roads.geometry)
+    layers["roads"] = tag(pd.concat([roads, other_roads], ignore_index=True), pieces)
 
     places = read("ne_10m_populated_places")
     capital = ["country" if c == "Admin-0 capital" else "state" if c == "Admin-1 capital" else "none" for c in places["FEATURECLA"]]
     places = frame({"name": places["NAME"], "rank": places["SCALERANK"].astype(int), "capital": capital, "min_zoom": zoom(places["MIN_ZOOM"])}, places.geometry)
-    places = gpd.sjoin(places, states[["region", "geometry"]], how="left", predicate="within").drop(columns="index_right")
+    places = gpd.sjoin(places, pieces[["region", "geometry"]], how="left", predicate="within").drop(columns="index_right")
     places["region"] = places["region"].fillna("")
     layers["places"] = places
 
@@ -259,7 +297,9 @@ def build() -> None:
     }, [Point(x, y) for x, y in zip(nations["LABEL_X"], nations["LABEL_Y"])])
     layers["labels"] = pd.concat([state_labels, country_labels], ignore_index=True)
     # Catalog regions' outlines, for pointing at a region to download it.
-    layers["regions"] = frame({"region": states["region"], "name": states["name"]}, states.geometry)
+    # `rank` orders overlapping outlines: the map takes the smallest region under the pointer.
+    order = outlines.to_crs(6933).area.rank(method="first").astype(int)
+    layers["regions"] = frame({"region": outlines["region"], "name": outlines["name"], "rank": order.values}, outlines.geometry)
 
     source = WORK / "overview.gpkg"
     source.unlink(missing_ok=True)
