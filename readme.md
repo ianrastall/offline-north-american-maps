@@ -31,10 +31,11 @@ The built-in overview is made from [Natural Earth](https://www.naturalearthdata.
 
 Status (14 November 2026): version 0.11.0, with 100 regions: the US (Alaska included), Canada and Mexico by state. All 52 US regions' flood zones and public lands are published. A WinUI 3/C# app over a Rust core. On 11 November 2026 the installed app passed the offline acceptance test: with no network, it showed the Illinois map and found places, addresses, stations, outdoor places and saved places ([validation](docs/validation.md#offline-acceptance-test)).
 
-Planned: region maps and processed stations and addresses published in this repository's releases (11 November 2026), and an Android app with GPS that receives maps from the desktop (10 November 2026). See the [North America and Android plan](docs/north-america-and-android.md).
+Planned: region maps and processed stations and addresses published in this repository's releases (11 November 2026), and an Android app with GPS that receives maps from the desktop (10 November 2026). See the [North America and Android plan](docs/north-america-and-android.md). Proposed on 14 November 2026: regions for the whole world, filled in on demand over a world overview ([worldwide plan](docs/worldwide.md)).
 
 - [Project brief](docs/project-brief.md)
 - [North America and Android plan](docs/north-america-and-android.md)
+- [Worldwide plan](docs/worldwide.md) (proposed 14 November 2026)
 - [Sources and technical decisions](docs/sources-and-architecture.md)
 - [Renderer proof and decision](docs/renderer-proof.md)
 - [Implementation stages and verification](docs/validation.md)

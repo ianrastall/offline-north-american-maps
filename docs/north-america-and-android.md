@@ -1,6 +1,6 @@
 # North America and Android plan
 
-10 November 2026. Direction agreed by Ian on 10 November 2026 ([project brief](project-brief.md#north-america-and-android-direction-agreed-10-november-2026)). Stage 0 passed on 11 November 2026; stage 1 (Mexico) was released in 0.8.0 the same day.
+10 November 2026. Direction agreed by Ian on 10 November 2026 ([project brief](project-brief.md#north-america-and-android-direction-agreed-10-november-2026)). Stage 0 passed on 11 November 2026; stage 1 (Mexico) was released in 0.8.0 the same day. A [worldwide plan](worldwide.md), proposed on 14 November 2026, builds on stage 5.
 
 ## Purpose
 
