@@ -1,7 +1,7 @@
-; Inno Setup script for Offline North American Maps. Compile through build/build.ps1 so the version and the
+; Inno Setup script for Offline Maps. Compile through build/build.ps1 so the version and the
 ; verified publish folder are supplied together.
 ;
-; Per-user install: no administrator rights, files under %LOCALAPPDATA%\Programs\Offline North American Maps,
+; Per-user install: no administrator rights, files under %LOCALAPPDATA%\Programs\Offline Maps,
 ; a Start entry under the app's name and an uninstaller in Settings > Apps. A later version
 ; installs over this one (same AppId). Maps, stations and addresses, saved places and settings
 ; (%LOCALAPPDATA%\Jupiter\OfflineMaps, and a map folder chosen in Settings) are never touched by install,
@@ -11,7 +11,7 @@
 ; runtime installer is bundled and run only if it is missing, so setup works without a
 ; connection.
 
-#define AppName "Offline North American Maps"
+#define AppName "Offline Maps"
 #define AppExe "OfflineMaps.exe"
 #define AppUserModelId "Jupiter.OfflineMaps"
 #ifndef AppVersion
@@ -45,7 +45,7 @@ SolidCompression=yes
 ; Tell Explorer and Start to refresh icons after install and uninstall.
 ChangesAssociations=yes
 OutputDir=..\dist
-OutputBaseFilename=OfflineNorthAmericanMaps-{#AppVersion}-win-x64-setup
+OutputBaseFilename=OfflineMaps-{#AppVersion}-win-x64-setup
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -57,14 +57,17 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; A Jupiter folder in Start is never used; Start lists the app by name.
 Type: files; Name: "{autoprograms}\Jupiter\{#AppName}.lnk"
 Type: dirifempty; Name: "{autoprograms}\Jupiter"
-; Shortcuts from before the renames to Offline US Maps (0.6.0) and Offline North American Maps
-; (0.10.0). An upgrade keeps the install folder, the AppId and the user data; only the name changes.
-Type: files; Name: "{autoprograms}\Offline Maps.lnk"
-Type: files; Name: "{autodesktop}\Offline Maps.lnk"
+; Shortcuts from the names Offline US Maps (0.6.0-0.9.0) and Offline North American Maps
+; (0.10.0-0.11.0); 0.12.0 returns to the first name, Offline Maps. An upgrade keeps the install
+; folder, the AppId and the user data; only the name changes.
 Type: files; Name: "{autoprograms}\Offline US Maps.lnk"
 Type: files; Name: "{autodesktop}\Offline US Maps.lnk"
+Type: files; Name: "{autoprograms}\Offline North American Maps.lnk"
+Type: files; Name: "{autodesktop}\Offline North American Maps.lnk"
 ; Map page files of an earlier version that no longer ship.
 Type: filesandordirs; Name: "{app}\Web"
+; The North American overview, replaced by the world overview in 0.12.0.
+Type: files; Name: "{app}\Overview\us-overview.mbtiles"
 
 [Files]
 Source: "..\dist\OfflineMaps\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"

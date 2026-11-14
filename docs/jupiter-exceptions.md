@@ -2,7 +2,7 @@
 
 Target: canonical WinUI 3/C# + Rust core architecture and Jupiter style standard 1.1.
 
-The app imports Jupiter.UI (`build/Jupiter.UI.targets`): shared resources, the accent and theme services, the Settings > Appearance controls, and the style check in its default error mode. The check reports 0 violations in the app's XAML. No NumberBox is used. The installer gives a top-level Start Menu entry named Offline North American Maps, registers an uninstaller, and leaves user data in `%LOCALAPPDATA%\Jupiter\OfflineMaps` through upgrades and uninstalls.
+The app imports Jupiter.UI (`build/Jupiter.UI.targets`): shared resources, the accent and theme services, the Settings > Appearance controls, and the style check in its default error mode. The check reports 0 violations in the app's XAML. No NumberBox is used. The installer gives a top-level Start Menu entry named Offline Maps, registers an uninstaller, and leaves user data in `%LOCALAPPDATA%\Jupiter\OfflineMaps` through upgrades and uninstalls.
 
 ## Exceptions
 

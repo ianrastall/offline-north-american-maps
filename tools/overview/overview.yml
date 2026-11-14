@@ -1,15 +1,17 @@
-# Planetiler schema for the built-in overview of the United States (see build_overview.py,
-# which fills in the GeoPackage path). Every feature inside a US state or territory carries
-# that region's catalog ID in `region`, so the map can leave out the overview wherever the
-# region's own map is installed. Layers:
+# Planetiler schema for the built-in world overview (see build_overview.py, which fills in the
+# GeoPackage path). Every feature inside a catalog region carries that region's ID in
+# `region`, so the map can leave out the overview wherever the region's own map is installed.
+# Layers:
 #   water        kind (ocean, lake), region
 #   rivers       name, region
 #   boundaries   kind (country, state), region
-#   roads        kind (interstate, federal, state), expressway (1/0), ref, region
+#   roads        kind (interstate, federal, state; motorway, main outside North America),
+#                expressway (1/0), ref, region
 #   places       name, rank (lower is more important), capital (country, state, none), region
 #   labels       kind (state, country), name, abbrev, region
-schema_name: Offline North American Maps overview
-schema_description: Whole-country overview from Natural Earth (public domain)
+#   regions      region, name: each catalog region's outline
+schema_name: Offline Maps overview
+schema_description: World overview from Natural Earth (public domain)
 attribution: Natural Earth
 args:
   minzoom: 0
@@ -49,6 +51,7 @@ layers:
     geometry: line
     include_when:
       layer: boundaries
+    min_zoom: '${ feature.tags.min_zoom }'
     attributes:
     - key: kind
     - key: region
@@ -82,8 +85,18 @@ layers:
     geometry: point
     include_when:
       layer: labels
+    min_zoom: '${ feature.tags.min_zoom }'
     attributes:
     - key: kind
     - key: name
     - key: abbrev
     - key: region
+- id: regions
+  features:
+  - source: ne
+    geometry: polygon
+    include_when:
+      layer: regions
+    attributes:
+    - key: region
+    - key: name

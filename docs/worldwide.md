@@ -1,6 +1,6 @@
 # Worldwide plan
 
-14 November 2026. Proposed at Ian's request; not yet agreed. It extends the [North America and Android plan](north-america-and-android.md) and depends on its stage 5 (prepared bundles on the release page).
+14 November 2026. Proposed at Ian's request. Ian started stage W1 the same day and chose the name Offline Maps; the other stages are not yet agreed. It extends the [North America and Android plan](north-america-and-android.md) and depends on its stage 5 (prepared bundles on the release page).
 
 ## Purpose
 
@@ -42,7 +42,7 @@ The package total is inflated by regions that cross the 180th meridian. Geofabri
 
 **Glyphs.** The font set already downloaded (VersaTiles Noto Sans, 256 ranges per face) includes Arabic, Devanagari, Thai, Hangul and CJK. The app bundles 23 ranges (6.8 MB). All ranges for the regular and bold faces would be about 76 MB. MapLibre GL JS draws Arabic and Hebrew right to left only with its RTL text plugin. It does not shape Devanagari, Bengali, Tamil, Thai or other complex scripts properly, so labels in those scripts show with broken letter forms. That is a limit of the map engine, not of the data.
 
-**Overview.** The current overview is 4.2 MB: Natural Earth 1:10m at zoom 0–7, clipped to 180°W–48°W, 8°N–84°N. Natural Earth covers the whole world with the same layers. A world overview has not been built; scaling by land area suggests 20–30 MB, to be measured.
+**Overview.** The current overview is 4.2 MB: Natural Earth 1:10m at zoom 0–7, clipped to 180°W–48°W, 8°N–84°N. Natural Earth covers the whole world with the same layers. The world overview built for W1 is 13.5 MB.
 
 **Hosting.** GitHub allows up to 1,000 files per release and 2 GiB per file, with no stated limit on total size or bandwidth. Several hundred regions with a map and an extras file each would need one release per continent. Regions over 2 GiB are split, as Nunavut is.
 
@@ -70,6 +70,8 @@ The package total is inflated by regions that cross the 180th meridian. Geofabri
 - Rename the app and repository (Ian's choice), keeping the AppId, install folder, data folder and Start identity, as the 0.6.0 and 0.10.0 renames did.
 - No new region data yet; the catalog stays at 100 regions.
 
+**Done in 0.12.0 (14 November 2026)**, except the Regions window's continent level: with every region in North America it would add a heading with one entry, so it moves to W2, which brings regions on other continents. The name is Offline Maps (Ian's choice), the app's first name, which already matched the install folder, project names and Start identity; the repository is `ianrastall/offline-maps`, and GitHub redirects the old addresses.
+
 ### W2. Catalog and builds for every region
 
 - Generate the catalog from Geofabrik's index for all regions with no subregions, skipping the grouping regions. Use ISO 3166 identifiers where they exist (`de-by`, `jp`) and Geofabrik's otherwise.
@@ -77,6 +79,8 @@ The package total is inflated by regions that cross the 180th meridian. Geofabri
   - cut from the VersaTiles planet (one 66.6 GB download, one schema), or
   - Geofabrik's packages where they exist (346 regions), with the rest built from raw extracts with `tools/regions-build/` (177 regions; their extracts total 59.8 GB, less once the overlapping groupings are dropped).
 - Clip every region that crosses the 180th meridian at it, as Alaska is.
+- The Regions window gains continent and country levels (moved from W1).
+- Outlines in the overview's `regions` layer for every new region, so each can be clicked to download.
 - Split any region over 2 GiB.
 - Publish through stage 5's maintainer build: maps, processed extras databases and a manifest with SHA-256, size and data date, one release per continent.
 
@@ -101,7 +105,7 @@ No separate work: the Android stages (6–9 of the North America plan) take regi
 
 ## Open decisions for Ian
 
-1. The new name and repository name (W1).
+1. The new name and repository name (W1): decided 14 November 2026, Offline Maps, repository `offline-maps`.
 2. Order: W1 before or after the Android foundation (stage 6 of the North America plan). W1 is independent of it; W2 depends on stage 5.
 3. The tile source for regions without a Geofabrik package: the VersaTiles planet, or builds from raw extracts (decided after measuring, W2).
 4. Fonts: bundled in the installer, or downloaded per script (W4).

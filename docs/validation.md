@@ -341,6 +341,21 @@ Completed 9 November 2026. The labels with missing letters were public-land name
 
 Verified: at zoom 12 over Evanston, "Lighthouse Landing", "Leahy Park", "Maple Park", "Philbrick Park" and "Lunt Park" draw whole where 0.7.0 cut them, in the development build and in the installed 0.7.1 started from Start. Released as [v0.7.1](https://github.com/ianrastall/offline-north-american-maps/releases/tag/v0.7.1), built from 8748bff; the installer's SHA-256 (06906734…e6d0581) matches GitHub's digest, and Settings > Apps lists 0.7.1.
 
+## 0.12.0: Offline Maps, with a world overview
+
+Completed 14 November 2026: stage W1 of the [worldwide plan](worldwide.md), started by Ian the same day.
+
+- **World overview.** `tools/overview/build_overview.py` now covers the whole world (`assets/overview/world-overview.mbtiles`, 13.5 MB; the North American one was 4.2 MB): country borders, Natural Earth's state and province lines outside the catalog countries, major and secondary highways (expressways drawn as motorways), cities, country names from Natural Earth's label points and zooms, ocean, lakes and rivers with the Europe supplements. Inside the catalog countries nothing changed. The installer deletes the old `Overview\us-overview.mbtiles`.
+- **Regions to fill in.** A new `regions` layer holds each catalog region's outline and name. Over a region with no map installed the pointer becomes a hand and the region is drawn in the accent color. A click, once it is clear it is not half of a double-click or a drag, shows a menu beside the pointer, never under it: "Download the <region> map (<size>)" and "Show <region> in Regions…", which opens the Regions window on that region.
+- **Map bounds.** With the overview the map has no bounds. MapLibre 5 throws ("Cannot read properties of null") while placing the view when bounds span all 360 degrees of longitude; found in the first installed build, where the map stayed blank.
+- **Name.** Offline Maps (Ian's choice, the app's first name) in windows, dialogs, the installer, Start, Settings > Apps, styles, notices and the setup file (`OfflineMaps-<version>-win-x64-setup.exe`). The repository is `ianrastall/offline-maps`; GitHub redirects the old addresses (checked: an overlay file under `offline-north-american-maps` answers 301 to `offline-maps`), so earlier versions keep downloading. The installer keeps the AppId, install folder, data folder, mutex and Start identity, and deletes "Offline North American Maps" shortcuts.
+- **Not done.** The Regions window's continent level, moved to W2 (all regions are still in North America).
+- **Tests.** 77 core, 2 HTTP and 7 ABI tests (Rust) and 9 interop tests; the app builds with no warnings.
+
+Verified with the installed 0.12.0 on Ian's machine, upgraded over 0.11.0: Start lists only "Offline Maps", Settings > Apps lists Offline Maps 0.12.0, the program folder has only `world-overview.mbtiles`, and the map folder setting (`G:\Maps`) was kept. Through WebView2's DevTools port on loopback (as the acceptance script uses it): zoomed out, the map draws Iceland, Senegal, Cuba, Central America and Venezuela; panned to the Balkans, every country's borders, names and capitals. Over central New York (not installed) the pointer hand and the accent outline appear, and near Keene the highlight is New Hampshire. A single click shows the two menu items above the pointer, not covering it; Show opened the Regions window with New York in the detail pane. A double-click zoomed in with no menu.
+
+During testing Ian was using the same running app. He downloaded New York's map and its flood zones and public lands while scripted clicks were being sent; the map download was taken for one the script had started and was cancelled twice, then stopped by a reinstall. The flood zones and public lands were installed; the map is kept at 693 of 846 MB to resume. Scripted checks now wait until the app is not in use.
+
 ## 0.11.0: Choosing and moving the map folder
 
 Completed 14 November 2026, at Ian's request: maps had to live on G:, and Settings could not change the map folder.

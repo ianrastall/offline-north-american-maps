@@ -103,7 +103,7 @@ pub struct Service {
     moved: Mutex<Option<(PathBuf, bool)>>,
 }
 
-const MOVED: &str = "The maps have moved to another folder. Restart Offline North American Maps.";
+const MOVED: &str = "The maps have moved to another folder. Restart Offline Maps.";
 
 /// Clears the busy flag and the progress state when an operation ends.
 struct BusyGuard<'a>(&'a Service);

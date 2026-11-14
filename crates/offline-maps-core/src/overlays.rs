@@ -26,7 +26,7 @@ use crate::store::{PackageStore, RECORD_FILE, is_version_name, write_atomic};
 
 /// Where the overlay files are published: `<base>/<region>-overlays.mbtiles`.
 pub const OVERLAYS_BASE: &str =
-    "https://github.com/ianrastall/offline-north-american-maps/releases/download/overlays";
+    "https://github.com/ianrastall/offline-maps/releases/download/overlays";
 pub const OVERLAYS_FILE: &str = "overlays.mbtiles";
 /// Layers every overlay file must have.
 pub const OVERLAY_LAYERS: [&str; 3] = ["flood_zones", "public_lands", "public_land_labels"];

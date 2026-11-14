@@ -1,7 +1,7 @@
 namespace OfflineMaps.App;
 
 /// <summary>
-/// Where Offline North American Maps keeps things. Settings are under %LOCALAPPDATA%\Jupiter\OfflineMaps, and maps
+/// Where Offline Maps keeps things. Settings are under %LOCALAPPDATA%\Jupiter\OfflineMaps, and maps
 /// and saved places are in its Maps folder unless another map folder is chosen in Settings. Both are outside the
 /// install folder, so they survive upgrades and uninstalling.
 /// </summary>
@@ -31,8 +31,8 @@ internal static class AppPaths
 
     public static string WebDir { get; } = Path.Combine(AppContext.BaseDirectory, "Web");
 
-    /// <summary>The built-in whole-country overview, drawn under the installed regions.</summary>
-    public static string OverviewPath { get; } = Path.Combine(AppContext.BaseDirectory, "Overview", "us-overview.mbtiles");
+    /// <summary>The built-in world overview, drawn under the installed regions.</summary>
+    public static string OverviewPath { get; } = Path.Combine(AppContext.BaseDirectory, "Overview", "world-overview.mbtiles");
 
     public static bool HasOverview { get; } = File.Exists(OverviewPath);
 

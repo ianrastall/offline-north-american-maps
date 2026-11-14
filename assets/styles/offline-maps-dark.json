@@ -1,6 +1,6 @@
 {
  "version": 8,
- "name": "Offline North American Maps dark",
+ "name": "Offline Maps dark",
  "metadata": {
   "offline-maps:derived-from": "VersaTiles Style 7.0.1 colorful-dark/en.json (MIT)",
   "offline-maps:source-sha256": "c2ee98a6135d4e8afb16cc33c56f3dac21da44e10d5b19974a879f6673694aa1"

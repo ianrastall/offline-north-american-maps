@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:local="using:OfflineMaps.App"
-    Title="Offline North American Maps">
+    Title="Offline Maps">
 
     <!--  Canvas workspace (standard section 7): the map fills the content region; search and saved
           places are in the inspector pane on the right. The map itself is an embedded WebView2
@@ -77,7 +77,7 @@
                 <MenuFlyoutItem x:Name="RemovePlaceItem" Click="RemovePlace_Click" Text="Remove place…" />
             </MenuBarItem>
             <MenuBarItem Title="Help">
-                <MenuFlyoutItem Click="About_Click" Text="About Offline North American Maps" />
+                <MenuFlyoutItem Click="About_Click" Text="About Offline Maps" />
             </MenuBarItem>
         </MenuBar>
 
@@ -89,7 +89,7 @@
                 IsClosable="False"
                 Severity="Informational"
                 Title="No map is installed"
-                Message="Download the regions you need while you have a connection. After that, Offline North American Maps works without one.">
+                Message="Download the regions you need while you have a connection. After that, Offline Maps works without one.">
                 <InfoBar.ActionButton>
                     <Button Click="Regions_Click" Content="Choose regions…" Style="{StaticResource AccentButtonStyle}" />
                 </InfoBar.ActionButton>

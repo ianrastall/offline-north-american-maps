@@ -1,15 +1,17 @@
-// Map surface hosted by the Offline North American Maps shell (WebView2). Everything is local:
+// Map surface hosted by the Offline Maps shell (WebView2). Everything is local:
 // the page, MapLibre, styles, sprites and glyphs come from the app folder at
 // https://map.local/, tiles and stations from the Rust core through the shell.
 //
 // Shell -> page messages (JSON): init, theme, units, terrain, show,
 // clearSelection, places, zoom, fit, center, reload. Page -> shell: ready,
-// view, contextmenu, place, key, idle, error.
+// view, contextmenu, place, region, key, idle, error.
 //
-// Overview: the built-in whole-country map from the core at overview/{z}/{x}/{y}.pbf
+// Overview: the built-in world map from the core at overview/{z}/{x}/{y}.pbf
 // (Natural Earth, zoom 0-7), drawn under everything else. Zoomed out (below
 // OVERVIEW_ONLY_BELOW) it is the whole map; closer in, it is left out inside
-// installed regions, whose own maps show the same things in detail.
+// installed regions, whose own maps show the same things in detail. A catalog
+// region with no map installed is highlighted under the pointer, and clicking
+// it sends `region` so the shell can offer its download.
 //
 // Terrain (when installed): Terrarium elevation tiles from the core at
 // terrain/{z}/{x}/{y}.webp, drawn as hillshading by MapLibre and as contour
@@ -83,7 +85,13 @@ function applyColors(colors) {
   const root = document.documentElement.style;
   for (const [key, value] of Object.entries(colors)) root.setProperty(`--${key}`, value);
   document.documentElement.style.colorScheme = theme;
+  if (map?.getLayer('overview-region-hover')) {
+    map.setPaintProperty('overview-region-hover', 'fill-color', accent());
+    map.setPaintProperty('overview-region-outline', 'line-color', accent());
+  }
 }
+
+const accent = () => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0078d4';
 
 // Route shields: stretchable rounded markers. Interstate: blue with red cap;
 // US: white with black border; Illinois: white square-cornered; Mexican federal:
@@ -435,7 +443,9 @@ function setOutdoorVisibility() {
 const OVERVIEW_LAYERS = [
   'overview-water', 'overview-rivers', 'overview-state-lines', 'overview-country-lines',
   'overview-roads', 'overview-place-dots', 'overview-places', 'overview-labels',
+  'overview-regions', 'overview-region-hover', 'overview-region-outline',
 ];
+let hoveredRegion = '';
 const OVERVIEW_ONLY_BELOW = 6;
 
 function applyOverview() {
@@ -448,7 +458,7 @@ function applyOverview() {
     tiles: [absolute('overview/{z}/{x}/{y}.pbf')],
     minzoom: 0,
     maxzoom: 7,
-    bounds: [-180, 8, -48, 84],
+    bounds: [-180, -85.0511, 180, 85.0511],
   });
   // The base style's own colors, so the overview matches the installed maps.
   const paint = (id, property, fallback) => (map.getLayer(id) && map.getPaintProperty(id, property)) || fallback;
@@ -510,11 +520,11 @@ function applyOverview() {
     filter: outside,
     layout: { 'line-join': 'round', 'line-cap': 'round' },
     paint: {
-      'line-color': ['match', ['get', 'kind'], 'interstate', motorway, trunk],
+      'line-color': ['match', ['get', 'kind'], ['interstate', 'motorway'], motorway, trunk],
       'line-width': ['interpolate', ['linear'], ['zoom'],
-        4, ['match', ['get', 'kind'], 'interstate', 1, 0.5],
-        7, ['match', ['get', 'kind'], 'interstate', 2, 1.2],
-        10, ['match', ['get', 'kind'], 'interstate', 3.5, 2]],
+        4, ['match', ['get', 'kind'], ['interstate', 'motorway'], 1, 0.5],
+        7, ['match', ['get', 'kind'], ['interstate', 'motorway'], 2, 1.2],
+        10, ['match', ['get', 'kind'], ['interstate', 'motorway'], 3.5, 2]],
     },
   });
   add({
@@ -559,6 +569,44 @@ function applyOverview() {
     },
     paint: { 'text-color': stateText, 'text-halo-color': halo, 'text-halo-width': 1.5, 'text-opacity': 0.8 },
   });
+  // Regions with no map installed: an invisible fill to point at, and the
+  // pointed-at region drawn in the accent color.
+  const notInstalled = ['all', ...installed.map((id) => ['!', ['in', id, ['get', 'region']]])];
+  add({
+    id: 'overview-regions',
+    type: 'fill',
+    'source-layer': 'regions',
+    filter: notInstalled,
+    paint: { 'fill-color': '#000000', 'fill-opacity': 0 },
+  });
+  add({
+    id: 'overview-region-hover',
+    type: 'fill',
+    'source-layer': 'regions',
+    filter: ['==', ['get', 'region'], hoveredRegion],
+    paint: { 'fill-color': accent(), 'fill-opacity': 0.15 },
+  });
+  add({
+    id: 'overview-region-outline',
+    type: 'line',
+    'source-layer': 'regions',
+    filter: ['==', ['get', 'region'], hoveredRegion],
+    paint: { 'line-color': accent(), 'line-width': 2 },
+  });
+}
+
+function regionAt(point) {
+  if (!map.getLayer('overview-regions')) return null;
+  return map.queryRenderedFeatures(point, { layers: ['overview-regions'] })[0]?.properties ?? null;
+}
+
+function hoverRegion(id) {
+  if (id === hoveredRegion) return;
+  hoveredRegion = id;
+  for (const layer of ['overview-region-hover', 'overview-region-outline']) {
+    if (map.getLayer(layer)) map.setFilter(layer, ['==', ['get', 'region'], id]);
+  }
+  map.getCanvas().style.cursor = id ? 'pointer' : '';
 }
 
 function reportView() {
@@ -572,8 +620,9 @@ function reportView() {
 // shape. MapLibre will not zoom out past the point where the view would leave
 // these bounds, so a tight margin cut off a tall box in a wide window.
 function maxBounds() {
-  // With the overview, the US, Canada and Mexico are in reach.
-  if (metadata.overview) return [[-180, 10], [-50, 83.5]];
+  // With the overview, the whole world is in reach: no bounds. (Bounds spanning
+  // all 360 degrees of longitude make MapLibre 5 throw while placing the view.)
+  if (metadata.overview) return null;
   const b = metadata.bounds;
   const cos = Math.cos((((b.south + b.north) / 2) * Math.PI) / 180);
   const width = b.east - b.west;
@@ -645,6 +694,22 @@ async function init(message) {
   map.on('contextmenu', (e) => {
     post({ kind: 'contextmenu', latitude: e.lngLat.lat, longitude: e.lngLat.lng, x: e.point.x, y: e.point.y });
   });
+  map.on('mousemove', (e) => hoverRegion(regionAt(e.point)?.region ?? ''));
+  map.on('mouseout', () => hoverRegion(''));
+  // A click on a region with no map installed offers its download, once it is
+  // clear the click is not half of a double-click (which zooms) or a drag.
+  let regionClick = 0;
+  const cancelRegionClick = () => clearTimeout(regionClick);
+  map.on('click', (e) => {
+    cancelRegionClick();
+    const region = regionAt(e.point);
+    if (!region) return;
+    regionClick = setTimeout(() => {
+      post({ kind: 'region', id: region.region, name: region.name, x: e.point.x, y: e.point.y });
+    }, 400);
+  });
+  map.on('dblclick', cancelRegionClick);
+  map.on('movestart', cancelRegionClick);
   map.once('idle', () => {
     reportView();
     post({ kind: 'idle' });

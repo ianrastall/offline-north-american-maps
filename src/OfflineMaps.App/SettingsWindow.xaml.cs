@@ -6,7 +6,7 @@ using Windows.Graphics;
 
 namespace OfflineMaps.App;
 
-/// <summary>Settings - Offline North American Maps: one per app, non-modal; changes apply immediately.</summary>
+/// <summary>Settings - Offline Maps: one per app, non-modal; changes apply immediately.</summary>
 public sealed partial class SettingsWindow : Window
 {
     private readonly MainWindow _main;
@@ -64,7 +64,7 @@ public sealed partial class SettingsWindow : Window
         if (AppPaths.StoreOverride is not null)
         {
             ChangeFolderButton.IsEnabled = false;
-            FolderCaption.Text = "Maps, stations and addresses, and saved places. Set with --store when Offline North American Maps was started, so it cannot be changed here.";
+            FolderCaption.Text = "Maps, stations and addresses, and saved places. Set with --store when Offline Maps was started, so it cannot be changed here.";
         }
     }
 

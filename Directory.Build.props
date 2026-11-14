@@ -3,9 +3,9 @@
     <LangVersion>14</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.11.0</Version>
+    <Version>0.12.0</Version>
     <Authors>Ian Rastall</Authors>
-    <Product>Offline North American Maps</Product>
+    <Product>Offline Maps</Product>
     <Platforms>x64</Platforms>
     <!-- An unspecified platform (the SDK default AnyCPU) means x64; any other platform is rejected below. -->
     <Platform Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">x64</Platform>
@@ -19,6 +19,6 @@
   </PropertyGroup>
 
   <Target Name="RejectUnsupportedPlatform" BeforeTargets="Restore;Build" Condition="'$(Platform)' != 'x64' or '$(RuntimeIdentifier)' != 'win-x64'">
-    <Error Text="Offline North American Maps builds only for Platform x64 and RuntimeIdentifier win-x64 (got $(Platform) / $(RuntimeIdentifier))." />
+    <Error Text="Offline Maps builds only for Platform x64 and RuntimeIdentifier win-x64 (got $(Platform) / $(RuntimeIdentifier))." />
   </Target>
 </Project>

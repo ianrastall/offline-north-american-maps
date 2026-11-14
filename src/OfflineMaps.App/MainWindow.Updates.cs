@@ -40,12 +40,17 @@ public sealed partial class MainWindow
 
     private void Regions_Click(object sender, RoutedEventArgs e) => OpenRegions();
 
-    internal void OpenRegions()
+    /// <summary>Opens the Regions window, on <paramref name="regionId"/> when given.</summary>
+    internal void OpenRegions(string? regionId = null)
     {
         if (_regionsWindow is null)
         {
-            _regionsWindow = new RegionsWindow(this);
+            _regionsWindow = new RegionsWindow(this, regionId);
             _regionsWindow.Closed += (_, _) => _regionsWindow = null;
+        }
+        else if (regionId is not null)
+        {
+            _regionsWindow.Select(regionId);
         }
         _regionsWindow.Activate();
     }
@@ -427,7 +432,7 @@ public sealed partial class MainWindow
             core.PrepareSearch();
             return "Search is ready";
         }));
-        await FinishAsync(message ?? "Cancelled. Search is prepared next time Offline North American Maps starts.");
+        await FinishAsync(message ?? "Cancelled. Search is prepared next time Offline Maps starts.");
     }
 
     /// <summary>Runs one job with the progress bar shown. Returns the result message, or null when cancelled or failed.</summary>

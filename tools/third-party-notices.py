@@ -118,8 +118,8 @@ def main() -> None:
     versatiles = (ROOT / "assets/styles/NOTICE.md").read_text(encoding="utf-8")
     versatiles = versatiles.replace("```text\n", "").replace("```", "")
     sections = [
-        "Offline North American Maps third-party notices\n\n"
-        "Offline North American Maps' own code is released into the public domain under The Unlicense "
+        "Offline Maps third-party notices\n\n"
+        "Offline Maps' own code is released into the public domain under The Unlicense "
         "(https://unlicense.org). It contains the components below, which keep their own licenses. "
         "Map data is not part of the program: it is "
         "downloaded by the person using it from Geofabrik and is (c) OpenStreetMap contributors, "

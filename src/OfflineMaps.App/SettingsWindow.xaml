@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:jupiter="using:Jupiter.UI"
-    Title="Settings - Offline North American Maps">
+    Title="Settings - Offline Maps">
 
     <Grid x:Name="Root" Background="{ThemeResource JupiterWindowBrush}">
         <ScrollViewer>
@@ -52,7 +52,7 @@
                     <TextBlock
                         x:Name="FolderCaption"
                         Style="{StaticResource JupiterCaptionTextStyle}"
-                        Text="Maps, stations and addresses, and saved places. Kept when Offline North American Maps is updated or uninstalled. Changing the folder can move them to the new one."
+                        Text="Maps, stations and addresses, and saved places. Kept when Offline Maps is updated or uninstalled. Changing the folder can move them to the new one."
                         TextWrapping="Wrap" />
                 </StackPanel>
             </StackPanel>

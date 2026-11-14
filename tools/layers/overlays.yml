@@ -4,7 +4,7 @@
 #   public_lands         name, access (open, restricted, closed, unknown), manager_type,
 #                        manager, designation, category (fee, easement)
 #   public_land_labels   a point inside each named owned area, with name and access
-schema_name: Offline North American Maps overlays
+schema_name: Offline Maps overlays
 schema_description: Flood hazard zones (FEMA National Flood Hazard Layer) and public lands (USGS PAD-US)
 attribution: Flood zones FEMA NFHL; public lands USGS PAD-US
 args:

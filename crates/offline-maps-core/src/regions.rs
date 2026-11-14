@@ -67,7 +67,7 @@ mod tests {
         assert_eq!(states.len(), 32);
         for r in states {
             assert!(r.package_url.starts_with(
-                "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/"
+                "https://github.com/ianrastall/offline-maps/releases/download/regions/"
             ));
             assert!(r.extras_url.ends_with(&format!("/{}-latest.osm.pbf", r.id)));
         }

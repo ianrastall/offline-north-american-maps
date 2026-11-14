@@ -53,7 +53,7 @@ def zz(n):
 
 
 def header_bbox(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "offline-north-american-maps-catalog", "Range": "bytes=0-65535", "Cache-Control": "no-cache"})
+    req = urllib.request.Request(url, headers={"User-Agent": "offline-maps-catalog", "Range": "bytes=0-65535", "Cache-Control": "no-cache"})
     with urllib.request.urlopen(req, timeout=60) as r:
         b = r.read()
     n = int.from_bytes(b[:4], "big")

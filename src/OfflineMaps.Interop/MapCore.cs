@@ -38,7 +38,7 @@ public sealed class MapCore : IDisposable
         if (actual != ExpectedAbiVersion)
         {
             throw new MapCoreException(ErrorKind.Internal,
-                $"The map core has ABI version {actual}, but this app needs {ExpectedAbiVersion}. Reinstall Offline North American Maps.");
+                $"The map core has ABI version {actual}, but this app needs {ExpectedAbiVersion}. Reinstall Offline Maps.");
         }
     }
 
@@ -227,7 +227,7 @@ public sealed class MapCore : IDisposable
                 return;
             case NativeStatus.Panic:
             case NativeStatus.Unusable:
-                throw new MapCoreException(ErrorKind.Internal, "The map core stopped after an internal error. Restart Offline North American Maps.");
+                throw new MapCoreException(ErrorKind.Internal, "The map core stopped after an internal error. Restart Offline Maps.");
             default:
                 throw new MapCoreException(ErrorKind.Internal, $"The map core rejected a request ({status}).");
         }

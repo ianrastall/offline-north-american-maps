@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.Web.WebView2.Core;
 using OfflineMaps.Interop;
+using OfflineMaps.Interop.Messages;
 using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -38,7 +39,7 @@ public sealed partial class MainWindow
         catch (Exception ex)
         {
             AppLog.Write($"WebView2 could not start: {ex}");
-            MapMessage.Text = $"The map view could not start. The Microsoft Edge WebView2 Runtime may be missing; reinstall Offline North American Maps to add it. ({ex.Message})";
+            MapMessage.Text = $"The map view could not start. The Microsoft Edge WebView2 Runtime may be missing; reinstall Offline Maps to add it. ({ex.Message})";
             return;
         }
         var web = MapView.CoreWebView2;
@@ -244,6 +245,9 @@ public sealed partial class MainWindow
                 case "place":
                     SelectPlace(message.GetProperty("id").GetUInt64());
                     break;
+                case "region":
+                    ShowRegionMenu(message.GetProperty("id").GetString() ?? "", Number("x"), Number("y"));
+                    break;
                 case "key":
                     HandleMapKey(message.GetProperty("key").GetString() ?? "");
                     break;
@@ -271,6 +275,33 @@ public sealed partial class MainWindow
             case "Ctrl+0": Post(new JsonObject { ["kind"] = "fit" }); break;
             case "F11": ToggleFullScreen(); break;
         }
+    }
+
+    /// <summary>A click on a region with no map installed: offers its download.</summary>
+    private void ShowRegionMenu(string regionId, double x, double y)
+    {
+        if (_catalog.FirstOrDefault(r => r.Id == regionId) is not { } region)
+        {
+            return;
+        }
+        var menu = new MenuFlyout();
+        bool waiting = CurrentJob == new Job(regionId, UpdateTarget.Map) || IsQueued(regionId, UpdateTarget.Map);
+        var download = new MenuFlyoutItem
+        {
+            Text = waiting ? $"{region.Name} map: download queued" : $"Download the {region.Name} map ({Format.Megabytes(region.PackageBytes)})",
+            IsEnabled = !waiting && _core is not null,
+        };
+        download.Click += (_, _) => Enqueue(regionId, UpdateTarget.Map);
+        var show = new MenuFlyoutItem { Text = $"Show {region.Name} in Regions…" };
+        show.Click += (_, _) => OpenRegions(regionId);
+        menu.Items.Add(download);
+        menu.Items.Add(show);
+        // Kept clear of the pointer, so a further click where the map was clicked never lands on Download.
+        menu.ShowAt(MapView, new FlyoutShowOptions
+        {
+            Position = new Windows.Foundation.Point(x, y),
+            ExclusionRect = new Windows.Foundation.Rect(x - 16, y - 16, 32, 32),
+        });
     }
 
     private void ShowMapMenu(double latitude, double longitude, double x, double y)

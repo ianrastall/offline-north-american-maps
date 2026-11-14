@@ -6,9 +6,9 @@ use crate::package::Region;
 pub const MX_AGU: Region = Region {
     id: "mx-agu",
     name: "Aguascalientes",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-agu-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-agu-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-agu-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-agu-latest.osm.pbf",
     outer: Bounds {
         west: -103.394,
         south: 21.102,
@@ -56,8 +56,8 @@ pub const US_AL: Region = Region {
 pub const US_AK: Region = Region {
     id: "us-ak",
     name: "Alaska",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/us-ak-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/us-ak-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/us/alaska-latest.osm.pbf",
     outer: Bounds {
         west: -180.000,
@@ -81,8 +81,8 @@ pub const US_AK: Region = Region {
 pub const CA_AB: Region = Region {
     id: "ca-ab",
     name: "Alberta",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-ab-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-ab-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/alberta-latest.osm.pbf",
     outer: Bounds {
         west: -120.504,
@@ -181,9 +181,9 @@ pub const US_AR: Region = Region {
 pub const MX_BCN: Region = Region {
     id: "mx-bcn",
     name: "Baja California",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-bcn-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-bcn-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-bcn-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-bcn-latest.osm.pbf",
     outer: Bounds {
         west: -118.885,
         south: 27.480,
@@ -206,9 +206,9 @@ pub const MX_BCN: Region = Region {
 pub const MX_BCS: Region = Region {
     id: "mx-bcs",
     name: "Baja California Sur",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-bcs-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-bcs-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-bcs-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-bcs-latest.osm.pbf",
     outer: Bounds {
         west: -116.289,
         south: 22.352,
@@ -231,8 +231,8 @@ pub const MX_BCS: Region = Region {
 pub const CA_BC: Region = Region {
     id: "ca-bc",
     name: "British Columbia",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-bc-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-bc-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/british-columbia-latest.osm.pbf",
     outer: Bounds {
         west: -143.372,
@@ -281,9 +281,9 @@ pub const US_CA: Region = Region {
 pub const MX_CAM: Region = Region {
     id: "mx-cam",
     name: "Campeche",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-cam-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-cam-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-cam-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-cam-latest.osm.pbf",
     outer: Bounds {
         west: -92.989,
         south: 17.292,
@@ -306,9 +306,9 @@ pub const MX_CAM: Region = Region {
 pub const MX_CHP: Region = Region {
     id: "mx-chp",
     name: "Chiapas",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-chp-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-chp-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-chp-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-chp-latest.osm.pbf",
     outer: Bounds {
         west: -94.659,
         south: 14.011,
@@ -331,9 +331,9 @@ pub const MX_CHP: Region = Region {
 pub const MX_CHH: Region = Region {
     id: "mx-chh",
     name: "Chihuahua",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-chh-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-chh-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-chh-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-chh-latest.osm.pbf",
     outer: Bounds {
         west: -109.595,
         south: 25.039,
@@ -356,9 +356,9 @@ pub const MX_CHH: Region = Region {
 pub const MX_COA: Region = Region {
     id: "mx-coa",
     name: "Coahuila",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-coa-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-coa-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-coa-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-coa-latest.osm.pbf",
     outer: Bounds {
         west: -104.480,
         south: 24.023,
@@ -381,9 +381,9 @@ pub const MX_COA: Region = Region {
 pub const MX_COL: Region = Region {
     id: "mx-col",
     name: "Colima",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-col-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-col-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-col-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-col-latest.osm.pbf",
     outer: Bounds {
         west: -115.280,
         south: 17.819,
@@ -506,9 +506,9 @@ pub const US_DC: Region = Region {
 pub const MX_DUR: Region = Region {
     id: "mx-dur",
     name: "Durango",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-dur-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-dur-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-dur-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-dur-latest.osm.pbf",
     outer: Bounds {
         west: -107.730,
         south: 21.825,
@@ -581,9 +581,9 @@ pub const US_GA: Region = Region {
 pub const MX_GUA: Region = Region {
     id: "mx-gua",
     name: "Guanajuato",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-gua-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-gua-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-gua-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-gua-latest.osm.pbf",
     outer: Bounds {
         west: -102.617,
         south: 19.393,
@@ -606,9 +606,9 @@ pub const MX_GUA: Region = Region {
 pub const MX_GRO: Region = Region {
     id: "mx-gro",
     name: "Guerrero",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-gro-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-gro-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-gro-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-gro-latest.osm.pbf",
     outer: Bounds {
         west: -102.704,
         south: 15.796,
@@ -656,9 +656,9 @@ pub const US_HI: Region = Region {
 pub const MX_HID: Region = Region {
     id: "mx-hid",
     name: "Hidalgo",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-hid-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-hid-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-hid-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-hid-latest.osm.pbf",
     outer: Bounds {
         west: -100.380,
         south: 19.078,
@@ -756,9 +756,9 @@ pub const US_IA: Region = Region {
 pub const MX_JAL: Region = Region {
     id: "mx-jal",
     name: "Jalisco",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-jal-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-jal-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-jal-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-jal-latest.osm.pbf",
     outer: Bounds {
         west: -106.215,
         south: 18.406,
@@ -881,8 +881,8 @@ pub const US_ME: Region = Region {
 pub const CA_MB: Region = Region {
     id: "ca-mb",
     name: "Manitoba",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-mb-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-mb-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/manitoba-latest.osm.pbf",
     outer: Bounds {
         west: -102.514,
@@ -956,9 +956,9 @@ pub const US_MA: Region = Region {
 pub const MX_CMX: Region = Region {
     id: "mx-cmx",
     name: "Mexico City",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-cmx-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-cmx-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-cmx-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-cmx-latest.osm.pbf",
     outer: Bounds {
         west: -99.885,
         south: 18.529,
@@ -1006,9 +1006,9 @@ pub const US_MI: Region = Region {
 pub const MX_MIC: Region = Region {
     id: "mx-mic",
     name: "Michoacán",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-mic-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-mic-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-mic-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-mic-latest.osm.pbf",
     outer: Bounds {
         west: -104.259,
         south: 17.395,
@@ -1131,9 +1131,9 @@ pub const US_MT: Region = Region {
 pub const MX_MOR: Region = Region {
     id: "mx-mor",
     name: "Morelos",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-mor-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-mor-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-mor-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-mor-latest.osm.pbf",
     outer: Bounds {
         west: -100.014,
         south: 17.812,
@@ -1156,9 +1156,9 @@ pub const MX_MOR: Region = Region {
 pub const MX_NAY: Region = Region {
     id: "mx-nay",
     name: "Nayarit",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-nay-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-nay-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-nay-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-nay-latest.osm.pbf",
     outer: Bounds {
         west: -107.223,
         south: 20.083,
@@ -1231,8 +1231,8 @@ pub const US_NV: Region = Region {
 pub const CA_NB: Region = Region {
     id: "ca-nb",
     name: "New Brunswick",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-nb-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-nb-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/new-brunswick-latest.osm.pbf",
     outer: Bounds {
         west: -69.690,
@@ -1356,8 +1356,8 @@ pub const US_NY: Region = Region {
 pub const CA_NL: Region = Region {
     id: "ca-nl",
     name: "Newfoundland and Labrador",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-nl-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-nl-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/newfoundland-and-labrador-latest.osm.pbf",
     outer: Bounds {
         west: -68.371,
@@ -1431,8 +1431,8 @@ pub const US_ND: Region = Region {
 pub const CA_NT: Region = Region {
     id: "ca-nt",
     name: "Northwest Territories",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-nt-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-nt-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/northwest-territories-latest.osm.pbf",
     outer: Bounds {
         west: -137.197,
@@ -1456,8 +1456,8 @@ pub const CA_NT: Region = Region {
 pub const CA_NS: Region = Region {
     id: "ca-ns",
     name: "Nova Scotia",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-ns-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-ns-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/nova-scotia-latest.osm.pbf",
     outer: Bounds {
         west: -68.013,
@@ -1481,9 +1481,9 @@ pub const CA_NS: Region = Region {
 pub const MX_NLE: Region = Region {
     id: "mx-nle",
     name: "Nuevo León",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-nle-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-nle-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-nle-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-nle-latest.osm.pbf",
     outer: Bounds {
         west: -101.727,
         south: 22.643,
@@ -1506,8 +1506,8 @@ pub const MX_NLE: Region = Region {
 pub const CA_NU_E: Region = Region {
     id: "ca-nu-e",
     name: "Nunavut east of 90° W",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-nu-e-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-nu-e-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/nunavut-latest.osm.pbf",
     outer: Bounds {
         west: -121.237,
@@ -1531,8 +1531,8 @@ pub const CA_NU_E: Region = Region {
 pub const CA_NU_W: Region = Region {
     id: "ca-nu-w",
     name: "Nunavut west of 90° W",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-nu-w-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-nu-w-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/nunavut-latest.osm.pbf",
     outer: Bounds {
         west: -121.500,
@@ -1556,9 +1556,9 @@ pub const CA_NU_W: Region = Region {
 pub const MX_OAX: Region = Region {
     id: "mx-oax",
     name: "Oaxaca",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-oax-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-oax-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-oax-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-oax-latest.osm.pbf",
     outer: Bounds {
         west: -99.073,
         south: 15.137,
@@ -1631,8 +1631,8 @@ pub const US_OK: Region = Region {
 pub const CA_ON: Region = Region {
     id: "ca-on",
     name: "Ontario",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-on-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-on-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/ontario-latest.osm.pbf",
     outer: Bounds {
         west: -95.660,
@@ -1706,8 +1706,8 @@ pub const US_PA: Region = Region {
 pub const CA_PE: Region = Region {
     id: "ca-pe",
     name: "Prince Edward Island",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-pe-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-pe-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/prince-edward-island-latest.osm.pbf",
     outer: Bounds {
         west: -65.102,
@@ -1731,9 +1731,9 @@ pub const CA_PE: Region = Region {
 pub const MX_PUE: Region = Region {
     id: "mx-pue",
     name: "Puebla",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-pue-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-pue-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-pue-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-pue-latest.osm.pbf",
     outer: Bounds {
         west: -99.590,
         south: 17.341,
@@ -1781,8 +1781,8 @@ pub const US_PR: Region = Region {
 pub const CA_QC: Region = Region {
     id: "ca-qc",
     name: "Quebec",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-qc-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-qc-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/quebec-latest.osm.pbf",
     outer: Bounds {
         west: -80.340,
@@ -1806,9 +1806,9 @@ pub const CA_QC: Region = Region {
 pub const MX_QUE: Region = Region {
     id: "mx-que",
     name: "Querétaro",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-que-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-que-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-que-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-que-latest.osm.pbf",
     outer: Bounds {
         west: -101.117,
         south: 19.495,
@@ -1831,9 +1831,9 @@ pub const MX_QUE: Region = Region {
 pub const MX_ROO: Region = Region {
     id: "mx-roo",
     name: "Quintana Roo",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-roo-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-roo-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-roo-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-roo-latest.osm.pbf",
     outer: Bounds {
         west: -89.817,
         south: 17.374,
@@ -1881,9 +1881,9 @@ pub const US_RI: Region = Region {
 pub const MX_SLP: Region = Region {
     id: "mx-slp",
     name: "San Luis Potosí",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-slp-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-slp-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-slp-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-slp-latest.osm.pbf",
     outer: Bounds {
         west: -102.816,
         south: 20.640,
@@ -1906,8 +1906,8 @@ pub const MX_SLP: Region = Region {
 pub const CA_SK: Region = Region {
     id: "ca-sk",
     name: "Saskatchewan",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-sk-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-sk-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/saskatchewan-latest.osm.pbf",
     outer: Bounds {
         west: -110.507,
@@ -1931,9 +1931,9 @@ pub const CA_SK: Region = Region {
 pub const MX_SIN: Region = Region {
     id: "mx-sin",
     name: "Sinaloa",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-sin-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-sin-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-sin-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-sin-latest.osm.pbf",
     outer: Bounds {
         west: -109.965,
         south: 21.947,
@@ -1956,9 +1956,9 @@ pub const MX_SIN: Region = Region {
 pub const MX_SON: Region = Region {
     id: "mx-son",
     name: "Sonora",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-son-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-son-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-son-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-son-latest.osm.pbf",
     outer: Bounds {
         west: -115.573,
         south: 25.777,
@@ -2031,9 +2031,9 @@ pub const US_SD: Region = Region {
 pub const MX_MEX: Region = Region {
     id: "mx-mex",
     name: "State of Mexico",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-mex-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-mex-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-mex-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-mex-latest.osm.pbf",
     outer: Bounds {
         west: -101.133,
         south: 17.847,
@@ -2056,9 +2056,9 @@ pub const MX_MEX: Region = Region {
 pub const MX_TAB: Region = Region {
     id: "mx-tab",
     name: "Tabasco",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-tab-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-tab-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-tab-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-tab-latest.osm.pbf",
     outer: Bounds {
         west: -94.650,
         south: 16.731,
@@ -2081,9 +2081,9 @@ pub const MX_TAB: Region = Region {
 pub const MX_TAM: Region = Region {
     id: "mx-tam",
     name: "Tamaulipas",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-tam-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-tam-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-tam-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-tam-latest.osm.pbf",
     outer: Bounds {
         west: -100.665,
         south: 21.687,
@@ -2156,9 +2156,9 @@ pub const US_TX: Region = Region {
 pub const MX_TLA: Region = Region {
     id: "mx-tla",
     name: "Tlaxcala",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-tla-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-tla-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-tla-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-tla-latest.osm.pbf",
     outer: Bounds {
         west: -99.228,
         south: 18.585,
@@ -2231,9 +2231,9 @@ pub const US_UT: Region = Region {
 pub const MX_VER: Region = Region {
     id: "mx-ver",
     name: "Veracruz",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-ver-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-ver-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-ver-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-ver-latest.osm.pbf",
     outer: Bounds {
         west: -99.202,
         south: 16.617,
@@ -2406,9 +2406,9 @@ pub const US_WY: Region = Region {
 pub const MX_YUC: Region = Region {
     id: "mx-yuc",
     name: "Yucatán",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-yuc-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-yuc-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-yuc-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-yuc-latest.osm.pbf",
     outer: Bounds {
         west: -92.828,
         south: 19.031,
@@ -2431,8 +2431,8 @@ pub const MX_YUC: Region = Region {
 pub const CA_YT: Region = Region {
     id: "ca-yt",
     name: "Yukon",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/ca-yt-shortbread-1.0.mbtiles",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/ca-yt-shortbread-1.0.mbtiles",
     extras_url: "https://download.geofabrik.de/north-america/canada/yukon-latest.osm.pbf",
     outer: Bounds {
         west: -141.856,
@@ -2456,9 +2456,9 @@ pub const CA_YT: Region = Region {
 pub const MX_ZAC: Region = Region {
     id: "mx-zac",
     name: "Zacatecas",
-    source_page: "https://github.com/ianrastall/offline-north-american-maps/releases/tag/regions",
-    package_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-zac-shortbread-1.0.mbtiles",
-    extras_url: "https://github.com/ianrastall/offline-north-american-maps/releases/download/regions/mx-zac-latest.osm.pbf",
+    source_page: "https://github.com/ianrastall/offline-maps/releases/tag/regions",
+    package_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-zac-shortbread-1.0.mbtiles",
+    extras_url: "https://github.com/ianrastall/offline-maps/releases/download/regions/mx-zac-latest.osm.pbf",
     outer: Bounds {
         west: -104.874,
         south: 20.522,

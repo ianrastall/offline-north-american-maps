@@ -1,4 +1,4 @@
-//! C ABI facade over the Offline North American Maps core for the WinUI shell.
+//! C ABI facade over the Offline Maps core for the WinUI shell.
 //!
 //! Commands and queries pass as protobuf messages (`proto/offline_maps.proto`):
 //! the caller sends a serialized `Request`, and the core returns a serialized
